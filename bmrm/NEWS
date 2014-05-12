@@ -1,0 +1,30 @@
+Release 1.8 (10 Feb, 2014)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* Change code structure to improve memory footprint.
+* Fix multiple issues with L2 regularization.
+* bmrm() now use L1 regularization by default.
+
+Release 1.7 (28 Jan, 2014)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* The hingeLoss function (for SVM learning) gain a loss.weights paramter to handle unbalanced class distribution
+* Better handling of optimization parameter w0 in bmrm for hot starting the optimization process
+
+Release 1.6 (4 Sept, 2013)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* Important fix in fbetaLoss: previous version was not correct and often lead to unsolvable optimization problem.
+* Improve memory footprint of L1 regularizer
+
+Release 1.5 (24 July, 2013)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* Rename mlsRegressionLoss into lmsRegressionLoss
+* Implement new scalar losses:  epsilonInsensitiveRegressionLoss, ladRegressionLoss, logisticRegression
+* Write a vignette for the package
+* Minor imrovment: Improve error messages
+* Minor imrovment: split the source code "scalarLoss.R" in 2 files "scalarClassificationLosses.R" and "scalarRegressionLosses.R"
+
+Release 1.4 (19 July, 2013)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* Minor improvment: track the number of none zero element, and number of constraints in bmrm log.
+* Minor improvment: improve package description.
+
+
