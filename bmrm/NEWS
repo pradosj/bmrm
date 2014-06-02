@@ -1,3 +1,8 @@
+Release 1.9 (2 Jun, 2014)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* Fix an issue in costMatrix and ordinalRegressionLoss in case of missing labels
+
+
 Release 1.8 (10 Feb, 2014)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * Change code structure to improve memory footprint.
