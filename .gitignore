@@ -1,0 +1,11 @@
+.Rproj.user
+.Rhistory
+.RData
+*.RData
+.bzr
+*.tar.gz
+*.tar
+.DS_Store
+bmrm-2.1
+clpAPI
+UNITEC.doc
