@@ -1,7 +1,7 @@
 Release 1.9 (2 Jun, 2014)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * Fix an issue in costMatrix and ordinalRegressionLoss in case of missing labels
-
+* Replace internal S4 Solver object with a simpler environment
 
 Release 1.8 (10 Feb, 2014)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
