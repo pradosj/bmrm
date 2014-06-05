@@ -24,14 +24,18 @@ newL1Solver <- function(LAMBDA) {
       }
       addRowsCLP(lp,1L,-.Machine$double.xmax,-b,c(0L,nc),seq_len(nc)-1L,c(-1,a,-a))
     }
-    optimize = function() {
+    regval <- function(w) {
+      sum(abs(w))
+    }
+    optimize <- function() {
       solveInitialCLP(lp)
       if (getSolStatusCLP(lp)!=0) warning("issue in the LP solver:",status_codeCLP(getSolStatusCLP(lp))) 
       W <- getColPrimCLP(lp)
       W <- matrix(W[-1],,2)
       w <- W[,1]-W[,2]      
-      return(list(w = w, obj = -getObjValCLP(lp), regval = sum(abs(w))))
+      return(list(w = w, obj = -getObjValCLP(lp)))
     }
+    
   })
   return(e)
 }
@@ -55,15 +59,17 @@ newL2Solver <- function(LAMBDA) {
       A <<- rbind(A,a)
       b <<- c(b,bt)
     }
-    optimize = function() {
+    regval <- function(w) {
+      0.5*crossprod(w)
+    }
+    optimize <- function() {
       Ale <- matrix(1,1,nrow(A))      
       H <- tcrossprod(A)
       opt <- ipop(c=-LAMBDA*b,H,Ale,0,rep_len(0,ncol(Ale)),rep_len(1,ncol(Ale)),1,sigf=5)
       alpha <- primal(opt)
       w <- as.vector(-crossprod(A,alpha) / LAMBDA)
-      regval <- 0.5*crossprod(w)
       R <- max(0,A %*% w + b)
-      return(list(w = as.vector(w), obj = LAMBDA*regval+R, regval = regval))
+      return(list(w = as.vector(w), obj = LAMBDA*regval(w)+R))
     }
   })
   return(e)
@@ -146,18 +152,15 @@ bmrm <- function(...,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,lossfun=hingeLoss,re
     
     # update model
     rrm$update(loss$gradient,loss$value - crossprod(opt$w,loss$gradient))
-	  ub <- min(ub,loss$value + LAMBDA*opt$regval)
+	  ub <- min(ub,loss$value + LAMBDA*rrm$regval(opt$w))
     
 	  # optimize Jt(w)
 	  opt <- rrm$optimize()
-    
-    # do line search
-    
-    
+        
     # log optimization status
     lb <- opt$obj
-    log$loss[i]<-loss$value;log$regVal[i]<-opt$regval;log$lb[i]<-lb;log$ub[i]<-ub;log$epsilon[i]<-ub-lb;log$nnz[i]<-sum(opt$w!=0);log$commonNNZ[i]<-sum(w!=0 & opt$w!=0)
-	  if (verbose) {cat(sprintf("i=%d,eps=%g (=%g-%g),nnz=%d(%d),loss=%g,reg=%g\n",i,log$epsilon[i],log$ub[i],log$lb[i],log$nnz[i],log$commonNNZ[i],log$loss[i],log$regVal[i]))}
+    log$loss[i]<-loss$value;log$regVal[i]<-rrm$regval(opt$w);log$lb[i]<-lb;log$ub[i]<-ub;log$epsilon[i]<-ub-lb;log$nnz[i]<-sum(opt$w!=0);log$commonNZ[i]<-sum(w!=0 & opt$w!=0)
+	  if (verbose) {cat(sprintf("i=%d,eps=%g (=%g-%g),nnz=%d(%d),loss=%g,reg=%g\n",i,log$epsilon[i],log$ub[i],log$lb[i],log$nnz[i],log$commonNZ[i],log$loss[i],log$regVal[i]))}
     
     # test end of convergence
     if (ub-lb < EPSILON_TOL) break
