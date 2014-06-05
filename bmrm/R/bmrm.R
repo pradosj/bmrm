@@ -147,15 +147,27 @@ bmrm <- function(...,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,lossfun=hingeLoss,re
   ub <- +Inf
 	log <- list(loss=numeric(),regVal=numeric(),lb=numeric(),ub=numeric(),epsilon=numeric(),nnz=integer())
 	for (i in 1:MAX_ITER) {
+    # compute loss value and gradiant
 	  loss <- lossfun(opt$w,cache=loss$cache,...)
     loss$gradient <- as.vector(loss$gradient)
-    opt$w <- rep_len(opt$w,length(loss$gradient))
+	  w <- opt$w <- rep_len(opt$w,length(loss$gradient))
+    
+    # update model
     rbind2(rrm,loss$gradient,loss$value - crossprod(opt$w,loss$gradient))
 	  ub <- min(ub,loss$value + LAMBDA*opt$regval)
+    
+	  # optimize Jt(w)
 	  opt <- solve(rrm)
+    
+    # do line search
+    
+    
+    # log optimization status
     lb <- opt$obj
-    log$loss[i]<-loss$value;log$regVal[i]<-opt$regval;log$lb[i]<-lb;log$ub[i]<-ub;log$epsilon[i]<-ub-lb;log$nnz[i]<-sum(opt$w!=0)
-	  if (verbose) {cat(sprintf("i=%d,eps=%g (=%g-%g),nnz=%d,loss=%g,reg=%g\n",i,log$epsilon[i],log$ub[i],log$lb[i],log$nnz[i],log$loss[i],log$regVal[i]))}
+    log$loss[i]<-loss$value;log$regVal[i]<-opt$regval;log$lb[i]<-lb;log$ub[i]<-ub;log$epsilon[i]<-ub-lb;log$nnz[i]<-sum(opt$w!=0);log$commonNNZ[i]<-sum(w!=0 & opt$w!=0)
+	  if (verbose) {cat(sprintf("i=%d,eps=%g (=%g-%g),nnz=%d(%d),loss=%g,reg=%g\n",i,log$epsilon[i],log$ub[i],log$lb[i],log$nnz[i],log$commonNNZ[i],log$loss[i],log$regVal[i]))}
+    
+    # test end of convergence
     if (ub-lb < EPSILON_TOL) break
 	}
 	if (i >= MAX_ITER) warning('max # of itertion exceeded')
