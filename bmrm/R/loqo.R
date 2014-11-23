@@ -1,7 +1,7 @@
 
-#' A copy of the ipop method from kernlab to solve QP
+#' A copy of the method ipop from kernlab package
 #' 
-#' Implement Bundle Methods for Regularized Risk Minimization as described in Teo et. al 2007.
+#' A copy of the method ipop from kernlab package that sove QP using LOQO method
 #' 
 #' @param c 
 #' @param H
@@ -42,19 +42,16 @@ loqo <- function (c, H, A, b, l, u, r, sigf = 7, maxiter = 40, margin = 0.05, bo
   if (is.square) H.x <- H else H.x <- t(H)
   b.plus.1 <- max(svd(b)$d) + 1
   c.plus.1 <- max(svd(c)$d) + 1
-  one.x <- -matrix(1, n, 1)
-  one.y <- -matrix(1, m, 1)
   if (is.square) diag(H.x) <- diag(H) + 1 else smwn <- ncol(H)
   H.y <- diag(1, m)
   c.x <- c
   c.y <- b
   if (is.square) {
     AP <- matrix(0, m + n, m + n)
-    xp <- 1:(m + n) <= n
-    AP[xp,xp] <- -H.x
-    AP[!xp,xp] <- A
-    AP[xp,!xp] <- t(A)
-    AP[!xp,!xp] <- H.y
+    AP[1:n,1:n] <- -H.x
+    AP[-(1:n),1:n] <- A
+    AP[1:n,-(1:n)] <- t(A)
+    AP[-(1:n),-(1:n)] <- H.y
     s.tmp <- solve(AP, c(c.x, c.y))
     x <- s.tmp[1:n]
     y <- s.tmp[-(1:n)]
@@ -112,8 +109,8 @@ loqo <- function (c, H, A, b, l, u, r, sigf = 7, maxiter = 40, margin = 0.05, bo
     c.x <- sigma - z * hat.nu/g - s * hat.tau/t
     c.y <- rho - e * (hat.beta - q * hat.alpha/p)
     if (is.square) {
-      AP[xp,xp] <- -H.x
-      AP[!xp,!xp] <- H.y
+      AP[1:n,1:n] <- -H.x
+      AP[-(1:n),-(1:n)] <- H.y
       s1.tmp <- solve(AP, c(c.x, c.y))
       delta.x <- s1.tmp[1:n]
       delta.y <- s1.tmp[-(1:n)]
@@ -151,8 +148,8 @@ loqo <- function (c, H, A, b, l, u, r, sigf = 7, maxiter = 40, margin = 0.05, bo
     c.x <- sigma - z * hat.nu/g - s * hat.tau/t
     c.y <- rho - e * (hat.beta - q * hat.alpha/p)
     if (is.square) {
-      AP[xp, xp] <- -H.x
-      AP[!xp,!xp] <- H.y
+      AP[1:n, 1:n] <- -H.x
+      AP[-(1:n),-(1:n)] <- H.y
       s1.tmp <- solve(AP, c(c.x, c.y))
       delta.x <- s1.tmp[1:n]
       delta.y <- s1.tmp[-(1:n)]
