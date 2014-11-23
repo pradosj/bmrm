@@ -65,8 +65,8 @@ newL2Solver <- function(LAMBDA) {
     optimize <- function() {
       Ale <- matrix(1,1,nrow(A))      
       H <- tcrossprod(A)
-      opt <- ipop(c=-LAMBDA*b,H,Ale,0,rep_len(0,ncol(Ale)),rep_len(1,ncol(Ale)),1,sigf=5)
-      alpha <- primal(opt)
+      opt <- loqo(c=-LAMBDA*b,H,Ale,0,rep_len(0,ncol(Ale)),rep_len(1,ncol(Ale)),1,sigf=5)
+      alpha <- opt$primal
       w <- as.vector(-crossprod(A,alpha) / LAMBDA)
       R <- max(0,A %*% w + b)
       return(list(w = as.vector(w), obj = LAMBDA*regval(w)+R))
