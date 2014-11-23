@@ -55,7 +55,7 @@ newL2Solver <- function(LAMBDA) {
     # methods
     destroy <- function() {}
     update <- function(a,bt) {
-      if (ncol(A)!=length(y)) dim(A)[2] <- length(a)
+      if (ncol(A)!=length(a)) dim(A)[2] <- length(a)
       A <<- rbind(A,a)
       b <<- c(b,bt)
     }
