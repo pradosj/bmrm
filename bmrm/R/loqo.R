@@ -39,14 +39,14 @@ loqo <- function (c, H, A, b, l, u, r, sigf = 7, maxiter = 40, margin = 0.05, bo
   u <- matrix(u)
   m <- nrow(A)
   n <- ncol(A)
-  if (is.square) H.x <- H else H.x <- t(H)
   b.plus.1 <- max(svd(b)$d) + 1
   c.plus.1 <- max(svd(c)$d) + 1
-  if (is.square) diag(H.x) <- diag(H) + 1 else smwn <- ncol(H)
   H.y <- diag(1, m)
   c.x <- c
   c.y <- b
   if (is.square) {
+    H.x <- H
+    diag(H.x) <- diag(H) + 1
     AP <- matrix(0, m + n, m + n)
     AP[1:n,1:n] <- -H.x
     AP[-(1:n),1:n] <- A
@@ -56,12 +56,12 @@ loqo <- function (c, H, A, b, l, u, r, sigf = 7, maxiter = 40, margin = 0.05, bo
     x <- s.tmp[1:n]
     y <- s.tmp[-(1:n)]
   } else {
-    V <- diag(smwn)
+    H.x <- t(H)
+    V <- diag(ncol(H))
     smwinner <- chol(V + crossprod(H))
     smwa1 <- t(A)
-    smwc1 <- c.x
     smwa2 <- smwa1 - (H %*% solve(smwinner, solve(t(smwinner), crossprod(H, smwa1))))
-    smwc2 <- smwc1 - (H %*% solve(smwinner, solve(t(smwinner), crossprod(H, smwc1))))
+    smwc2 <- c.x - (H %*% solve(smwinner, solve(t(smwinner), crossprod(H, c.x))))
     y <- solve(A %*% smwa2 + H.y, c.y + A %*% smwc2)
     x <- smwa2 %*% y - smwc2
   }
@@ -90,7 +90,6 @@ loqo <- function (c, H, A, b, l, u, r, sigf = 7, maxiter = 40, margin = 0.05, bo
     dual.infeasibility <- max(svd(rbind(sigma, t(t(beta))))$d)/c.plus.1
     primal.obj <- crossprod(c, x) + 0.5 * x.dot.H.dot.x
     dual.obj <- crossprod(b, y) - 0.5 * x.dot.H.dot.x + crossprod(l, z) - crossprod(u, s) - crossprod(r, q)
-    old.sigfig <- sigfig
     sigfig <- max(-log10(abs(primal.obj - dual.obj)/(abs(primal.obj) + 1)), 0)
     if (sigfig >= sigf) break
     if (verb > 0) cat(counter, "\t", signif(primal.infeasibility, 6), signif(dual.infeasibility, 6), sigfig, alfa, primal.obj, dual.obj, "\n")
@@ -111,14 +110,11 @@ loqo <- function (c, H, A, b, l, u, r, sigf = 7, maxiter = 40, margin = 0.05, bo
       delta.x <- s1.tmp[1:n]
       delta.y <- s1.tmp[-(1:n)]
     } else {
-      V <- diag(smwn)
+      V <- diag(ncol(H))
       smwinner <- chol(V + chunkmult(t(H), 2000, d))
-      smwa1 <- t(A)
-      smwa1 <- smwa1/d
-      smwc1 <- c.x/d
-      smwa2 <- t(A) - (H %*% solve(smwinner, solve(t(smwinner), crossprod(H, smwa1))))
+      smwa2 <- t(A) - (H %*% solve(smwinner, solve(t(smwinner), crossprod(H, t(A)/d))))
       smwa2 <- smwa2/d
-      smwc2 <- (c.x - (H %*% solve(smwinner, solve(t(smwinner), crossprod(H, smwc1)))))/d
+      smwc2 <- (c.x - (H %*% solve(smwinner, solve(t(smwinner), crossprod(H, c.x/d)))))/d
       delta.y <- solve(A %*% smwa2 + H.y, c.y + A %*% smwc2)
       delta.x <- smwa2 %*% delta.y - smwc2
     }
@@ -150,8 +146,7 @@ loqo <- function (c, H, A, b, l, u, r, sigf = 7, maxiter = 40, margin = 0.05, bo
       delta.x <- s1.tmp[1:n]
       delta.y <- s1.tmp[-(1:n)]
     } else {
-      smwc1 <- c.x/d
-      smwc2 <- (c.x - (H %*% solve(smwinner, solve(t(smwinner), crossprod(H, smwc1)))))/d
+      smwc2 <- (c.x - (H %*% solve(smwinner, solve(t(smwinner), crossprod(H, c.x/d)))))/d
       delta.y <- solve(A %*% smwa2 + H.y, c.y + A %*% smwc2)
       delta.x <- smwa2 %*% delta.y - smwc2
     }
