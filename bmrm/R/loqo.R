@@ -99,11 +99,11 @@ loqo <- function (c, H, A, b, l, u, r, sigf = 7, maxiter = 40, margin = 0.05, bo
     hat.tau <- tau + t
     d <- z/g + s/t
     e <- 1/(v/w + q/p)
-    if (is.square) diag(H.x) <- diag(H) + d
     diag(H.y) <- e
     c.x <- sigma - z * hat.nu/g - s * hat.tau/t
     c.y <- rho - e * (hat.beta - q * hat.alpha/p)
     if (is.square) {
+      diag(H.x) <- diag(H) + d
       AP[1:n,1:n] <- -H.x
       AP[-(1:n),-(1:n)] <- H.y
       s1.tmp <- solve(AP, c(c.x, c.y))
