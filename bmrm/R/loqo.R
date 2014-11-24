@@ -85,10 +85,6 @@ loqo <- function (c, H, A, b, l, u, r, sigf = 7, maxiter = 40, margin = 0.05, bo
     alpha <- r - w - p
     sigma <- c - crossprod(A, y) - z + s + H.dot.x
     beta <- y + q - v
-    gamma.z <- -z
-    gamma.w <- -w
-    gamma.s <- -s
-    gamma.q <- -q
     x.dot.H.dot.x <- crossprod(x, H.dot.x)
     primal.infeasibility <- max(svd(rbind(rho, tau, matrix(alpha), nu))$d)/b.plus.1
     dual.infeasibility <- max(svd(rbind(sigma, t(t(beta))))$d)/c.plus.1
@@ -98,10 +94,10 @@ loqo <- function (c, H, A, b, l, u, r, sigf = 7, maxiter = 40, margin = 0.05, bo
     sigfig <- max(-log10(abs(primal.obj - dual.obj)/(abs(primal.obj) + 1)), 0)
     if (sigfig >= sigf) break
     if (verb > 0) cat(counter, "\t", signif(primal.infeasibility, 6), signif(dual.infeasibility, 6), sigfig, alfa, primal.obj, dual.obj, "\n")
-    hat.beta <- beta - v * gamma.w/w
-    hat.alpha <- alpha - p * gamma.q/q
-    hat.nu <- nu + g * gamma.z/z
-    hat.tau <- tau - t * gamma.s/s
+    hat.beta <- beta + v
+    hat.alpha <- alpha + p
+    hat.nu <- nu - g
+    hat.tau <- tau + t
     d <- z/g + s/t
     e <- 1/(v/w + q/p)
     if (is.square) diag(H.x) <- diag(H) + d
@@ -130,10 +126,10 @@ loqo <- function (c, H, A, b, l, u, r, sigf = 7, maxiter = 40, margin = 0.05, bo
     delta.s <- s * (delta.x - hat.tau)/t
     delta.z <- z * (hat.nu - delta.x)/g
     delta.q <- q * (delta.w - hat.alpha)/p
-    delta.v <- v * (gamma.w - delta.w)/w
-    delta.p <- p * (gamma.q - delta.q)/q
-    delta.g <- g * (gamma.z - delta.z)/z
-    delta.t <- t * (gamma.s - delta.s)/s
+    delta.v <- v * (-w - delta.w)/w
+    delta.p <- p * (-q - delta.q)/q
+    delta.g <- g * (-z - delta.z)/z
+    delta.t <- t * (-s - delta.s)/s
     alfa <- -(1 - margin)/min(c(delta.g/g, delta.w/w, delta.t/t, delta.p/p, delta.z/z, delta.v/v, delta.s/s, delta.q/q, -1))
     newmu <- (crossprod(z, g) + crossprod(v, w) + crossprod(s, t) + crossprod(p, q))/(2 * (m + n))
     newmu <- mu * ((alfa - 1)/(alfa + 10))^2
