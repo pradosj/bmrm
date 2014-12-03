@@ -63,13 +63,15 @@ newL2Solver <- function(LAMBDA) {
       0.5*crossprod(w)
     }
     optimize <- function() {
-      Ale <- matrix(1,1,nrow(A))      
-      H <- tcrossprod(A)
-      opt <- loqo(c=-LAMBDA*b,H,Ale,0,rep_len(0,ncol(Ale)),rep_len(1,ncol(Ale)),1,sigf=5)
-      alpha <- opt$primal
+      ones <- rep(1,nrow(A))
+      Ale <- matrix(1,1,nrow(A)+1L)
+      H <- diag(rep(c(1,0),c(1,nrow(A))))
+      H[-1,-1] <- tcrossprod(A)
+      opt <- LowRankQP(H,c(0,-LAMBDA*b),Ale,1,c(1,ones),method="LU")
+      alpha <- opt$alpha[-1]
       w <- as.vector(-crossprod(A,alpha) / LAMBDA)
       R <- max(0,A %*% w + b)
-      return(list(w = as.vector(w), obj = LAMBDA*regval(w)+R))
+      return(list(w = w, obj = LAMBDA*regval(w)+R))
     }
   })
   return(e)
