@@ -138,7 +138,17 @@ newL2Solver <- function(LAMBDA) {
 #'     lines(m$log$epsilon,type="o",col=i,lwd=3)
 #'   }
 #'   
-bmrm <- function(...,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,lossfun=hingeLoss,regfun=c('l1','l2'),verbose=FALSE) {		
+#'   
+#'   # -- 
+#'   set.seed(123)
+#'   X <- matrix(rnorm(4000*200), 4000, 200)
+#'   beta <- c(rep(1,ncol(X)-4),0,0,0,0)
+#'   Y <- X%*%beta + rnorm(nrow(X))
+#'   model <- bmrm(X,Y,lossfun=ladRegressionLoss,regfun="l2",LAMBDA=100,MAX_ITER=150)
+#'   barplot(model$w)
+#'   
+#'   
+bmrm <- function(...,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,lossfun=hingeLoss,regfun=c('l1','l2'),verbose=TRUE) {		
 	regfun <- match.arg(regfun)
   rrm <- switch(regfun,l1=newL1Solver(LAMBDA),l2=newL2Solver(LAMBDA))
   on.exit(rrm$destroy())
