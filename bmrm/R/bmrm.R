@@ -82,6 +82,7 @@ newL2Solver <- function(LAMBDA) {
 #' Bundle Methods for Regularized Risk Minimization
 #' 
 #' Implement Bundle Methods for Regularized Risk Minimization as described in Teo et. al 2007.
+#' Find w that minimize: LAMBDA*norm(w) + lossfun(w)
 #' 
 #' @param lossfun the loss function to use in the optimization (e.g.: hingeLoss, softMarginVectorLoss). 
 #'   The function must evaluate the loss value and its gradient for a given point vector (w).
