@@ -64,8 +64,8 @@ newL2Solver <- function(LAMBDA) {
     }
     optimize <- function() {
       ones <- rep(1,nrow(A))
-      Ale <- matrix(1,1,nrow(A)+1L)
-      H <- diag(rep(c(1,0),c(1,nrow(A))))
+      Ale <- matrix(1,1L,nrow(A)+1L)
+      H <- diag(rep(0,1L+nrow(A)))
       H[-1,-1] <- tcrossprod(A)
       opt <- LowRankQP(H,c(0,-LAMBDA*b),Ale,1,c(1,ones),method="LU")
       alpha <- opt$alpha[-1]
