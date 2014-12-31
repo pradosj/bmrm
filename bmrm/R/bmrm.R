@@ -1,3 +1,13 @@
+
+
+gradient.default <- function(x) attr(x, "gradient")
+gradient <- function(x,...) UseMethod("gradient")
+
+"gradient<-.default" <- function(x,value) {attr(x, "gradient") <- value;x}
+"gradient<-" <- function(x,...) UseMethod("gradient<-")
+
+
+
 #
 # -- Define Solver for L1 regularization
 # 
@@ -102,6 +112,7 @@ newL2Solver <- function(LAMBDA) {
 #' @import clpAPI
 #' @import kernlab
 #' @import methods
+#' @import LowRankQP
 #' @references Teo et al.
 #'   A Scalable Modular Convex Solver for Regularized Risk Minimization.
 #'   KDD 2007
@@ -117,9 +128,9 @@ newL2Solver <- function(LAMBDA) {
 #'   
 #'   # -- train scalar prediction models with maxMarginLoss and fbetaLoss 
 #'   models <- list(
-#'     svm_L1 = bmrm(x,y,lossfun=hingeLoss,LAMBDA=0.1,regfun='l1',verbose=TRUE),
-#'     svm_L2 = bmrm(x,y,lossfun=hingeLoss,LAMBDA=0.1,regfun='l2',verbose=TRUE),
-#'     f1_L1 = bmrm(x,y,lossfun=fbetaLoss,LAMBDA=0.01,regfun='l1',verbose=TRUE)
+#'     svm_L1 = bmrm(hingeLoss(x,y),LAMBDA=0.1,regfun='l1',verbose=TRUE),
+#'     svm_L2 = bmrm(hingeLoss(x,y),LAMBDA=0.1,regfun='l2',verbose=TRUE),
+#'     f1_L1 = bmrm(fbetaLoss(x,y),LAMBDA=0.01,regfun='l1',verbose=TRUE)
 #'   )
 #'   
 #'   # -- Plot the dataset and the predictions
@@ -145,34 +156,34 @@ newL2Solver <- function(LAMBDA) {
 #'   X <- matrix(rnorm(4000*200), 4000, 200)
 #'   beta <- c(rep(1,ncol(X)-4),0,0,0,0)
 #'   Y <- X%*%beta + rnorm(nrow(X))
-#'   model <- bmrm(X,Y,lossfun=ladRegressionLoss,regfun="l2",LAMBDA=100,MAX_ITER=150)
+#'   model <- bmrm(ladRegressionLoss(X,Y),regfun="l2",LAMBDA=100,MAX_ITER=150)
 #'   barplot(model$w)
 #'   
 #'   
-bmrm <- function(...,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,lossfun=hingeLoss,regfun=c('l1','l2'),verbose=TRUE) {		
+bmrm <- function(lossfun,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,regfun=c('l1','l2'),verbose=TRUE) {
 	regfun <- match.arg(regfun)
   rrm <- switch(regfun,l1=newL1Solver(LAMBDA),l2=newL2Solver(LAMBDA))
   on.exit(rrm$destroy())
-  loss <- list(cache=NULL)
+  loss <- list()
   opt <- list(w=0,regval=0)
   ub <- +Inf
 	log <- list(loss=numeric(),regVal=numeric(),lb=numeric(),ub=numeric(),epsilon=numeric(),nnz=integer())
 	for (i in 1:MAX_ITER) {
-    # compute loss value and gradiant
-	  loss <- lossfun(opt$w,cache=loss$cache,...)
-    loss$gradient <- as.vector(loss$gradient)
-	  w <- opt$w <- rep_len(opt$w,length(loss$gradient))
+    # compute loss value and gradient
+	  loss <- lossfun(opt$w)
+    gradient(loss) <- as.vector(gradient(loss))
+	  w <- opt$w <- rep_len(opt$w,length(gradient(loss)))
     
     # update model
-    rrm$update(loss$gradient,loss$value - crossprod(opt$w,loss$gradient))
-	  ub <- min(ub,loss$value + LAMBDA*rrm$regval(opt$w))
+    rrm$update(gradient(loss),loss - crossprod(opt$w,gradient(loss)))
+	  ub <- min(ub,LAMBDA*rrm$regval(opt$w) + loss)
     
 	  # optimize Jt(w)
 	  opt <- rrm$optimize()
         
     # log optimization status
     lb <- opt$obj
-    log$loss[i]<-loss$value;log$regVal[i]<-rrm$regval(opt$w);log$lb[i]<-lb;log$ub[i]<-ub;log$epsilon[i]<-ub-lb;log$nnz[i]<-sum(opt$w!=0);log$commonNZ[i]<-sum(w!=0 & opt$w!=0)
+    log$loss[i]<-loss;log$regVal[i]<-rrm$regval(opt$w);log$lb[i]<-lb;log$ub[i]<-ub;log$epsilon[i]<-ub-lb;log$nnz[i]<-sum(opt$w!=0);log$commonNZ[i]<-sum(w!=0 & opt$w!=0)
 	  if (verbose) {cat(sprintf("i=%d,eps=%g (=%g-%g),nnz=%d(%d),loss=%g,reg=%g\n",i,log$epsilon[i],log$ub[i],log$lb[i],log$nnz[i],log$commonNZ[i],log$loss[i],log$regVal[i]))}
     
     # test end of convergence
