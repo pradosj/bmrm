@@ -26,7 +26,7 @@ newL1Solver <- function(LAMBDA) {
     destroy <- function() {
       delProbCLP(lp)
     }
-    update <- function(a,b) {
+    addCuttingPlane <- function(a,b) {
       nc <- 2L*length(a)+1L
       if (getNumRowsCLP(lp)<1L) {
         resizeCLP(lp,0L,nc)
@@ -60,7 +60,7 @@ newL2Solver <- function(LAMBDA) {
 
   within(list(),{
     destroy <- function() {}
-    update <- function(a,bt) {
+    addCuttingPlane <- function(a,bt) {
       if (ncol(A)!=length(a)) dim(A)[2] <- length(a)
       A <<- rbind(A,a)
       b <<- c(b,bt)
@@ -152,6 +152,7 @@ newL2Solver <- function(LAMBDA) {
 #'   beta <- c(rep(1,ncol(X)-4),0,0,0,0)
 #'   Y <- X%*%beta + rnorm(nrow(X))
 #'   model <- bmrm(ladRegressionLoss(X,Y),regfun="l2",LAMBDA=100,MAX_ITER=150)
+#'   layout(1)
 #'   barplot(model$w)
 #'   
 #'   
@@ -159,26 +160,25 @@ bmrm <- function(lossfun,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,regfun=c('l1','l
 	regfun <- match.arg(regfun)
   rrm <- switch(regfun,l1=newL1Solver(LAMBDA),l2=newL2Solver(LAMBDA))
   on.exit(rrm$destroy())
-  loss <- list()
-  opt <- list(w=0,regval=0)
+
+	opt <- list(w=0,regval=0)
+	loss <- lossfun(opt$w)
+  
   ub <- +Inf
 	log <- list(loss=numeric(),regVal=numeric(),lb=numeric(),ub=numeric(),epsilon=numeric(),nnz=integer())
 	for (i in 1:MAX_ITER) {
-    # compute loss value and gradient
-	  loss <- lossfun(opt$w)
-    gradient(loss) <- as.vector(gradient(loss))
-	  w <- opt$w <- rep_len(opt$w,length(gradient(loss)))
-    
-    # update model
-    rrm$update(gradient(loss),loss - crossprod(opt$w,gradient(loss)))
-	  ub <- min(ub,LAMBDA*rrm$regval(opt$w) + loss)
-    
-	  # optimize Jt(w)
+	  g <- as.vector(gradient(loss))
+    w <- opt$w <- rep(opt$w,length.out=length(g))
+	  rrm$addCuttingPlane(g,loss - crossprod(opt$w,g))
 	  opt <- rrm$optimize()
-        
+	  loss <- lossfun(opt$w)
+	  
+    regval <- rrm$regval(opt$w)
+	  lb <- opt$obj
+	  ub <- min(ub,LAMBDA*regval + loss)
+    
     # log optimization status
-    lb <- opt$obj
-    log$loss[i]<-loss;log$regVal[i]<-rrm$regval(opt$w);log$lb[i]<-lb;log$ub[i]<-ub;log$epsilon[i]<-ub-lb;log$nnz[i]<-sum(opt$w!=0);log$commonNZ[i]<-sum(w!=0 & opt$w!=0)
+    log$loss[i]<-loss;log$regVal[i]<-regval;log$lb[i]<-lb;log$ub[i]<-ub;log$epsilon[i]<-ub-lb;log$nnz[i]<-sum(opt$w!=0);log$commonNZ[i]<-sum(w!=0 & opt$w!=0)
 	  if (verbose) {cat(sprintf("i=%d,eps=%g (=%g-%g),nnz=%d(%d),loss=%g,reg=%g\n",i,log$epsilon[i],log$ub[i],log$lb[i],log$nnz[i],log$commonNZ[i],log$loss[i],log$regVal[i]))}
     
     # test end of convergence
