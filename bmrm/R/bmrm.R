@@ -18,15 +18,11 @@ gradient.default <- function(x) attr(x, "gradient")
 # -- Define Solver for L1 regularization
 # 
 newL1Solver <- function(LAMBDA) {
-  e <- new.env()
-  with(e,{
-    # initialization
-    LAMBDA <- LAMBDA
-    lp <- initProbCLP()    
-    setLogLevelCLP(lp,0)
-    setObjDirCLP(lp,-1)
-    
-    # methods
+  lp <- initProbCLP()    
+  setLogLevelCLP(lp,0)
+  setObjDirCLP(lp,-1)
+
+  within(list(),{
     destroy <- function() {
       delProbCLP(lp)
     }
@@ -51,9 +47,7 @@ newL1Solver <- function(LAMBDA) {
       w <- W[,1]-W[,2]      
       return(list(w = w, obj = -getObjValCLP(lp)))
     }
-    
   })
-  return(e)
 }
 
 
@@ -61,14 +55,10 @@ newL1Solver <- function(LAMBDA) {
 # -- Define Solver for L2 regularization
 #
 newL2Solver <- function(LAMBDA) {
-  e <- new.env()
-  with(e,{
-    # initialization
-    LAMBDA <- LAMBDA
-    A <- matrix(,0,0)
-    b <- numeric(0)
-    
-    # methods
+  A <- matrix(NA_real_,0,0)
+  b <- numeric(0)
+
+  within(list(),{
     destroy <- function() {}
     update <- function(a,bt) {
       if (ncol(A)!=length(a)) dim(A)[2] <- length(a)
@@ -90,7 +80,6 @@ newL2Solver <- function(LAMBDA) {
       return(list(w = w, obj = LAMBDA*regval(w)+R))
     }
   })
-  return(e)
 }
 
 

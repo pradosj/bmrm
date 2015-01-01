@@ -1,3 +1,11 @@
+Release 3.0 (1 Jan, 2015)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* Change loss function structure to now return the 1-arg function to optimize. 
+  This simplify overall code structure and make it more natural. For example, 
+  no more cache paramter is needed in the loss function.
+* Replace kernlab package by LowRankQP package to solve quadratic problems. This
+  change fix a frequent bug in case of singular matrix
+
 Release 1.9 (2 Jun, 2014)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * Fix an issue in costMatrix and ordinalRegressionLoss in case of missing labels
