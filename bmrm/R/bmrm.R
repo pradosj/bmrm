@@ -100,7 +100,7 @@ newL2Solver <- function(LAMBDA) {
 #' @param regfun type of regularization to consider in the optimization. It can either be the character string "l1" for L1-norm regularization, 
 #'   or "l2" (default) for L2-norm regularization.
 #' @param verbose a length one logical. Show progression of the convergence on stdout
-#' @param ... additional argument passed to the loss function
+#' @param w0 initial weight vector where optimization start
 #' @return a list of 2 fileds: "w" the optimized weight vector; "log" a data.frame showing the trace of important values in the optimization process.
 #' @export
 #' @import clpAPI
@@ -155,15 +155,16 @@ newL2Solver <- function(LAMBDA) {
 #'   barplot(model$w)
 #'   
 #'   
-bmrm <- function(lossfun,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,regfun=c('l1','l2'),verbose=TRUE) {
+bmrm <- function(lossfun,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,regfun=c('l1','l2'),w0=0,verbose=TRUE) {
 	regfun <- match.arg(regfun)
   rrm <- switch(regfun,l1=newL1Solver(LAMBDA),l2=newL2Solver(LAMBDA))
   on.exit(rrm$destroy())
 
-	opt <- list(w=0,regval=0)
+	opt <- list(w=w0)
 	loss <- lossfun(opt$w)
+	regval <- rrm$regval(opt$w)
+	ub <- LAMBDA*regval + loss
   
-  ub <- +Inf
 	log <- list(loss=numeric(),regVal=numeric(),lb=numeric(),ub=numeric(),epsilon=numeric(),nnz=integer())
 	for (i in 1:MAX_ITER) {
 	  g <- as.vector(gradient(loss))
@@ -171,10 +172,9 @@ bmrm <- function(lossfun,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,regfun=c('l1','l
 	  rrm$addCuttingPlane(g,loss - crossprod(opt$w,g))
 	  opt <- rrm$optimize()
 	  loss <- lossfun(opt$w)
-	  
     regval <- rrm$regval(opt$w)
-	  lb <- opt$obj
 	  ub <- min(ub,LAMBDA*regval + loss)
+	  lb <- opt$obj
     
     # log optimization status
     log$loss[i]<-loss;log$regVal[i]<-regval;log$lb[i]<-lb;log$ub[i]<-ub;log$epsilon[i]<-ub-lb;log$nnz[i]<-sum(opt$w!=0);log$commonNZ[i]<-sum(w!=0 & opt$w!=0)
