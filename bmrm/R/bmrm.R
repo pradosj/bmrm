@@ -167,10 +167,15 @@ bmrm <- function(lossfun,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,regfun=c('l1','l
   
 	log <- list(loss=numeric(),regVal=numeric(),lb=numeric(),ub=numeric(),epsilon=numeric(),nnz=integer())
 	for (i in 1:MAX_ITER) {
+    # reformat current gradient and weight vector
 	  g <- as.vector(gradient(loss))
     w <- opt$w <- rep(opt$w,length.out=length(g))
+    
+    # add the new cutting plane for current weight vector and optimize
 	  rrm$addCuttingPlane(g,loss - crossprod(opt$w,g))
 	  opt <- rrm$optimize()
+    
+    # estimate loss and regularization at new optimum
 	  loss <- lossfun(opt$w)
     regval <- rrm$regval(opt$w)
 	  ub <- min(ub,LAMBDA*regval + loss)
