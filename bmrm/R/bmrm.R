@@ -43,8 +43,8 @@ newL1Solver <- function(LAMBDA) {
       solveInitialCLP(lp)
       if (getSolStatusCLP(lp)!=0) warning("issue in the LP solver:",status_codeCLP(getSolStatusCLP(lp))) 
       W <- getColPrimCLP(lp)
-      W <- matrix(W[-1],,2)
-      w <- W[,1]-W[,2]      
+      W <- matrix(W[-1],,2L)
+      w <- W[,1L]-W[,2L]
       return(list(w = w, obj = -getObjValCLP(lp)))
     }
   })
@@ -55,13 +55,13 @@ newL1Solver <- function(LAMBDA) {
 # -- Define Solver for L2 regularization
 #
 newL2Solver <- function(LAMBDA) {
-  A <- matrix(NA_real_,0,0)
-  b <- numeric(0)
+  A <- matrix(NA_real_,0L,0L)
+  b <- numeric(0L)
 
   within(list(),{
     destroy <- function() {}
     addCuttingPlane <- function(a,bt) {
-      if (ncol(A)!=length(a)) dim(A)[2] <- length(a)
+      if (ncol(A)!=length(a)) dim(A)[2L] <- length(a)
       A <<- rbind(A,a)
       b <<- c(b,bt)
     }
@@ -73,7 +73,7 @@ newL2Solver <- function(LAMBDA) {
       H <- matrix(0,1L+nrow(A),1L+nrow(A))
       H[-1,-1] <- tcrossprod(A)
       opt <- LowRankQP(H,c(0,-LAMBDA*b),Ale,1,rep(1,nrow(A)+1L),method="LU")
-      alpha <- opt$alpha[-1]
+      alpha <- opt$alpha[-1L]
       w <- as.vector(-crossprod(A,alpha) / LAMBDA)
       R <- max(0,A %*% w + b)
       return(list(w = w, obj = LAMBDA*regval(w)+R))
