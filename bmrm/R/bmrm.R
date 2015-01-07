@@ -54,26 +54,41 @@ newL1Solver <- function(LAMBDA) {
 #
 # -- Define Solver for L2 regularization
 #
-newL2Solver <- function(LAMBDA) {
-  A <- matrix(NA_real_,0L,0L)
-  b <- numeric(0L)
+newL2Solver <- function(LAMBDA,maxCP=+Inf) {
+  a0 <- b0 <- NULL # store aggregated cutting plane
+  A <- matrix(NA_real_,0L,0L) # store cutting plane direction
+  b <- numeric(0L) # store cutting plane intercept
+  inactive.count <- integer(0L) # store for each CP the number of time it was incactive
 
   within(list(),{
     destroy <- function() {}
     addCuttingPlane <- function(a,bt) {
       if (ncol(A)!=length(a)) dim(A)[2L] <- length(a)
-      A <<- rbind(A,a)
-      b <<- c(b,bt)
+      
+      cp <- head(order(inactive.count),n=maxCP)
+      A <<- rbind(A[cp,],a)
+      b <<- c(b[cp],bt)
+      inactive.count <<- c(inactive.count[cp],0L)
     }
     regval <- function(w) {
       0.5*crossprod(w)
     }
     optimize <- function() {
+      # add aggregated cutting cutting plane to A and b
+      A <- rbind(a0,A)
+      b <- c(b0,b)
+      
       Ale <- matrix(1,1L,nrow(A)+1L)
       H <- matrix(0,1L+nrow(A),1L+nrow(A))
       H[-1,-1] <- tcrossprod(A)
       opt <- LowRankQP(H,c(0,-LAMBDA*b),Ale,1,rep(1,nrow(A)+1L),method="LU")
       alpha <- opt$alpha[-1L]
+
+      # update aggregated cutting plane
+      inactive.count[alpha<=0] <- inactive.count[alpha<=0] + 1L
+      a0 <<- colSums(alpha * A)
+      b0 <<- sum(alpha * b)
+      
       w <- as.vector(-crossprod(A,alpha) / LAMBDA)
       R <- max(0,A %*% w + b)
       return(list(w = w, obj = LAMBDA*regval(w)+R))
@@ -86,7 +101,8 @@ newL2Solver <- function(LAMBDA) {
 #' Bundle Methods for Regularized Risk Minimization
 #' 
 #' Implement Bundle Methods for Regularized Risk Minimization as described in Teo et. al 2007.
-#' Find w that minimize: LAMBDA*norm(w) + lossfun(w)
+#' Find w that minimize: LAMBDA*regularization_norm(w) + lossfun(w)
+#' where regularization_norm is either L1 or L2.
 #' 
 #' @param lossfun the loss function to use in the optimization (e.g.: hingeLoss, softMarginVectorLoss). 
 #'   The function must evaluate the loss value and its gradient for a given point vector (w).
@@ -99,6 +115,7 @@ newL2Solver <- function(LAMBDA) {
 #' @param EPSILON_TOL control optimization stoping criteria: the optimization end when the optimization gap is below this threshold
 #' @param regfun type of regularization to consider in the optimization. It can either be the character string "l1" for L1-norm regularization, 
 #'   or "l2" (default) for L2-norm regularization.
+#' @param maxCP limit the number of cutting plane to maxCP to reduce memory footprint (only available when for L2 regularization)
 #' @param verbose a length one logical. Show progression of the convergence on stdout
 #' @param w0 initial weight vector where optimization start
 #' @return a list of 2 fileds: "w" the optimized weight vector; "log" a data.frame showing the trace of important values in the optimization process.
@@ -155,9 +172,10 @@ newL2Solver <- function(LAMBDA) {
 #'   barplot(model$w)
 #'   
 #'   
-bmrm <- function(lossfun,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,regfun=c('l1','l2'),w0=0,verbose=TRUE) {
+bmrm <- function(lossfun,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,regfun=c('l1','l2'),w0=0,maxCP=+Inf,verbose=TRUE) {
+  if (is.finite(maxCP) && regfun!="l2") stop("maxCP argument only valid for L2 regularization")
 	regfun <- match.arg(regfun)
-  rrm <- switch(regfun,l1=newL1Solver(LAMBDA),l2=newL2Solver(LAMBDA))
+  rrm <- switch(regfun,l1=newL1Solver(LAMBDA),l2=newL2Solver(LAMBDA,maxCP))
   on.exit(rrm$destroy())
 
 	opt <- list(w=w0)
