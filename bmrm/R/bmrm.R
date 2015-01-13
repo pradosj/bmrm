@@ -1,51 +1,22 @@
 
-#' @export
-gradient <- function(x,...) UseMethod("gradient")
-
-#' @export
-gradient.default <- function(x) attr(x, "gradient")
-
-#' @export
-"gradient<-" <- function(x,...) UseMethod("gradient<-")
-
-#' @export
-"gradient<-.default" <- function(x,value) {attr(x, "gradient") <- value;x}
-
-
-
-
 #
 # -- Define Solver for L1 regularization
 # 
 newL1Solver <- function(LAMBDA) {
-  lp <- initProbCLP()    
-  setLogLevelCLP(lp,0)
-  setObjDirCLP(lp,-1)
-
   within(list(),{
-    destroy <- function() {
-      delProbCLP(lp)
-    }
-    addCuttingPlane <- function(a,b) {
-      nc <- 2L*length(a)+1L
-      if (getNumRowsCLP(lp)<1L) {
-        resizeCLP(lp,0L,nc)
-        chgObjCoefsCLP(lp,c(-1,rep_len(-LAMBDA,nc-1L)))
-        chgColLowerCLP(lp,rep_len(0,nc))
-        chgColUpperCLP(lp,rep_len(.Machine$double.xmax,nc))
-      }
-      addRowsCLP(lp,1L,-.Machine$double.xmax,-b,c(0L,nc),seq_len(nc)-1L,c(-1,a,-a))
-    }
     regval <- function(w) {
       sum(abs(w))
     }
-    optimize <- function() {
-      solveInitialCLP(lp)
-      if (getSolStatusCLP(lp)!=0) warning("issue in the LP solver:",status_codeCLP(getSolStatusCLP(lp))) 
-      W <- getColPrimCLP(lp)
-      W <- matrix(W[-1],,2L)
-      w <- W[,1L]-W[,2L]
-      return(list(w = w, obj = -getObjValCLP(lp)))
+    optimize <- function(A,b) {
+      opt <- lp(dir = "max",
+         obj = c(-1,rep_len(-LAMBDA,2L*ncol(A))),
+         const.mat = cbind(-1,A,-A),
+         const.dir = rep("<=",nrow(A)),
+         const.rhs = -b
+      )
+      if (opt$status!=0) warning("issue in the LP solver:",opt$status)
+      W <- matrix(opt$solution[-1L],,2L)
+      return(list(w = W[,1L]-W[,2L], obj = -opt$objval))
     }
   })
 }
@@ -55,20 +26,11 @@ newL1Solver <- function(LAMBDA) {
 # -- Define Solver for L2 regularization
 #
 newL2Solver <- function(LAMBDA) {
-  A <- matrix(NA_real_,0L,0L)
-  b <- numeric(0L)
-
   within(list(),{
-    destroy <- function() {}
-    addCuttingPlane <- function(a,bt) {
-      if (ncol(A)!=length(a)) dim(A)[2L] <- length(a)
-      A <<- rbind(A,a)
-      b <<- c(b,bt)
-    }
     regval <- function(w) {
       0.5*crossprod(w)
     }
-    optimize <- function() {
+    optimize <- function(A,b) {
       Ale <- matrix(1,1L,nrow(A)+1L)
       H <- matrix(0,1L+nrow(A),1L+nrow(A))
       H[-1,-1] <- tcrossprod(A)
@@ -100,10 +62,10 @@ newL2Solver <- function(LAMBDA) {
 #' @param w0 initial weight vector where optimization start
 #' @return a list of 2 fileds: "w" the optimized weight vector; "log" a data.frame showing the trace of important values in the optimization process.
 #' @export
-#' @import clpAPI
 #' @import kernlab
 #' @import methods
 #' @import LowRankQP
+#' @import lpSolve
 #' @references Teo et al.
 #'   A Scalable Modular Convex Solver for Regularized Risk Minimization.
 #'   KDD 2007
@@ -155,35 +117,35 @@ newL2Solver <- function(LAMBDA) {
 bmrm <- function(lossfun,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,regfun=c('l1','l2'),w0=0,verbose=TRUE) {
 	regfun <- match.arg(regfun)
   rrm <- switch(regfun,l1=newL1Solver(LAMBDA),l2=newL2Solver(LAMBDA))
-  on.exit(rrm$destroy())
-
-	opt <- list(w=w0)
-	loss <- lossfun(opt$w)
-	regval <- rrm$regval(opt$w)
-	ub <- LAMBDA*regval + loss
+	
+	loss <- lossfun(w0)
+  g <- as.vector(gradient(loss))
+  A <- matrix(numeric(0),0L,length(g))
+	b <- numeric(0)
   
-	log <- list(loss=numeric(),regVal=numeric(),lb=numeric(),ub=numeric(),epsilon=numeric(),nnz=integer())
+	opt <- list(w=rep(w0,length.out=length(g)))
+	ub <- LAMBDA*rrm$regval(opt$w) + loss
+	log <- list(loss=numeric(),ub=numeric(),epsilon=numeric(),nnz=integer())
 	for (i in 1:MAX_ITER) {
-    # reformat current gradient and weight vector
-	  g <- as.vector(gradient(loss))
-    w <- opt$w <- rep(opt$w,length.out=length(g))
-    
-    # add the new cutting plane for current weight vector and optimize
-	  rrm$addCuttingPlane(g,loss - crossprod(opt$w,g))
-	  opt <- rrm$optimize()
-    
-    # estimate loss and regularization at new optimum
-	  loss <- lossfun(opt$w)
-    regval <- rrm$regval(opt$w)
-	  ub <- min(ub,LAMBDA*regval + loss)
+	  # add the new cutting plane to the working set
+	  A <- rbind(A,g)
+	  b <- c(b,loss - crossprod(opt$w,g))
+
+    # optimize underestimator
+	  opt <- rrm$optimize(A,b)
 	  lb <- opt$obj
     
-    # log optimization status
-    log$loss[i]<-loss;log$regVal[i]<-regval;log$lb[i]<-lb;log$ub[i]<-ub;log$epsilon[i]<-ub-lb;log$nnz[i]<-sum(opt$w!=0);log$commonNZ[i]<-sum(w!=0 & opt$w!=0)
-	  if (verbose) {cat(sprintf("i=%d,eps=%g (=%g-%g),nnz=%d(%d),loss=%g,reg=%g\n",i,log$epsilon[i],log$ub[i],log$lb[i],log$nnz[i],log$commonNZ[i],log$loss[i],log$regVal[i]))}
-    
-    # test end of convergence
-    if (ub-lb < EPSILON_TOL) break
+	  # log optimization status
+	  log$loss[i]<-loss;log$ub[i]<-ub;log$epsilon[i]<-ub-lb;log$nnz[i]<-sum(opt$w!=0)
+	  if (verbose) {cat(sprintf("%d:gap=%g, loss=%g, ub=%g, nnz=%d\n",i,log$epsilon[i],log$loss[i],log$ub[i],log$nnz[i]))}
+	  
+	  # test for the end of convergence
+	  if (ub-lb < EPSILON_TOL) break
+	  
+    # estimate loss and regularization at new optimum
+	  loss <- lossfun(opt$w)
+	  ub <- min(ub,LAMBDA*rrm$regval(opt$w) + loss)
+	  g <- as.vector(gradient(loss))    
 	}
 	if (i >= MAX_ITER) warning('max # of itertion exceeded')
 	return(list(w=opt$w,log=as.data.frame(log)))
