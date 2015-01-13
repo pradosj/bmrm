@@ -91,10 +91,6 @@ newL2Solver <- function(LAMBDA) {
 #' 
 #' @param lossfun the loss function to use in the optimization (e.g.: hingeLoss, softMarginVectorLoss). 
 #'   The function must evaluate the loss value and its gradient for a given point vector (w).
-#'   The function must be of the form lossfun(w,...,cache=NULL), i.e. accept as first parameter the vector of weight w, and unused arguments to bmrm().
-#'   The return value must be a list(value,gardient,cache), where value is the numeric value of the loss for w, and gradient is the gradient vector of the function at point w.
-#'   The "cache" parameter and the "cache" element in the return value can be used to store variable from one call to the next call. 
-#'   The "cache" parameter is set to NULL at the first call, and is set to the previous returned "cache" value at next calls.
 #' @param LAMBDA control the regularization strength in the optimization process. This is the value used as coefficient of the regularization term.
 #' @param MAX_ITER the maximum number of iteration to perform. The function stop with a warning message if the number of iteration exceed this value
 #' @param EPSILON_TOL control optimization stoping criteria: the optimization end when the optimization gap is below this threshold

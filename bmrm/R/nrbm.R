@@ -1,7 +1,29 @@
 
-#' NRBM for regularized non-convex risk minimization
+#' Convex and non-convex risk minimization with L2 regularization and limited memory
+#' 
+#' Use algorithm of Do and Artieres, JMLR 2012 to find w minimizing: 
+#' f(w) = 0.5*LAMBDA*l2norm(w) + riskFun(w)
+#' where riskFun is either a convex or a non-convex risk function.
+#' @param riskFun the risk function to use in the optimization (e.g.: hingeLoss, softMarginVectorLoss). 
+#'   The function must evaluate the loss value and its gradient for a given point vector (w).
+#' @param LAMBDA control the regularization strength in the optimization process. 
+#'   This is the value used as coefficient of the regularization term.
+#' @param MAX_ITER the maximum number of iteration to perform. 
+#'   The function stop with a warning message if the number of iteration exceed this value
+#' @param EPSILON_TOL control optimization stoping criteria: 
+#'   the optimization end when the optimization gap is below this threshold
+#' @param w0 initial weight vector where optimization start
+#' @return the optimal weight vector (w)
 #' @export
 #' @import LowRankQP
+#' @examples
+#'   set.seed(123)
+#'   X <- matrix(rnorm(4000*200), 4000, 200)
+#'   beta <- c(rep(1,ncol(X)-4),0,0,0,0)
+#'   Y <- X%*%beta + rnorm(nrow(X))
+#'   w <- nrbm(ladRegressionLoss(X/100,Y/100),maxCP=50)
+#'   layout(1)
+#'   barplot(w)
 nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100L,convexRisk=TRUE) {
   R <- riskFun(w0)
   at <- as.vector(gradient(R))
