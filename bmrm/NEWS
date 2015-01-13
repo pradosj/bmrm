@@ -5,6 +5,10 @@ Release 3.0 (1 Jan, 2015)
   no more cache paramter is needed in the loss function.
 * Replace kernlab package by LowRankQP package to solve quadratic problems. This
   change fix a frequent bug in case of singular matrix
+* Replace clpAPI package by lpSolve package to solve linear programs. This new 
+  package is much easier to install
+* Implement NRBM algorithm of Do and Artieres (JMLR 2012) for non convex risk
+  minimization
 
 Release 1.9 (2 Jun, 2014)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
