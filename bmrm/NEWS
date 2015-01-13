@@ -1,4 +1,4 @@
-Release 3.0 (1 Jan, 2015)
+Release 3.0 (13 Jan, 2015)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * Change loss function structure to now return the 1-arg function to optimize. 
   This simplify overall code structure and make it more natural. For example, 
