@@ -44,7 +44,7 @@ hingeLoss <- function(x,y,loss.weights=1) {
 #'   Bundle Methods for Regularized Risk Minimization
 #'   JMLR 2010
 #' @seealso bmrm
-rocLoss <- function(w,x,y,cache=NULL) {
+rocLoss <- function(x,y) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.numeric(y) || !all(y %in% c(-1,1))) stop('y must be a numeric vector of either -1 or +1')    
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
