@@ -13,6 +13,9 @@
 #' @param EPSILON_TOL control optimization stoping criteria: 
 #'   the optimization end when the optimization gap is below this threshold
 #' @param w0 initial weight vector where optimization start
+#' @param maxCP mximal number of cutting plane to use to limit memory footprint
+#' @param a length 1 logical telling if the risk function riskFun is convex. 
+#'    If TRUE, use CRBM algorithm; if FALSE use NRBM algorithm from Do and Artieres, JMLR 2012
 #' @return the optimal weight vector (w)
 #' @export
 #' @import LowRankQP
