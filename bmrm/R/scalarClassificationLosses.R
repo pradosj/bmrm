@@ -4,7 +4,6 @@
 #'
 #' @param x matrix of training instances (one instance by row)
 #' @param y numeric vector of values in (-1,+1) representing the training labels for each instance in x
-#' @param cache if NULL (which is the case at the first call) parameters values are checked
 #' @param loss.weights numeric vector of loss weights to incure for each instance of x in case of misprediction. 
 #'        Vector length should match length(y), but values are cycled if not of identical size. 
 #'        Default to 1 so we define a standard 0/1 loss for SVM classifier. 
