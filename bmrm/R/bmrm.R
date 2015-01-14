@@ -62,8 +62,6 @@ newL2Solver <- function(LAMBDA) {
 #' @param w0 initial weight vector where optimization start
 #' @return a list of 2 fileds: "w" the optimized weight vector; "log" a data.frame showing the trace of important values in the optimization process.
 #' @export
-#' @import kernlab
-#' @import methods
 #' @import LowRankQP
 #' @import lpSolve
 #' @references Teo et al.
