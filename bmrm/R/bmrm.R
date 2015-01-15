@@ -8,8 +8,8 @@ newL1Solver <- function(LAMBDA) {
       sum(abs(w))
     }
     optimize <- function(A,b) {
-      opt <- lp(dir = "max",
-         obj = c(-1,rep_len(-LAMBDA,2L*ncol(A))),
+      opt <- lp(direction = "max",
+         objective.in = c(-1,rep_len(-LAMBDA,2L*ncol(A))),
          const.mat = cbind(-1,A,-A),
          const.dir = rep("<=",nrow(A)),
          const.rhs = -b
