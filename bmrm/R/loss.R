@@ -17,7 +17,7 @@ gradient <- function(x,...) UseMethod("gradient")
 
 #' @rdname gradient
 #' @export
-gradient.default <- function(x) attr(x, "gradient")
+gradient.default <- function(x,...) attr(x, "gradient")
 
 #' @rdname gradient
 #' @export
