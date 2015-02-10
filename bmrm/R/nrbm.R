@@ -28,25 +28,30 @@
 #'   layout(1)
 #'   barplot(w)
 nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100L,convexRisk=TRUE) {
+  # intialize first point estimation
   R <- riskFun(w0)
   at <- as.vector(gradient(R))
   w0 <- rep(w0,length.out=length(at))  
   bt <- as.vector(R) - crossprod(w0,at)
   
+  # initialize working set
   A <- matrix(numeric(0),0L,length(at))
   b <- numeric(0)
+  s <- numeric(0)
   inactivity.score <- numeric(0)
+  
+  # initialize aggregated cutting plane
   a0 <- b0 <- NULL
   s0 <- 0
-  s <- numeric(0)
     
   # find minimizer of the underestimator function
   # and update aggregated cutting plane
   optimize <- function() {
-    # add aggregated cutting cutting plane to A and b
+    # add aggregated cutting cutting plane to the working set (A,b)
     A <- rbind(a0,A)
     b <- c(b0,b)
     
+    # solve the optimization problem
     Ale <- matrix(1,1L,nrow(A)+1L)
     H <- matrix(0,1L+nrow(A),1L+nrow(A))
     H[-1,-1] <- tcrossprod(A)    
@@ -58,6 +63,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
     a0 <<- colSums(alpha * A)
     b0 <<- sum(alpha * b)
     
+    # return the optimum vector and corresponding objective value
     w <- as.vector(-crossprod(A,alpha) / LAMBDA)
     R <- max(0,A %*% w + b)
     return(list(w = w, obj = LAMBDA*0.5*crossprod(w)+R))
