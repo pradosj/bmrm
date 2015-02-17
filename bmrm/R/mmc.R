@@ -71,6 +71,7 @@ mmcLoss <- function(x, k=3L, ...) {
 #' The random starting points are determined by randomly assigning N0 samples to each cluster and solving for multi-class SVM
 #' 
 #' @export
+#' @import parallel
 #' @param x numeric matrix representing the dataset (one sample per row)
 #' @param k an integer specifying number of clusters to find
 #' @param N0 number of instance to randomly assign per cluster when determining a random starting point.
@@ -81,8 +82,9 @@ mmcLoss <- function(x, k=3L, ...) {
 #' @param seed the random seed basis to use
 #' @param nrbmArgsSmv arguments to nrbm() when solving for multi-class SVM problem
 #' @param nrbmArgsMmc arguments to nrbm() when solving for max-margin clustering problem
+#' @param mc.cores number of core to use when running the random iterations in parallel
 #' @param ... additional arguments are passed to mmcLoss()
-#' @return the MMC model matrix.
+#' @return the MMC model matrix
 #' @examples
 #'    # -- Prepare a 2D dataset to cluster with an intercept
 #'    x <- data.matrix(iris[c(1,3)])
@@ -101,7 +103,7 @@ mmcLoss <- function(x, k=3L, ...) {
 #'    Y <- outer(gx,gy,function(a,b){max.col(cbind(a,b,1) %*% W)})
 #'    image(gx,gy,Y,asp=1,main="MMC clustering",xlab=colnames(x)[1],ylab=colnames(x)[2])
 #'    points(x,pch=19+y)
-mmc <- function(x,k=2L,N0=3L,LAMBDA=1,NUM_RAMDOM_START=50L,seed=123,nrbmArgsSmv=list(maxCP=50L,MAX_ITER=300L,LAMBDA=LAMBDA),nrbmArgsMmc=list(),...) {
+mmc <- function(x,k=2L,N0=3L,LAMBDA=1,NUM_RAMDOM_START=50L,seed=123,nrbmArgsSmv=list(maxCP=50L,MAX_ITER=300L,LAMBDA=LAMBDA),nrbmArgsMmc=list(),mc.cores=getOption("mc.cores",1L),...) {
   nrbmArgsSmv$convexRisk <- TRUE
   nrbmArgsMmc$convexRisk <- FALSE
   nrbmArgsMmc$riskFun <- mmcLoss(x,k=k,...)
