@@ -85,12 +85,12 @@ rocLoss <- function(x,y) {
 #' y <- as.integer(iris$Species)
 #' 
 #' # -- Train the model
-#' m <- bmrm(ordinalRegressionLoss(x,y),LAMBDA=0.001,EPSILON_TOL=0.0001)
-#' m2 <- bmrm(ordinalRegressionLoss(x,y,impl="quadratic"),LAMBDA=0.001,EPSILON_TOL=0.0001)
+#' w <- bmrm(ordinalRegressionLoss(x,y),LAMBDA=0.001,EPSILON_TOL=0.0001)
+#' w2 <- bmrm(ordinalRegressionLoss(x,y,impl="quadratic"),LAMBDA=0.001,EPSILON_TOL=0.0001)
 #' 
 #' # -- plot predictions
-#' f <- x %*% m$w
-#' f2 <- x %*% m2$w
+#' f <- x %*% w
+#' f2 <- x %*% w2
 #' layout(1:2)
 #' plot(y,f)
 #' plot(f,f2,main="compare predictions of quadratic and loglin implementations")

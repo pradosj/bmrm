@@ -21,7 +21,8 @@
 #'   
 #'   # -- train a multi-class SVM & compute the predictions
 #'   train.multiclassSVM <- function(x,y,...) {
-#'     m <- bmrm(softMarginVectorLoss(x,y),...)
+#'     w <- bmrm(softMarginVectorLoss(x,y),...)
+#'     m <- list(w=as.vector(w),log=attr(w,"log"))
 #'     m$w <- matrix(m$w,ncol(x))
 #'     m$f <- x %*% m$w
 #'     m$y <- max.col(m$f)
