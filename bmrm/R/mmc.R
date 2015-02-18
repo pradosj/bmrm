@@ -5,16 +5,16 @@
 #' 
 #' @export
 #' @param R numeric matrix of risks: element (i,j) is the loss penalty for assigning cluster j to sample i
-#' @param lb an integer specifying the minimum number of sample per cluster
+#' @param minClusterSize an integer specifying the minimum number of sample per cluster
 #' @return a binary matrix of the same dimension as R with the solution to the assignment problem
-mmcBestClusterAssign <- function(R,lb=1L) {
+mmcBestClusterAssignment <- function(R,minClusterSize=1L) {
   eq <- cbind(as.vector(row(R)),seq_along(R),1)
   gt <- cbind(as.vector(col(R)) + nrow(R),seq_along(R),1)
   opt <- lp("min",
             objective.in = as.vector(R),
             dense.const = rbind(eq,gt),
             const.dir = rep(c("==",">="),c(nrow(R),ncol(R))),
-            const.rhs = rep(c(1,lb),c(nrow(R),ncol(R))),
+            const.rhs = rep(c(1,minClusterSize),c(nrow(R),ncol(R))),
             binary.vec = seq_along(R)
   )
   if (opt$status!=0) stop("not feasible")
@@ -27,7 +27,7 @@ mmcBestClusterAssign <- function(R,lb=1L) {
 #' @export
 #' @param F numeric prediction matrix of the MMC model: (i,j) being prediction of the model for sample i being part of cluster j
 #' @return numeric matrix of risks where element (i,j) is the loss penalty for assigning cluster j to sample i
-mmcClusterAssignRisk <- function(F) {
+mmcClusterAssignmentRisk <- function(F) {
   R <- matrix(NA_real_,nrow(F),ncol(F))
   for(k in  1:ncol(F)) {
     xi <- pmax(1 + F - F[,k],0)
@@ -51,8 +51,8 @@ mmcLoss <- function(x, k=3L, ...) {
   function(w) {
     W <- matrix(w, ncol(x),k)
     F <- x %*% W
-    R <- mmcClusterAssignRisk(F)
-    Y <- mmcBestClusterAssign(R,...)
+    R <- mmcClusterAssignmentRisk(F)
+    Y <- mmcBestClusterAssignment(R,...)
     
     G <- 1-Y+F-rowSums(F*Y)
     G <- ifelse(G>0,1,0)
@@ -94,7 +94,7 @@ mmcLoss <- function(x, k=3L, ...) {
 #'    x <- cbind(x,intercept=1)
 #' 
 #'    # -- Find max-margin clusters
-#'    W <- mmc(x,k=3,LAMBDA=0.001,lb=10,NUM_RAMDOM_START=10)
+#'    W <- mmc(x,k=3,LAMBDA=0.001,minClusterSize=10,NUM_RAMDOM_START=10)
 #'    y <- max.col(x %*% W)
 # 
 #'    # -- Plot the dataset and the MMC decision boundaries
@@ -103,25 +103,25 @@ mmcLoss <- function(x, k=3L, ...) {
 #'    Y <- outer(gx,gy,function(a,b){max.col(cbind(a,b,1) %*% W)})
 #'    image(gx,gy,Y,asp=1,main="MMC clustering",xlab=colnames(x)[1],ylab=colnames(x)[2])
 #'    points(x,pch=19+y)
-mmc <- function(x,k=2L,N0=3L,LAMBDA=1,NUM_RAMDOM_START=50L,seed=123,nrbmArgsSmv=list(maxCP=50L,MAX_ITER=300L,LAMBDA=LAMBDA),nrbmArgsMmc=list(),mc.cores=getOption("mc.cores",1L),...) {
-  nrbmArgsSmv$convexRisk <- TRUE
-  nrbmArgsMmc$convexRisk <- FALSE
-  nrbmArgsMmc$riskFun <- mmcLoss(x,k=k,...)
-  nrbmArgsMmc$LAMBDA <- LAMBDA
-  
+mmc <- function(x,k=2L,N0=3L,LAMBDA=1,NUM_RAMDOM_START=50L,seed=123,
+                svmCall=call("nrbm",convexRisk=TRUE,maxCP=50L,MAX_ITER=300L,LAMBDA=LAMBDA),
+                mmcCall=call("nrbm",convexRisk=FALSE,LAMBDA=LAMBDA),
+                mc.cores=getOption("mc.cores",1L),...) {  
+  mmcCall$riskFun <- mmcLoss(x,k=k,...)
   models <- mclapply(mc.cores=mc.cores,seq_len(NUM_RAMDOM_START),function(i) {
     # select a starting point w0 by randomly selecting 3 samples in each cluster and train a multi-class SVM on them
     set.seed(seed+i)
     n0 <- min(nrow(x),k*N0)
     i0 <- sample(seq_len(nrow(x)),n0)
     y0 <- sample(rep_len(seq_len(k),n0))
-    nrbmArgsSmv$riskFun <- softMarginVectorLoss(x[i0,],y0)
-    w0 <- do.call(nrbm,nrbmArgsSmv)
+    
+    svmCall$riskFun <- softMarginVectorLoss(x[i0,],y0)
+    w0 <- eval(svmCall)
     
     # run MMC solver starting at w0
-    nrbmArgsMmc$w0 <- w0
-    w <- do.call(nrbm,nrbmArgsMmc)
-    f <- 0.5*LAMBDA*crossprod(w) + nrbmArgsMmc$riskFun(w)
+    mmcCall$w0 <- w0
+    w <- eval(mmcCall)
+    f <- 0.5*LAMBDA*crossprod(w) + mmcCall$riskFun(w)
     list(f=f,W=matrix(w,ncol(x)))
   })
   # find the minimum of all runs
