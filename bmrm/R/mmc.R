@@ -6,18 +6,28 @@
 #' @export
 #' @param R numeric matrix of risks: element (i,j) is the loss penalty for assigning cluster j to sample i
 #' @param minClusterSize an integer specifying the minimum number of sample per cluster
+#' @param groups a data.frame defining groups of instances by the fields ("row","group")
+#' @param groupsMinSize a data.frame whose columns ("group","minClusterSize")
 #' @return a binary matrix of the same dimension as R with the solution to the assignment problem
-mmcBestClusterAssignment <- function(R,minClusterSize=1L) {
+mmcBestClusterAssignment <- function(R,minClusterSize=1L,groups=NULL) {
+  if (!is.null(groups) && nrow(R)!=nrow(groups)) stop("nrow(R) != nrow(groups)")
+
   eq <- cbind(as.vector(row(R)),seq_along(R),1)
+  eq.dir <- rep_len("==",nrow(R))
+  eq.rhs <- rep_len(1,nrow(R))
+  
   gt <- cbind(as.vector(col(R)) + nrow(R),seq_along(R),1)
+  gt.dir <- rep_len(">=",ncol(R))
+  gt.rhs <- rep_len(minClusterSize,ncol(R))
+  
   opt <- lp("min",
             objective.in = as.vector(R),
             dense.const = rbind(eq,gt),
-            const.dir = rep(c("==",">="),c(nrow(R),ncol(R))),
-            const.rhs = rep(c(1,minClusterSize),c(nrow(R),ncol(R))),
+            const.dir = c(eq.dir,gt.dir),
+            const.rhs = c(eq.rhs,gt.rhs),
             binary.vec = seq_along(R)
   )
-  if (opt$status!=0) stop("not feasible")
+  if (opt$status!=0) stop("LP problem not feasible")
   matrix(opt$solution,nrow(R),ncol(R))
 }
 
