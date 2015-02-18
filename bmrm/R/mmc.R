@@ -12,10 +12,12 @@
 mmcBestClusterAssignment <- function(R,minClusterSize=1L,groups=NULL) {
   if (!is.null(groups) && nrow(R)!=nrow(groups)) stop("nrow(R) != nrow(groups)")
 
+  # constrain the instances to belong to one and only one cluster
   eq <- cbind(as.vector(row(R)),seq_along(R),1)
   eq.dir <- rep_len("==",nrow(R))
   eq.rhs <- rep_len(1,nrow(R))
   
+  # constraint on the minimum size of the clusters
   gt <- cbind(as.vector(col(R)) + nrow(R),seq_along(R),1)
   gt.dir <- rep_len(">=",ncol(R))
   gt.rhs <- rep_len(minClusterSize,ncol(R))
