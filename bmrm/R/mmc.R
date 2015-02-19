@@ -128,7 +128,7 @@ mmcLoss <- function(x, k=3L, ...) {
 #' @param LAMBDA the complexity parameter for nrbm()
 #' @param NUM_RAMDOM_START number of MMC iteration to perform with a random starting point
 #' @param seed the random seed basis to use
-#' @param nrbmArgsSmv arguments to nrbm() when solving for multi-class SVM problem
+#' @param nrbmArgsSvm arguments to nrbm() when solving for multi-class SVM problem
 #' @param nrbmArgsMmc arguments to nrbm() when solving for max-margin clustering problem
 #' @param mc.cores number of core to use when running the random iterations in parallel
 #' @param ... additional arguments are passed to mmcLoss()
@@ -152,10 +152,13 @@ mmcLoss <- function(x, k=3L, ...) {
 #'    image(gx,gy,Y,asp=1,main="MMC clustering",xlab=colnames(x)[1],ylab=colnames(x)[2])
 #'    points(x,pch=19+y)
 mmc <- function(x,k=2L,N0=3L,LAMBDA=1,NUM_RAMDOM_START=50L,seed=123,
-                svmCall=call("nrbm",convexRisk=TRUE,maxCP=50L,MAX_ITER=300L,LAMBDA=LAMBDA),
-                mmcCall=call("nrbm",convexRisk=FALSE,LAMBDA=LAMBDA),
+                nrbmArgsSvm=list(maxCP=50L,MAX_ITER=300L),
+                nrbmArgsMmc=list(),
                 mc.cores=getOption("mc.cores",1L),...) {  
-  mmcCall$riskFun <- mmcLoss(x,k=k,...)
+  nrbmArgsMmc$riskFun <- mmcLoss(x,k=k,...)
+  nrbmArgsMmc$convexRisk <- FALSE
+  nrbmArgsSvm$convexRisk <- TRUE
+  nrbmArgsSvm$LAMBDA <- nrbmArgsMmc$LAMBDA <- LAMBDA
   models <- mclapply(mc.cores=mc.cores,seq_len(NUM_RAMDOM_START),function(i) {
     # select a starting point w0 by randomly selecting 3 samples in each cluster and train a multi-class SVM on them
     set.seed(seed+i)
@@ -163,13 +166,13 @@ mmc <- function(x,k=2L,N0=3L,LAMBDA=1,NUM_RAMDOM_START=50L,seed=123,
     i0 <- sample(seq_len(nrow(x)),n0)
     y0 <- sample(rep_len(seq_len(k),n0))
     
-    svmCall$riskFun <- softMarginVectorLoss(x[i0,],y0)
-    w0 <- eval(svmCall)
+    nrbmArgsSvm$riskFun <- softMarginVectorLoss(x[i0,],y0)
+    w0 <- do.call(nrbm,nrbmArgsSvm)
     
     # run MMC solver starting at w0
-    mmcCall$w0 <- w0
-    w <- eval(mmcCall)
-    f <- 0.5*LAMBDA*crossprod(w) + mmcCall$riskFun(w)
+    nrbmArgsMmc$w0 <- w0
+    w <- do.call(nrbm,nrbmArgsMmc)
+    f <- 0.5*LAMBDA*crossprod(w) + nrbmArgsMmc$riskFun(w)
     list(f=f,W=matrix(w,ncol(x)))
   })
   # find the minimum of all runs
