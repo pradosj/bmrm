@@ -5,13 +5,45 @@
 #' 
 #' @export
 #' @param R numeric matrix of risks: element (i,j) is the loss penalty for assigning cluster j to sample i
-#' @param minClusterSize an integer specifying the minimum number of sample per cluster
-#' @param groups a data.frame defining groups of instances by the fields ("row","group")
-#' @param groupsMinSize a data.frame whose columns ("group","minClusterSize")
+#' @param minClusterSize an integer vector specifying the minimum number of sample per cluster. 
+#'   Given values are reclycled if necessary to have one value per cluster.
+#' @param groups a data.frame defining groups of instances. The data.frame must contains the 2 fields "groupName" and "sampleId". 
+#'   "groupName" is a character vector identifying a group of samples; "sampleId" is an integer identifying the samples that are member of the group
+#' @param minGroupOverlap a data.frame to constrain the minimum overlap size between a group and a cluster. The data.frame may contains 
+#'   the 3 fields "groupName","clusterId","overlapSize". Each row of the data.frame specify a constraint on the minimum overlap between a group and a cluster.
+#'   field "clusterId" is optional and in this case the constraints apply to all clusters
 #' @return a binary matrix of the same dimension as R with the solution to the assignment problem
-mmcBestClusterAssignment <- function(R,minClusterSize=1L,groups=NULL) {
-  if (!is.null(groups) && nrow(R)!=nrow(groups)) stop("nrow(R) != nrow(groups)")
-
+mmcBestClusterAssignment <- function(R,minClusterSize=1L,groups=NULL,minGroupOverlap=NULL) {
+  
+  # Helper function building LP constraints for the groups
+  grpConst <- function(R,groups,minGroupOverlap) {
+    if (is.null(minGroupOverlap)) return(list())
+    # Simplify arguments
+    groups <- unique(groups[intersect(names(groups),c("groupName","sampleId"))])
+    minGroupOverlap <- unique(minGroupOverlap[intersect(names(minGroupOverlap),c("groupName","clusterId","overlapSize"))])
+    
+    # Expand groups constraints to all clusters when "clusterId" is missing or if it contains NAs
+    if (!exists("clusterId",minGroupOverlap)) minGroupOverlap$clusterId <- NA
+    D <- data.frame(clusterId=c(rep(NA,ncol(R)),seq_len(ncol(R))),extClusterId=c(seq_len(ncol(R)),seq_len(ncol(R))))
+    minGroupOverlap <- unique(merge(minGroupOverlap,D))
+    minGroupOverlap$clusterId <- minGroupOverlap$extClusterId
+    minGroupOverlap$extClusterId <- NULL
+  
+    # Add an identifier for the groups constraints
+    minGroupOverlap$constraintId <- seq_len(nrow(minGroupOverlap))
+  
+    # Build dense constraint matrix
+    dense.const <- data.frame(sampleId=as.vector(row(R)),clusterId=as.vector(col(R)),varId=seq_along(R))
+    dense.const <- merge(dense.const,groups,by="sampleId")
+    dense.const <- merge(dense.const,minGroupOverlap,by=c("groupName","clusterId"))
+    dense.const <- cbind(dense.const$constraintId,dense.const$varId,1)
+    
+    list(dense.const = dense.const,
+         const.dir = rep_len(">=",nrow(minGroupOverlap)),
+         const.rhs = minGroupOverlap$overlapSize
+    )
+  }
+  
   # constrain the instances to belong to one and only one cluster
   eq <- cbind(as.vector(row(R)),seq_along(R),1)
   eq.dir <- rep_len("==",nrow(R))
@@ -22,11 +54,15 @@ mmcBestClusterAssignment <- function(R,minClusterSize=1L,groups=NULL) {
   gt.dir <- rep_len(">=",ncol(R))
   gt.rhs <- rep_len(minClusterSize,ncol(R))
   
+  # retreive groups constraints
+  grp <- grpConst(R,groups,minGroupOverlap)
+  grp$dense.const[,1] <- grp$dense.const[,1] + max(gt[,1])
+  
   opt <- lp("min",
             objective.in = as.vector(R),
-            dense.const = rbind(eq,gt),
-            const.dir = c(eq.dir,gt.dir),
-            const.rhs = c(eq.rhs,gt.rhs),
+            dense.const = rbind(eq,gt,grp$dense.const),
+            const.dir = c(eq.dir,gt.dir,grp$const.dir),
+            const.rhs = c(eq.rhs,gt.rhs,grp$const.rhs),
             binary.vec = seq_along(R)
   )
   if (opt$status!=0) stop("LP problem not feasible")
