@@ -17,6 +17,9 @@
 #' @param convexRisk a length 1 logical telling if the risk function riskFun is convex. 
 #'    If TRUE, use CRBM algorithm; if FALSE use NRBM algorithm from Do and Artieres, JMLR 2012
 #' @return the optimal weight vector (w)
+#' @references Do and Artieres
+#'   Regularized Bundle Methods for Convex and Non-Convex Risks
+#'   JMLR 2012
 #' @export
 #' @import LowRankQP
 #' @examples
