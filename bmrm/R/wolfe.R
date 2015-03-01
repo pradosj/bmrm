@@ -8,10 +8,13 @@
 #' The function is not used yet, but might be used later to speed up bmrm/nrbm 
 #' convergence.
 #' 
-#' @param f
+#' @param f a function to minimize. It must accept as first argument a numeric vector
+#'   representing the optimization point and return a numeric value, with 
+#'   gradient attribute setted
 #' @param x0 initial search point
 #' @param f0 initial function value
 #' @param s0 direction of the search from x0
+#' @param ... additional parameters passed to f()
 #' @param a1 first step coefficient guess
 #' @param amax max coefficient value
 #' @param c1
