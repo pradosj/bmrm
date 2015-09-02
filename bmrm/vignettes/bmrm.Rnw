@@ -36,7 +36,7 @@ This section shows how to use \emph{bmrm} to train several classification algrit
 On this dataset, 3 linear classfiers are learned: linear-SVM with L1-norm regularization, linear-SVM with L2-norm regularization, max-margin-f1-classification with L1-regularization.
 <<>>=
   train.prediction.model <- function(...) {
-    m <- bmrm(...)
+    m <- list(w=bmrm(...))
     m$f <- x %*% m$w
     m$y <- sign(m$f)
     m$contingencyTable <- table(y,m$y)
