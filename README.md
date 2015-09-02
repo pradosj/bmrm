@@ -14,7 +14,7 @@ bmrm is an R package implementing a bundle method for minimization of convex and
 
 Installation
 ---------------
-This R package depends on lpSolve and LowRankQP packages, and require them to 
+This R package depends on lpSolve and LowRankQP packages, and requires them to 
 be first installed on your system. The documentation is automatically generated
 by roxygen2 package.
 
