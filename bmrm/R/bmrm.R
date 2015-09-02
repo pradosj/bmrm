@@ -102,7 +102,9 @@ newL2Solver <- function(LAMBDA) {
 #'   }
 #'   
 #'   
-#'   # -- 
+#'   # -- fit a least absolute deviation linear model on a synthetic dataset
+#'   # -- containing 196 meaningful features and 4 noisy features. Then
+#'   # -- check if the model has detected the noise
 #'   set.seed(123)
 #'   X <- matrix(rnorm(4000*200), 4000, 200)
 #'   beta <- c(rep(1,ncol(X)-4),0,0,0,0)
