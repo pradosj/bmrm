@@ -46,17 +46,17 @@
 #'   plot(row(m$f),m$f,pch=19+col(m$f),ylab="prediction values",xlab="sample")
 softMarginVectorLoss <- function(x,y,l="0/1") {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
-  if (!is.integer(y)) stop('y must be an integer vector')
+  y <- as.factor(y)
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   
   if (is.character(l) && identical(l,"0/1")) {
-    l <- matrix(1,length(y),max(y))
+    l <- matrix(1,length(y),nlevels(y))
     l[cbind(seq_along(y),y)] <- 0
   } else {
     l <- as.matrix(l)
     if (!identical(nrow(x),nrow(l))) stop('dimensions of x and l mismatch')
   }
-  if (any(y<1 | y>ncol(l))) stop('some values in y are out of range')
+  if (nlevels(y)>ncol(l)) stop('some values in y are out of range of the loss matrix')
   
   function(w) {
     w <- matrix(w,ncol(x),ncol(l))
