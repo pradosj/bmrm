@@ -16,7 +16,13 @@
 #' @seealso bmrm
 hingeLoss <- function(x,y,loss.weights=1) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
-  if (!is.numeric(y) || !all(y %in% c(-1,1))) stop('y must be a numeric vector of either -1 or +1')
+  if (is.numeric(y)) {
+    if (!all(y %in% c(-1,1))) stop('y must be a numeric vector of either -1 or +1')
+  } else {
+    y <- as.factor(y)
+    if (nlevels(y)!=2) stop("y must have exatly 2 levels")
+    y <- c(-1,1)[y]
+  }
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   loss.weights <- rep(loss.weights,length.out=length(y))
   
@@ -45,7 +51,13 @@ hingeLoss <- function(x,y,loss.weights=1) {
 #' @seealso bmrm
 rocLoss <- function(x,y) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
-  if (!is.numeric(y) || !all(y %in% c(-1,1))) stop('y must be a numeric vector of either -1 or +1')    
+  if (is.numeric(y)) {
+    if (!all(y %in% c(-1,1))) stop('y must be a numeric vector of either -1 or +1')
+  } else {
+    y <- as.factor(y)
+    if (nlevels(y)!=2) stop("y must have exatly 2 levels")
+    y <- c(-1,1)[y]
+  }
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
 
   function(w) {
@@ -177,7 +189,13 @@ ordinalRegressionLoss <- function(x,y,C="0/1",impl=c("loglin","quadratic")) {
 fbetaLoss <- function(x,y,beta=1) {
   
   if (!is.matrix(x)) stop('x must be a numeric matrix')
-  if (!is.numeric(y) || !all(y %in% c(-1,1))) stop('y must be a numeric vector of either -1 or +1')
+  if (is.numeric(y)) {
+    if (!all(y %in% c(-1,1))) stop('y must be a numeric vector of either -1 or +1')
+  } else {
+    y <- as.factor(y)
+    if (nlevels(y)!=2) stop("y must have exatly 2 levels")
+    y <- c(-1,1)[y]
+  }
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   
   .fbeta <- function(TP,TN,P,N,beta) {
