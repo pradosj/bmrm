@@ -1,12 +1,36 @@
 
 #svmL1 solve:
-# min_w LAMBDA*|w| + sum(e_i)
-# y_i * w.x_i >= 1-e_i
-# e_i >= 0
-svmL1 <- function(x,y,LAMBDA=1) {
+
+#' Linear Programed SVM
+#' 
+#' Solve a linear program implementing a linear SVM 
+#' with L1 regularization and L1 loss. It solves:
+#' min_w LAMBDA*|w| + sum_i(e_i);
+#' s.t. y_i * <w.x_i> >= 1-e_i; e_i >= 0
+#' 
+#' @param x a numeric data matrix.
+#' @param y a response factor of 2 levels for each row of x.
+#' @param LAMBDA control the regularization strength in the optimization process. This is the value used as coefficient of the regularization term.
+#' @param instance.weights a numeric vector of weight for each row of x, recycled as necessary.
+#' @return the optimized weight vector.
+#' @export
+#' @import lpSolve
+#' @author Julien Prados
+#' @examples
+#'   x <- data.matrix(iris[1:4])
+#'   y <- iris$Species
+#'   levels(y)[3] <- levels(y)[2]
+#'   w <- lpSVM(x,y)
+#'
+lpSVM <- function(x,y,LAMBDA=1,instance.weights=1) {
+  y <- as.factor(y)
+  if (nlevels(y)!=2) stop("nlevels(y) must be 2")
+  if (nrow(x)!=length(y)) stop("length(y) must match nrow(x)")
+  instance.weights <- rep_len(instance.weights,nrow(x))
+  y.num <- c(-1,+1)[y]
   opt <- lp(direction = "min",
-            objective.in = rep(c(LAMBDA,LAMBDA,1),c(ncol(x),ncol(x),nrow(x))),
-            const.mat = cbind(y*x,-y*x,diag(nrow(x))),
+            objective.in = c(rep(c(LAMBDA,LAMBDA),c(ncol(x),ncol(x))),instance.weights),
+            const.mat = cbind(y.num*x,-y.num*x,diag(nrow(x))),
             const.dir = rep(">=",nrow(x)),
             const.rhs = 1
   )
