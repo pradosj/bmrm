@@ -16,10 +16,11 @@
 #' @import lpSolve
 #' @author Julien Prados
 #' @examples
-#'   x <- data.matrix(iris[1:4])
+#'   x <- cbind(100,data.matrix(iris[1:4]))
 #'   y <- iris$Species
 #'   levels(y)[3] <- levels(y)[2]
 #'   w <- lpSVM(x,y)
+#'   table(predict(w,x),y)
 lpSVM <- function(x,y,LAMBDA=1,instance.weights=1) {
   y <- as.factor(y)
   if (nlevels(y)!=2) stop("nlevels(y) must be 2")
@@ -40,6 +41,14 @@ lpSVM <- function(x,y,LAMBDA=1,instance.weights=1) {
   w
 }
 
+
+#' Predict function for lpSVM models
+#'
+#' @param object an object of class lpSVM
+#' @param x data.matrix to predict
+#' @return prediction for row of x, with an attribute "decision.value"
+#' @export
+#' @author Julien Prados
 predict.lpSVM <- function(object,x,...) {
   f <- x %*% w
   y <- attr(object,"levels")[1+(f<0)]
