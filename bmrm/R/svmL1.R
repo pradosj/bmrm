@@ -34,10 +34,18 @@ lpSVM <- function(x,y,LAMBDA=1,instance.weights=1) {
   )
   u <- opt$solution[1:ncol(x)] 
   v <- opt$solution[ncol(x) + 1:ncol(x)]
-  u - v
+  w <- u - v
+  attr(w,"levels") <- levels(y)
+  class(w) <- "lpSVM"
+  w
 }
 
-
+predict.lpSVM <- function(object,x,...) {
+  f <- x %*% w
+  y <- attr(object,"levels")[1+(f<0)]
+  attr(y,"decision.value") <- f
+  return(y)
+}
 
 
 
