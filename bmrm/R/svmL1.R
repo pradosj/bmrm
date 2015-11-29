@@ -20,7 +20,6 @@
 #'   y <- iris$Species
 #'   levels(y)[3] <- levels(y)[2]
 #'   w <- lpSVM(x,y)
-#'
 lpSVM <- function(x,y,LAMBDA=1,instance.weights=1) {
   y <- as.factor(y)
   if (nlevels(y)!=2) stop("nlevels(y) must be 2")
