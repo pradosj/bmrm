@@ -1,5 +1,4 @@
 
-#svmL1 solve:
 
 #' Linear Programed SVM
 #' 
