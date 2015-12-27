@@ -19,9 +19,9 @@
 #'   x <- cbind(100,data.matrix(iris[1:4]))
 #'   y <- iris$Species
 #'   levels(y)[3] <- levels(y)[2]
-#'   w <- lpSVM(x,y)
+#'   w <- svmLP(x,y)
 #'   table(predict(w,x),y)
-lpSVM <- function(x,y,LAMBDA=1,instance.weights=1) {
+svmLP <- function(x,y,LAMBDA=1,instance.weights=1) {
   y <- as.factor(y)
   if (nlevels(y)!=2) stop("nlevels(y) must be 2")
   if (nrow(x)!=length(y)) stop("length(y) must match nrow(x)")
@@ -37,19 +37,19 @@ lpSVM <- function(x,y,LAMBDA=1,instance.weights=1) {
   v <- opt$solution[ncol(x) + 1:ncol(x)]
   w <- u - v
   attr(w,"levels") <- levels(y)
-  class(w) <- "lpSVM"
+  class(w) <- "svmLP"
   w
 }
 
 
-#' Predict function for lpSVM models
+#' Predict function for svmLP models
 #'
-#' @param object an object of class lpSVM
+#' @param object an object of class svmLP
 #' @param x data.matrix to predict
 #' @return prediction for row of x, with an attribute "decision.value"
 #' @export
 #' @author Julien Prados
-predict.lpSVM <- function(object,x,...) {
+predict.svmLP <- function(object,x,...) {
   f <- x %*% w
   y <- attr(object,"levels")[1+(f<0)]
   attr(y,"decision.value") <- f
