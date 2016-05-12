@@ -25,7 +25,7 @@ To date, the package implements more than 10 loss functions providing access to 
 \section{Quick Start: \emph{bmrm} for iris classification}
 This section shows how to use \emph{bmrm} to train several classification algorithms on \emph{iris} dataset. 
 
-\section{Linear support vector machine (SVM)}
+\subsection{Linear support vector machine (SVM)}
 To simplify the dataset and facilitate plotting, we consider only 2 variables in this section. Additionally, as SVM is a binary classifier, we limit the iris dataset to 2 classes. Finally, we add a constant variable to learn the linear intercept.
 <<>>=
   require(bmrm)
