@@ -96,7 +96,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
     lb <- opt$obj
     
     # test for the end of convergence
-    cat(sprintf("%d:gap=%.3f opt=%.3f\n",i,ub-lb,ub))
+    cat(sprintf("%d:gap=%g obj=%g reg=%g risk=%g w=[%g,%g]\n",i,ub-lb,ub,LAMBDA*0.5*crossprod(ub.w),ub.R,min(ub.w),max(ub.w)))
     if (ub-lb < EPSILON_TOL) break
     
     # estimate loss at the new underestimator optimum

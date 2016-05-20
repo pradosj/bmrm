@@ -137,7 +137,7 @@ bmrm <- function(riskFun,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,regfun=c('l1','l
     
 	  # log optimization status
 	  log$loss[i]<-loss;log$ub[i]<-ub;log$epsilon[i]<-ub-lb;log$nnz[i]<-sum(opt$w!=0)
-	  if (verbose) {cat(sprintf("%d:gap=%g, loss=%g, ub=%g, nnz=%d\n",i,log$epsilon[i],log$loss[i],log$ub[i],log$nnz[i]))}
+	  if (verbose) {cat(sprintf("%d:gap=%g obj=%g reg=%g risk=%g w=[%g,%g] nnz=%d\n",i,log$epsilon[i],log$ub[i],log$ub[i]-log$loss[i],log$loss[i],min(opt$w),max(opt$w),log$nnz[i]))}
 	  
 	  # test for the end of convergence
 	  if (ub-lb < EPSILON_TOL) break
