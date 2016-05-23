@@ -17,8 +17,8 @@
 #' @param ... additional parameters passed to f()
 #' @param a1 first step coefficient guess
 #' @param amax max coefficient value
-#' @param c1
-#' @param c2
+#' @param c1 lower bound
+#' @param c2 upper bound
 #' @param maxiter maximum number of iteration for this linesearch
 #' @return the optimal point as a 3 element list
 #' @references Do and Artieres
