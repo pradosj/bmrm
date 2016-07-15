@@ -1,6 +1,6 @@
 
 
-#' Linear Programed SVM
+#' SVM Linear Program
 #' 
 #' Solve a linear program implementing a linear SVM 
 #' with L1 regularization and L1 loss. It solves:
