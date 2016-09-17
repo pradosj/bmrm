@@ -45,6 +45,7 @@ hingeLoss <- function(x,y,loss.weights=1) {
 #' @param y numeric vector of values in (-1,+1) representing the training labels for each instance in x
 #' @return a function taking one argument w and computing the loss value and the gradient at point w
 #' @export
+#' @import matrixStats
 #' @references Teo et al.
 #'   Bundle Methods for Regularized Risk Minimization
 #'   JMLR 2010
@@ -61,18 +62,18 @@ rocLoss <- function(x,y) {
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
 
   function(w) {
-    w <- rep(w,length.out=ncol(x))
+    w <- cbind(matrix(numeric(),ncol(x),0),w)
     c <- x %*% w - 0.5*y
-    o <- order(c)
+    o <- matrix(row(c)[order(col(c),c)],nrow(c))
     
-    sp <- cumsum(y[o]==+1)
-    sm <- sum(y==-1) - cumsum(y[o]==-1)
-    l <- numeric(length(o))
-    l[o] <- ifelse(y[o]==-1,sp,-sm)
+    sp <- matrixStats::colCumsums(0+matrix(y[o]==+1,nrow(o)))
+    sm <- sum(y==-1) - matrixStats::colCumsums(0+matrix(y[o]==-1,nrow(o)))
+    l <- 0*o
+    l[cbind(as.vector(o),as.vector(col(o)))] <- ifelse(y[o]==-1,sp,-sm)
     l <- l/(sum(y==-1)*sum(y==+1))
     
-    val <- crossprod(l,c)
-    gradient(val) <- crossprod(l,x)
+    val <- colSums(l*c)
+    gradient(val) <- crossprod(x,l)
     return(val)
   }
 }
