@@ -6,6 +6,7 @@
 #' with L1 regularization and L1 loss. It solves:
 #' min_w LAMBDA*|w| + sum_i(e_i);
 #' s.t. y_i * <w.x_i> >= 1-e_i; e_i >= 0
+#' where |w| is the L1-norm of w
 #' 
 #' @param x a numeric data matrix.
 #' @param y a response factor of 2 levels for each row of x.
