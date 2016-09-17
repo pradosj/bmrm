@@ -17,7 +17,7 @@
 hingeLoss <- function(x,y,loss.weights=1) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (is.numeric(y)) {
-    if (!all(y %in% c(-1,1))) stop('y must be a numeric vector of either -1 or +1')
+    if (!all(y %in% c(-1,1))) stop('y must be a numeric vector of either -1 or +1, or a 2-levels factor')
   } else {
     y <- as.factor(y)
     if (nlevels(y)!=2) stop("y must have exatly 2 levels")
@@ -27,11 +27,11 @@ hingeLoss <- function(x,y,loss.weights=1) {
   loss.weights <- rep(loss.weights,length.out=length(y))
   
   function(w) {
-    w <- rep(w,length.out=ncol(x))
+    w <- cbind(matrix(numeric(),ncol(x),0),w)
     f <- x %*% w
-    loss <- loss.weights * pmax(0,1-y*f)
+    loss <- loss.weights * pmax(1-y*f,0)
     grad <- loss.weights * (loss>0) * (-y)
-    val <- sum(loss)
+    val <- colSums(loss)
     gradient(val) <- crossprod(x,grad)
     return(val)
   }
