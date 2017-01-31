@@ -14,6 +14,10 @@
 #'   A Scalable Modular Convex Solver for Regularized Risk Minimization.
 #'   KDD 2007
 #' @seealso bmrm
+#' @examples
+#'   x <- cbind(data.matrix(iris[1:2]),1)
+#'   y <- c(-1,1,1)[iris$Species]
+#'   w <- bmrm(hingeLoss(x,y),LAMBDA=0.1,verbose=TRUE)
 hingeLoss <- function(x,y,loss.weights=1) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (is.numeric(y)) {
@@ -50,6 +54,10 @@ hingeLoss <- function(x,y,loss.weights=1) {
 #'   Bundle Methods for Regularized Risk Minimization
 #'   JMLR 2010
 #' @seealso bmrm
+#' @examples
+#'   x <- cbind(data.matrix(iris[1:2]),1)
+#'   y <- c(-1,1,1)[iris$Species]
+#'   w <- bmrm(rocLoss(x,y),LAMBDA=0.1,verbose=TRUE)
 rocLoss <- function(x,y) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (is.numeric(y)) {
@@ -187,7 +195,6 @@ ordinalRegressionLoss <- function(x,y,C="0/1",impl=c("loglin","quadratic")) {
 #'   A Scalable Modular Convex Solver for Regularized Risk Minimization.
 #'   KDD 2007
 #' @seealso bmrm
-#' 
 #' @examples
 #'   x <- cbind(data.matrix(iris[1:2]),1)
 #'   y <- c(-1,1,1)[iris$Species]
