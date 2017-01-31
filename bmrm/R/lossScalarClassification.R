@@ -187,6 +187,11 @@ ordinalRegressionLoss <- function(x,y,C="0/1",impl=c("loglin","quadratic")) {
 #'   A Scalable Modular Convex Solver for Regularized Risk Minimization.
 #'   KDD 2007
 #' @seealso bmrm
+#' 
+#' @examples
+#'   x <- cbind(data.matrix(iris[1:2]),1)
+#'   y <- c(-1,1,1)[iris$Species]
+#'   w <- bmrm(fbetaLoss(x,y),LAMBDA=0.01,verbose=TRUE)
 fbetaLoss <- function(x,y,beta=1) {
   
   if (!is.matrix(x)) stop('x must be a numeric matrix')
