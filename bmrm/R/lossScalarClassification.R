@@ -205,24 +205,37 @@ fbetaLoss <- function(x,y,beta=1) {
   }
   
   function(w) {
-    w <- rep(w,length.out=ncol(x))
+    w <- cbind(matrix(numeric(),ncol(x),0),w)
     f <- x %*% w
-    o <- order(f,decreasing=TRUE)
-    op <- o[y[o]==1]
-    on <- rev(o[y[o]==-1])
     
-    p <- 2*(sum(f[op]) - cumsum(c(0,f[op])))
-    n <- 2*(sum(f[on]) - cumsum(c(0,f[on])))
-    R <- outer(seq_along(p),seq_along(n),function(i,j) {
-      1 - .fbeta(i-1,j-1,length(op),length(on),beta) - p[i] + n[j]
+    o <- matrix(row(f)[order(col(f),-f)],nrow(f))
+    op <- matrix(o[y[o]==1],ncol=ncol(o))
+    on <- matrix(o[y[o]==-1],ncol=ncol(o))
+    on <- on[rev(seq(nrow(on))),,drop=FALSE]
+    p <- local({
+      F <- matrix(f[cbind(as.vector(op),as.vector(col(op)))],nrow(op))
+      2*t(colSums(F,na.rm=TRUE) - t(matrixStats::colCumsums(rbind(0,F))))
     })
+    n <- local({
+      F <- matrix(f[cbind(as.vector(on),as.vector(col(on)))],nrow(on))
+      2*t(colSums(F,na.rm=TRUE) - t(matrixStats::colCumsums(rbind(0,F))))
+    })
+
+    ij <- expand.grid(i=seq(nrow(p)),j=seq(nrow(n)))
     
-    ij <- arrayInd(which.max(R),dim(R))
-    Y <- -y
-    Y[op[seq_len(ij[1,1]-1L)]] <- 1L
-    Y[on[seq_len(ij[1,2]-1L)]] <- -1L
+    # warning: matrix R might be memory consuming
+    R <- 1 - .fbeta(ij$i-1,ij$j-1,nrow(op),nrow(on),beta) - p[ij$i,,drop=FALSE] + n[ij$j,,drop=FALSE]
     
-    val <- R[ij]
+    mi <- max.col(t(R),ties.method="first")
+    Y <- matrix(-y,length(y),ncol(w))
+    
+    msk <- t(t(row(Y))<ij$i[mi])
+    Y[cbind(op[msk],col(Y)[msk])] <- 1
+    
+    msk <- t(t(row(Y))<ij$j[mi])
+    Y[cbind(on[msk],col(Y)[msk])] <- -1
+    
+    val <- R[cbind(mi,seq_along(mi))]
     gradient(val) <- crossprod(x,Y-y)
     return(val)
   }
