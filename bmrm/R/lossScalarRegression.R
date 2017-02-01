@@ -53,11 +53,11 @@ ladRegressionLoss <- function(x,y) {
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
 
   function(w) {
-    w <- rep(w,length.out=ncol(x))
+    w <- cbind(matrix(numeric(),ncol(x),0),w)
     f <- x %*% w
     loss <- abs(f-y)
     grad <- sign(f-y)
-    val <- sum(loss)
+    val <- colSums(loss)
     gradient(val) <- crossprod(x,grad)
     return(val)
   }
