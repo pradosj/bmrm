@@ -75,17 +75,21 @@ ladRegressionLoss <- function(x,y) {
 #'   Bundle Methods for Regularized Risk Minimization
 #'   JMLR 2010
 #' @seealso bmrm
+#' @examples
+#'   x <- cbind(data.matrix(iris[1:2]),1)
+#'   y <- c(-1,1,1)[iris$Species]
+#'   w <- bmrm(logisticRegressionLoss(x,y),LAMBDA=1,verbose=TRUE)
 logisticRegressionLoss <- function(x,y) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.numeric(y)) stop('y must be a numeric vector')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
 
   function(w) {
-    w <- rep(w,length.out=ncol(x))
+    w <- cbind(matrix(numeric(),ncol(x),0),w)
     f <- x %*% w
     loss <- log(1+exp(-y*f))
     grad <- -y/(1+exp(-y*f))
-    val <- sum(loss)
+    val <- colSums(loss)
     gradient(val) <- crossprod(x,grad)
     return(val)
   }
