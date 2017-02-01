@@ -11,17 +11,21 @@
 #'   Bundle Methods for Regularized Risk Minimization
 #'   JMLR 2010
 #' @seealso bmrm
+#' @examples
+#'   x <- cbind(data.matrix(iris[1:2]),1)
+#'   y <- iris[[3]]
+#'   w <- bmrm(lmsRegressionLoss(x,y),LAMBDA=0.1,verbose=TRUE)
 lmsRegressionLoss <- function(x,y) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.numeric(y)) stop('y must be a numeric vector')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   
   function(w) {
-    w <- rep(w,length.out=ncol(x))
+    w <- cbind(matrix(numeric(),ncol(x),0),w)
     f <- x %*% w
     loss <- 0.5*(f-y)^2
     grad <- f-y
-    val <- sum(loss)
+    val <- colSums(loss)
     gradient(val) <- crossprod(x,grad)
     return(val)
   }
@@ -39,6 +43,10 @@ lmsRegressionLoss <- function(x,y) {
 #'   Bundle Methods for Regularized Risk Minimization
 #'   JMLR 2010
 #' @seealso bmrm
+#' @examples
+#'   x <- cbind(data.matrix(iris[1:2]),1)
+#'   y <- iris[[3]]
+#'   w <- bmrm(ladRegressionLoss(x,y),LAMBDA=0.1,verbose=TRUE)
 ladRegressionLoss <- function(x,y) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.numeric(y)) stop('y must be a numeric vector')
