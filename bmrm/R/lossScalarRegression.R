@@ -108,6 +108,10 @@ logisticRegressionLoss <- function(x,y) {
 #'   Bundle Methods for Regularized Risk Minimization
 #'   JMLR 2010
 #' @seealso bmrm
+#' @examples
+#'   x <- cbind(data.matrix(iris[1:2]),1)
+#'   y <- iris[[3]]
+#'   w <- bmrm(quantileRegressionLoss(x,y),LAMBDA=0.1,verbose=TRUE)
 quantileRegressionLoss <- function(x,y,q=0.5) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.numeric(y)) stop('y must be a numeric vector')    
@@ -115,11 +119,11 @@ quantileRegressionLoss <- function(x,y,q=0.5) {
   if (length(q)!=1 || q<0 || q>1) stop('q must be a length one numeric in the range [0-1]')
 
   function(w) {
-    w <- rep(w,length.out=ncol(x))
+    w <- cbind(matrix(numeric(),ncol(x),0),w)
     f <- x %*% w
     loss <- pmax(q*(f-y),(1-q)*(y-f))
     grad <- ifelse(f>y,q,q-1)
-    val <- sum(loss)
+    val <- colSums(loss)
     gradient(val) <- crossprod(x,grad)
     return(val)
   }
@@ -138,6 +142,10 @@ quantileRegressionLoss <- function(x,y,q=0.5) {
 #'   Bundle Methods for Regularized Risk Minimization
 #'   JMLR 2010
 #' @seealso bmrm
+#' @examples
+#'   x <- cbind(data.matrix(iris[1:2]),1)
+#'   y <- iris[[3]]
+#'   w <- bmrm(epsilonInsensitiveRegressionLoss(x,y,1),LAMBDA=0.1,verbose=TRUE)
 epsilonInsensitiveRegressionLoss <- function(x,y,epsilon) {
   
   if (!is.matrix(x)) stop('x must be a numeric matrix')
@@ -145,11 +153,11 @@ epsilonInsensitiveRegressionLoss <- function(x,y,epsilon) {
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
 
   function(w) {
-    w <- rep(w,length.out=ncol(x))
+    w <- cbind(matrix(numeric(),ncol(x),0),w)
     f <- x %*% w
-    loss <- pmax(0,abs(f-y)-epsilon)
+    loss <- pmax(abs(f-y)-epsilon,0)
     grad <- ifelse(abs(f-y)<epsilon,0,sign(f-y))
-    val <- sum(loss)
+    val <- colSums(loss)
     gradient(val) <- crossprod(x,grad)
     return(val)
   }
