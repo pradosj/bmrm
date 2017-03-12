@@ -18,9 +18,7 @@ This R package depends on lpSolve and LowRankQP packages, and requires them to
 be first installed on your system. The documentation is automatically generated
 by roxygen2 package.
 
-Overall bmrm can be build or installed with the commands:
+bmrm can be installed using devtools:
 
-    roxygen2::roxygenize("bmrm")
-    R CMD build bmrm
-    R CMD INSTALL bmrm/
+    devtools::install_github("pradosj/bmrm/bmrm")
 
