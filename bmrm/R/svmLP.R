@@ -63,7 +63,7 @@ svmLP <- function(x,y,LAMBDA=1,instance.weights=1) {
 #'   x <- cbind(100,data.matrix(iris[1:4]))
 #'   y <- iris$Species
 #'   w <- svmLPmulticlass(x,y)
-#'   table(max.col(x %*% w),y)
+#'   table(predict(w,x),y)
 svmLPmulticlass <- function(x,y,LAMBDA=1,instance.weights=1) {
   y <- as.factor(y)
   if (nlevels(y)<2) stop("nlevels(y) must be >=2")

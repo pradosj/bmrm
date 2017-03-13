@@ -29,7 +29,7 @@ where |w| is the L1-norm of w
   x <- cbind(100,data.matrix(iris[1:4]))
   y <- iris$Species
   w <- svmLPmulticlass(x,y)
-  table(max.col(x \%*\% w),y)
+  table(predict(w,x),y)
 }
 \author{
 Julien Prados
