@@ -43,6 +43,26 @@ svmLP <- function(x,y,LAMBDA=1,instance.weights=1) {
 }
 
 
+
+svmLPmulticlass <- function(x,y,LAMBDA=1,instance.weights=1) {
+  y <- as.factor(y)
+  if (nlevels(y)<2) stop("nlevels(y) must be >=2")
+  if (nrow(x)!=length(y)) stop("length(y) must match nrow(x)")
+  instance.weights <- rep_len(instance.weights,nrow(x))
+  opt <- lp(direction = "min",
+            objective.in = c(rep(LAMBDA,2L*ncol(x)*nlevels(y))),instance.weights),
+            const.mat = cbind(x,x,diag(nrow(x))),
+            const.dir = rep(">=",nrow(x)),
+            const.rhs = 1
+  )
+  u <- matrix(opt$solution[seq_int(ncol(x)*nlevels(y)))],ncol(x)) 
+  v <- matrix(opt$solution[ncol(x)*nlevels(y) + seq_int(ncol(x)*nlevels(y)))],ncol(x))
+  w <- u - v
+  attr(w,"levels") <- levels(y)
+  w
+}
+    
+
 #' Predict function for svmLP models
 #'
 #' @param object an object of class svmLP
