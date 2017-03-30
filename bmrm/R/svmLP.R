@@ -62,9 +62,9 @@ svmLP <- function(x,y,LAMBDA=1,instance.weights=1) {
 #' @examples
 #'   x <- cbind(100,data.matrix(iris[1:4]))
 #'   y <- iris$Species
-#'   w <- svmLPmulticlass(x,y)
+#'   w <- svmMulticlassLP(x,y)
 #'   table(predict(w,x),y)
-svmLPmulticlass <- function(x,y,LAMBDA=1,instance.weights=1) {
+svmMulticlassLP <- function(x,y,LAMBDA=1,instance.weights=1) {
   y <- as.factor(y)
   if (nlevels(y)<2) stop("nlevels(y) must be >=2")
   if (nrow(x)!=length(y)) stop("length(y) must match nrow(x)")
