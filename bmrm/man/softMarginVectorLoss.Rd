@@ -4,7 +4,7 @@
 \alias{softMarginVectorLoss}
 \title{Soft Margin Vector Loss function for multiclass SVM}
 \usage{
-softMarginVectorLoss(x, y, l = "0/1")
+softMarginVectorLoss(x, y, l = 1 - table(seq_along(y), y))
 }
 \arguments{
 \item{x}{instance matrix, where x(t,) defines the features of instance t}
@@ -23,7 +23,7 @@ Soft Margin Vector Loss function for multiclass SVM
 \examples{
   # -- Load the data
   x <- data.matrix(iris[1:2])
-  y <- as.integer(iris$Species)
+  y <- iris$Species
   
   # -- Add a constant dimension to the dataset to learn the intercept
   cst <- sqrt(max(rowSums(x*x)))
@@ -51,7 +51,7 @@ Soft Margin Vector Loss function for multiclass SVM
   }) # matrix of predictions for all probes
   layout(matrix(c(1,3,2,3),2,2))
   image(gx,gy,Y,asp=1,main="dataset & decision boundaries",xlab=colnames(x)[1],ylab=colnames(x)[2])
-  points(x,pch=19+y)
+  points(x,pch=19+as.integer(y))
   plot(m$log$epsilon,type="o",ylab="epsilon gap",xlab="iteration")
   plot(row(m$f),m$f,pch=19+col(m$f),ylab="prediction values",xlab="sample")
 }

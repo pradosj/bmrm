@@ -13,7 +13,7 @@
 #' @examples
 #'   # -- Load the data
 #'   x <- data.matrix(iris[1:2])
-#'   y <- as.integer(iris$Species)
+#'   y <- iris$Species
 #'   
 #'   # -- Add a constant dimension to the dataset to learn the intercept
 #'   cst <- sqrt(max(rowSums(x*x)))
@@ -41,21 +41,14 @@
 #'   }) # matrix of predictions for all probes
 #'   layout(matrix(c(1,3,2,3),2,2))
 #'   image(gx,gy,Y,asp=1,main="dataset & decision boundaries",xlab=colnames(x)[1],ylab=colnames(x)[2])
-#'   points(x,pch=19+y)
+#'   points(x,pch=19+as.integer(y))
 #'   plot(m$log$epsilon,type="o",ylab="epsilon gap",xlab="iteration")
 #'   plot(row(m$f),m$f,pch=19+col(m$f),ylab="prediction values",xlab="sample")
-softMarginVectorLoss <- function(x,y,l="0/1") {
+softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
-  y <- as.factor(y)
+  if (!is.factor(y)) stop('y must be a factor')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
-  
-  if (is.character(l) && identical(l,"0/1")) {
-    l <- matrix(1,length(y),nlevels(y))
-    l[cbind(seq_along(y),y)] <- 0
-  } else {
-    l <- as.matrix(l)
-    if (!identical(nrow(x),nrow(l))) stop('dimensions of x and l mismatch')
-  }
+  if (!identical(nrow(x),nrow(l))) stop('dimensions of x and l mismatch')
   if (nlevels(y)>ncol(l)) stop('some values in y are out of range of the loss matrix')
   
   function(w) {
@@ -68,8 +61,8 @@ softMarginVectorLoss <- function(x,y,l="0/1") {
     
     # compute gradient
     gy <- gp <- matrix(0,length(y),ncol(w))
-    gp[cbind(1:length(y),p)] <- 1
-    gy[cbind(1:length(y),y)] <- 1
+    gp[cbind(seq_along(y),p)] <- 1
+    gy[cbind(seq_along(y),y)] <- 1
     grad <- gp - gy
     
     val <- sum(lp)
@@ -77,4 +70,10 @@ softMarginVectorLoss <- function(x,y,l="0/1") {
     return(val)
   }
 }
+
+
+
+
+
+
 
