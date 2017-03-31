@@ -28,7 +28,7 @@ Ontology Loss Function
   y <- iris$Species
   dag <- matrix(c(1,0,0,0,
                   0,1,1,0,
-                  0,1,0,1),3,4)
+                  0,1,0,1),3,4,byrow=TRUE)
   w <- nrbm(ontologyLoss(x,y,dag=dag))
   w <- matrix(w,ncol(x))
   max.col(x \%*\% w \%*\% dag)
