@@ -14,7 +14,7 @@ ontologyLoss(x, y, l = 1 - table(seq_along(y), y), dag = diag(nlevels(y)))
 \item{l}{loss matrix. l(t,p(t)) must be the loss for predicting target p(t) instead of y(t) 
 for instance t. By default, the parameter is set to a 0/1 loss matrix.}
 
-\item{dag}{a numeric column oriented matrix defining the path in the Direct Acyclic Graph (DAG) to each class label}
+\item{dag}{a numeric matrix defining the path in the Direct Acyclic Graph (DAG) to each class label}
 }
 \value{
 a function taking one argument w and computing the loss value and the gradient at point w

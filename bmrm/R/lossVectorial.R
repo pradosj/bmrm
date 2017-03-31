@@ -82,7 +82,7 @@ softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
 #' @param y target vector where y(t) is an integer encoding target of x(t,)
 #' @param l loss matrix. l(t,p(t)) must be the loss for predicting target p(t) instead of y(t) 
 #'        for instance t. By default, the parameter is set to a 0/1 loss matrix.
-#' @param dag a numeric column oriented matrix defining the path in the Direct Acyclic Graph (DAG) to each class label
+#' @param dag a numeric matrix defining the path in the Direct Acyclic Graph (DAG) to each class label
 #' @return a function taking one argument w and computing the loss value and the gradient at point w
 #' @export
 #' @references Teo et al.
