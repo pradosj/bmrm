@@ -90,14 +90,15 @@ softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
 #'   KDD 2007
 #' @examples
 #'   # -- Load the data
-#'   x <- data.matrix(iris[1:2])
+#'   x <- data.matrix(iris[1:4])
 #'   y <- iris$Species
 #'   dag <- matrix(c(1,0,0,0,
 #'                   0,1,1,0,
 #'                   0,1,0,1),3,4,byrow=TRUE)
 #'   w <- nrbm(ontologyLoss(x,y,dag=dag))
 #'   w <- matrix(w,ncol(x))
-#'   max.col(x %*% w %*% dag)
+#'   f <- x %*% tcrossprod(w,dag)
+#'   table(y,max.col(f))
 ontologyLoss <- function(x,y,l=1 - table(seq_along(y),y),dag=diag(nlevels(y))) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.factor(y)) stop('y must be a factor')
