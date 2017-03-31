@@ -92,7 +92,9 @@ softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
 #'   # -- Load the data
 #'   x <- data.matrix(iris[1:2])
 #'   y <- iris$Species
-#'   dag <- matrix(c(1,0,0,0,1,1,0,1,0,0,0,1),4,byrow=TRUE)
+#'   dag <- matrix(c(1,0,0,0,
+#'                   0,1,1,0,
+#'                   0,1,0,1),3,4)
 #'   w <- nrbm(ontologyLoss(x,y,dag=dag))
 #'   w <- matrix(w,ncol(x))
 #'   max.col(x %*% w %*% dag)
@@ -100,20 +102,20 @@ ontologyLoss <- function(x,y,l=1 - table(seq_along(y),y),dag=diag(nlevels(y))) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.factor(y)) stop('y must be a factor')
   if (!is.matrix(dag)) stop('x must be a numeric matrix')
-  if (ncol(dag)!=nlevels(y)) stop('ncol(dag) should match with nlevels(y)')
-  if (ncol(dag)>nrow(dag)) stop('dag matrix must have more row than column (or equal)')
+  if (nrow(dag)!=nlevels(y)) stop('ncol(dag) should match with nlevels(y)')
+  if (nrow(dag)>ncol(dag)) stop('dag matrix must have more row than column (or equal)')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   if (!identical(nrow(x),nrow(l))) stop('dimensions of x and l mismatch')
   if (nlevels(y)!=ncol(l)) stop('ncol(l) do not match with nlevels(y)')
   
   function(w) {
-    w <- matrix(w,ncol(x),nrow(dag))
+    w <- matrix(w,ncol(x),ncol(dag))
     fp <- x %*% w
-    z <- fp %*% dag + l
+    z <- tcrossprod(fp,dag) + l
     Y <- max.col(z,ties.method = "first")
-    G <- dag[,Y] - dag[,y]
+    G <- dag[Y,] - dag[y,]
     val <- sum(z[cbind(seq_along(Y),Y)] - z[cbind(seq_along(y),y)])
-    gradient(val) <- crossprod(x,t(G))
+    gradient(val) <- crossprod(x,G)
     return(val)
   }
 }
