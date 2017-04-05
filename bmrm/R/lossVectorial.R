@@ -82,7 +82,7 @@ softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
 #' @param y target vector where y(t) is an integer encoding target of x(t,)
 #' @param l loss matrix. l(t,p(t)) must be the loss for predicting target p(t) instead of y(t) 
 #'        for instance t. By default, the parameter is set to a 0/1 loss matrix.
-#' @param dag a numeric column oriented matrix defining the path in the Direct Acyclic Graph (DAG) to each class label
+#' @param dag a numeric matrix defining the path in the Direct Acyclic Graph (DAG) to each class label
 #' @return a function taking one argument w and computing the loss value and the gradient at point w
 #' @export
 #' @references Teo et al.
@@ -90,30 +90,33 @@ softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
 #'   KDD 2007
 #' @examples
 #'   # -- Load the data
-#'   x <- data.matrix(iris[1:2])
+#'   x <- data.matrix(iris[1:4])
 #'   y <- iris$Species
-#'   dag <- matrix(c(1,0,0,0,1,1,0,1,0,0,0,1),4,byrow=TRUE)
+#'   dag <- matrix(c(1,0,0,0,
+#'                   0,1,1,0,
+#'                   0,1,0,1),3,4,byrow=TRUE)
 #'   w <- nrbm(ontologyLoss(x,y,dag=dag))
 #'   w <- matrix(w,ncol(x))
-#'   max.col(x %*% w %*% dag)
+#'   f <- x %*% tcrossprod(w,dag)
+#'   table(y,max.col(f))
 ontologyLoss <- function(x,y,l=1 - table(seq_along(y),y),dag=diag(nlevels(y))) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.factor(y)) stop('y must be a factor')
   if (!is.matrix(dag)) stop('x must be a numeric matrix')
-  if (ncol(dag)!=nlevels(y)) stop('ncol(dag) should match with nlevels(y)')
-  if (ncol(dag)>nrow(dag)) stop('dag matrix must have more row than column (or equal)')
+  if (nrow(dag)!=nlevels(y)) stop('ncol(dag) should match with nlevels(y)')
+  if (nrow(dag)>ncol(dag)) stop('dag matrix must have more row than column (or equal)')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   if (!identical(nrow(x),nrow(l))) stop('dimensions of x and l mismatch')
   if (nlevels(y)!=ncol(l)) stop('ncol(l) do not match with nlevels(y)')
   
   function(w) {
-    w <- matrix(w,ncol(x),nrow(dag))
+    w <- matrix(w,ncol(x),ncol(dag))
     fp <- x %*% w
-    z <- fp %*% dag + l
+    z <- tcrossprod(fp,dag) + l
     Y <- max.col(z,ties.method = "first")
-    G <- dag[,Y] - dag[,y]
+    G <- dag[Y,] - dag[y,]
     val <- sum(z[cbind(seq_along(Y),Y)] - z[cbind(seq_along(y),y)])
-    gradient(val) <- crossprod(x,t(G))
+    gradient(val) <- crossprod(x,G)
     return(val)
   }
 }
