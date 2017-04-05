@@ -107,7 +107,7 @@ svmMulticlassLP <- function(x,y,LAMBDA=1,instance.weights=1) {
 #' @export
 #' @author Julien Prados
 predict.svmLP <- function(object,x,...) {
-  f <- x %*% w
+  f <- x %*% object
   colnames(f)[max.col(f,ties.method = "first")]
   attr(y,"decision.values") <- f
   return(y)
