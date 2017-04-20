@@ -22,6 +22,7 @@
 #'   JMLR 2012
 #' @export
 #' @import LowRankQP
+#' @importFrom utils head
 #' @examples
 #'   set.seed(123)
 #'   X <- matrix(rnorm(4000*200), 4000, 200)

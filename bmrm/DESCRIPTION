@@ -7,7 +7,8 @@ Depends:
     R (>= 3.0.2)
 Imports:
     lpSolve,
-    LowRankQP
+    LowRankQP,
+    matrixStats
 Author: Julien Prados
 Maintainer: Julien Prados <julien.prados@unige.ch>
 Copyright: 2014, University of Geneva

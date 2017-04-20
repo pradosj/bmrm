@@ -10,6 +10,8 @@
 \item{object}{an object of class svmLP}
 
 \item{x}{data.matrix to predict}
+
+\item{...}{unused, present to satisfy the generic predict() prototype}
 }
 \value{
 prediction for row of x, with an attribute "decision.value"

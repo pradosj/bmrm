@@ -74,7 +74,7 @@ svmMulticlassLP <- function(x,y,LAMBDA=1,instance.weights=1) {
             objective.in = c(rep(LAMBDA,2L*ncol(x)*nlevels(y)),instance.weights),
             const.mat = local({
               L <- merge(data.frame(i=seq_along(y),y=y),data.frame(Y=factor(levels(y),levels(y))))
-              L <- subset(L,y!=Y)
+              L <- L[L$y != L$Y,]
               
               m <- matrix(rep(seq_len(nlevels(y)),each=ncol(x)),nlevels(y),ncol(x)*nlevels(y),byrow=TRUE)
               m <- (m == row(m)) + 0
@@ -103,6 +103,7 @@ svmMulticlassLP <- function(x,y,LAMBDA=1,instance.weights=1) {
 #'
 #' @param object an object of class svmLP
 #' @param x data.matrix to predict
+#' @param ... unused, present to satisfy the generic predict() prototype
 #' @return prediction for row of x, with an attribute "decision.value"
 #' @export
 #' @author Julien Prados
