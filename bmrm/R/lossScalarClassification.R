@@ -46,7 +46,9 @@ hingeLoss <- function(x,y,loss.weights=1) {
 #' The loss function to maximize area under the ROC curve
 #' 
 #' @param x matrix of training instances (one instance by row)
-#' @param y numeric vector of values in (-1,+1) representing the training labels for each instance in x
+#' @param y a 2-levels factor representing the training labels for each instance in x
+#' @param loss.weights numeric vector of loss weights to incure for each instance of x. 
+#'        Vector length should match length(y), but values are cycled if not of identical size.
 #' @return a function taking one argument w and computing the loss value and the gradient at point w
 #' @export
 #' @import matrixStats
@@ -58,17 +60,14 @@ hingeLoss <- function(x,y,loss.weights=1) {
 #'   x <- cbind(data.matrix(iris[1:2]),1)
 #'   y <- c(-1,1,1)[iris$Species]
 #'   w <- bmrm(rocLoss(x,y),LAMBDA=0.1,verbose=TRUE)
-rocLoss <- function(x,y) {
+rocLoss <- function(x,y,loss.weights=1) {
+  y <- as.factor(y)
+  if (nlevels(y)!=2) stop("y must have exatly 2 levels")
   if (!is.matrix(x)) stop('x must be a numeric matrix')
-  if (is.numeric(y)) {
-    if (!all(y %in% c(-1,1))) stop('y must be a numeric vector of either -1 or +1')
-  } else {
-    y <- as.factor(y)
-    if (nlevels(y)!=2) stop("y must have exatly 2 levels")
-    y <- c(-1,1)[y]
-  }
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
-
+  loss.weights <- rep(loss.weights,length.out=length(y))
+  y <- c(-1,1)[y]
+  
   function(w) {
     w <- cbind(matrix(numeric(),ncol(x),0),w)
     c <- x %*% w - 0.5*y
@@ -79,7 +78,8 @@ rocLoss <- function(x,y) {
     l <- 0*o
     l[cbind(as.vector(o),as.vector(col(o)))] <- ifelse(y[o]==-1,sp,-sm)
     l <- l/(sum(y==-1)*sum(y==+1))
-    
+    l <- loss.weights * l
+      
     val <- colSums(l*c)
     gradient(val) <- crossprod(x,l)
     return(val)
@@ -200,16 +200,11 @@ ordinalRegressionLoss <- function(x,y,C="0/1",impl=c("loglin","quadratic")) {
 #'   y <- c(-1,1,1)[iris$Species]
 #'   w <- bmrm(fbetaLoss(x,y),LAMBDA=0.01,verbose=TRUE)
 fbetaLoss <- function(x,y,beta=1) {
-  
+  y <- as.factor(y)
+  if (nlevels(y)!=2) stop("y must have exatly 2 levels")
   if (!is.matrix(x)) stop('x must be a numeric matrix')
-  if (is.numeric(y)) {
-    if (!all(y %in% c(-1,1))) stop('y must be a numeric vector of either -1 or +1')
-  } else {
-    y <- as.factor(y)
-    if (nlevels(y)!=2) stop("y must have exatly 2 levels")
-    y <- c(-1,1)[y]
-  }
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
+  y <- c(-1,1)[y]
   
   .fbeta <- function(TP,TN,P,N,beta) {
     beta2 <- beta*beta

@@ -4,7 +4,7 @@
 \alias{epsilonInsensitiveRegressionLoss}
 \title{The loss function to perform a epsilon-insensitive regression (Vapnik et al. 1997)}
 \usage{
-epsilonInsensitiveRegressionLoss(x, y, epsilon)
+epsilonInsensitiveRegressionLoss(x, y, epsilon, loss.weights = 1)
 }
 \arguments{
 \item{x}{matrix of training instances (one instance by row)}
@@ -12,6 +12,9 @@ epsilonInsensitiveRegressionLoss(x, y, epsilon)
 \item{y}{numeric vector of values representing the training labels for each instance in x}
 
 \item{epsilon}{a numeric value setting tolerance of the epsilon-regression}
+
+\item{loss.weights}{numeric vector of loss weights to incure for each instance of x. 
+Vector length should match length(y), but values are cycled if not of identical size.}
 }
 \value{
 a function taking one argument w and computing the loss value and the gradient at point w

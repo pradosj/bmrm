@@ -4,7 +4,7 @@
 \alias{quantileRegressionLoss}
 \title{The loss function to perform a quantile regression}
 \usage{
-quantileRegressionLoss(x, y, q = 0.5)
+quantileRegressionLoss(x, y, q = 0.5, loss.weights = 1)
 }
 \arguments{
 \item{x}{matrix of training instances (one instance by row)}
@@ -12,6 +12,9 @@ quantileRegressionLoss(x, y, q = 0.5)
 \item{y}{numeric vector of values representing the training labels for each instance in x}
 
 \item{q}{a numeric value in the range [0-1] defining quantile value to consider}
+
+\item{loss.weights}{numeric vector of loss weights to incure for each instance of x. 
+Vector length should match length(y), but values are cycled if not of identical size.}
 }
 \value{
 a function taking one argument w and computing the loss value and the gradient at point w
