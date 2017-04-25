@@ -11,13 +11,15 @@ vignette: >
 ---
 
 ## Introduction
-`bmrm` package implements the *Bundle Methods for Regularized Risk Minimization* proposed by @Teo_JMLR_2010 as well as the non-convex extension proposed by @Do_JMLR_2012. This framework is able to solve a minimization problem found in many machine learning algorithm where the goal is to minimze an empirical risk ($R_{emp}(w)$) under a regularization term ($\Omega(w)$):
+Many advanced machine learning algorithms can be cast under the same empirical risk minimization framework. @Teo_JMLR_2010 and @Do_JMLR_2012 have proposed efficient algorithms to solve this minimization problem. The `bmrm` package implements there solution together with many classification, regression and structure prediction algorithms. It allows as well easy implementation of customized learning algorithm. 
+
+The minimization problem solved by the framework minimze the empirical risk ($R_{emp}(w)$) under a regularization term ($\Omega(w)$):
 
 $$\min_{w} J(w) := \lambda \Omega(w) + R_{emp}(w),$$
 where
 $$R_{emp} := \frac{1}{m}\sum{l(x_i,y_i,w)}, \lambda > 0$$
 
-The parameter $\lambda$ controls the tradeoff between model fitting and model simplicity and can be tune to precent model overfitting. Different algorithm are obtained by adapting the loss function $l(w,x_i,y_i)$ computed on each training example $(x_i,y_i)$. The package currently implements more than 10 loss functions providing access to powerful algorithms for standand classification and regression, but also for structured prediction: 
+The parameter $\lambda$ controls the tradeoff between model fitting and model simplicity and can be tune to avoid model overfitting. Different learning algorithm are obtained by adapting the loss function $l(w,x_i,y_i)$ computed on each training example $(x_i,y_i)$. The package currently implements more than 10 loss functions providing access to powerful algorithms for standand classification and regression, but also for structured prediction: 
 
 | Algorithm                       | Loss Function                        |
 |---------------------------------|--------------------------------------|
@@ -33,6 +35,15 @@ The parameter $\lambda$ controls the tradeoff between model fitting and model si
 
 
 Furthermore, flexibility of the framework makes it particulary easy to implement custom loss function for all your needs.
+
+
+
+##Loss function
+
+The loss functions has to accept a matrix W (or 0) and return both a vector of loss values and a matrix of gradients at input points W. When W=0, 
+
+###Custom loss
+
 
 
 Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
