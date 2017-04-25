@@ -21,15 +21,21 @@ $$R_{emp} := \frac{1}{m}\sum{l(x_i,y_i,w)}, \lambda > 0$$
 
 The parameter $\lambda$ controls the tradeoff between model fitting and model simplicity and can be tune to avoid model overfitting. Different learning algorithm are obtained by adapting the loss function $l(w,x_i,y_i)$ computed on each training example $(x_i,y_i)$. The package currently implements more than 10 loss functions providing access to powerful algorithms for standand classification and regression, but also for structured prediction: 
 
-| Algorithm                       | Loss Function                        |
-|---------------------------------|--------------------------------------|
-| linear-SVM                      | `hingeLoss()`                        |
-| multiclass-SVM                  | `softMarginVectorLoss()`             |
-| max-margin-fbeta-classification | `fbetaLoss()`                        |
-| ontology-classification         | `ontologyLoss()`                     |
-| epsilon-regression              | `epsilonInsensitiveRegressionLoss()` |
-| ordinal-regression              | `ordinalRegressionLoss()`            |
-| quantile-regression             | `quantileRegressionLoss()`           |
+
+
+| Loss Function                        | Type       | Algorithm                    |
+|--------------------------------------|------------|------------------------------|
+| `hingeLoss()`                        | Classifier | Support Vector Machine (SVM) |
+| `rocLoss()`                          | Classifier | maximizing ROC area          |
+| `fbetaLoss()`                        | Classifier | maximizing fbeta score       |
+| `lmsRegressionLoss()`                | Regressor  | least mean square            |
+| `ladRegressionLoss()`                | Regressor  | least absolute deviation     |
+| `epsilonInsensitiveRegressionLoss()` | Regressor  | epsilon insensitive          |
+| `quantileRegressionLoss()`           | Regressor  | quantile-regression          |
+| `softMarginVectorLoss()`             | Structure  | multiclass SVM               |
+| `ontologyLoss()`                     | Structure  | ontology classification      |
+| `ordinalRegressionLoss()`            | Structure  | ordinal regression           |
+
 
 
 
