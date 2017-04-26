@@ -116,6 +116,7 @@ newL2Solver <- function(LAMBDA) {
 #'   
 bmrm <- function(riskFun,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,regfun=c('l1','l2'),w0=0,verbose=TRUE) {
 	regfun <- match.arg(regfun)
+	if (regfun=="l2") warning("for l2 regularization, the use of nrbm() is strongly recommended.")
   rrm <- switch(regfun,l1=newL1Solver(LAMBDA),l2=newL2Solver(LAMBDA))
 	
 	loss <- riskFun(w0)
