@@ -171,6 +171,7 @@ logisticRegressionLoss <- function(x,y,loss.weights=1) {
 #'   y <- ifelse(iris$Species=="setosa","setosa","not_setosa")
 #'   w <- bmrm(hingeLoss(x,y))
 #'   w <- bmrm(rocLoss(x,y))
+#'   w <- bmrm(fbetaLoss(x,y))
 NULL
 
 
@@ -227,21 +228,9 @@ rocLoss <- function(x,y,loss.weights=1) {
 
 
 
-#' F beta score loss function
-#'
-#' @param x matrix of training instances (one instance by row)
-#' @param y numeric vector of values in (-1,+1) representing the training labels for each instance in x
+#' @describeIn binaryClassificationLosses F-beta score loss function
 #' @param beta a numeric value setting the beta parameter is the f-beta score
-#' @return a function taking one argument w and computing the loss value and the gradient at point w
 #' @export
-#' @references Teo et al.
-#'   A Scalable Modular Convex Solver for Regularized Risk Minimization.
-#'   KDD 2007
-#' @seealso bmrm
-#' @examples
-#'   x <- cbind(data.matrix(iris[1:2]),1)
-#'   y <- c(-1,1,1)[iris$Species]
-#'   w <- bmrm(fbetaLoss(x,y),LAMBDA=0.01,verbose=TRUE)
 fbetaLoss <- function(x,y,beta=1) {
   y <- as.factor(y)
   if (nlevels(y)!=2) stop("y must have exatly 2 levels")

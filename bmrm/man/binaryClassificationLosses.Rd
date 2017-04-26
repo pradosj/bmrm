@@ -2,6 +2,7 @@
 % Please edit documentation in R/loss.R
 \name{binaryClassificationLosses}
 \alias{binaryClassificationLosses}
+\alias{fbetaLoss}
 \alias{hingeLoss}
 \alias{rocLoss}
 \title{Loss functions for binary classification}
@@ -9,6 +10,8 @@
 hingeLoss(x, y, loss.weights = 1)
 
 rocLoss(x, y, loss.weights = 1)
+
+fbetaLoss(x, y, beta = 1)
 }
 \arguments{
 \item{x}{matrix of training instances (one instance by row)}
@@ -17,6 +20,8 @@ rocLoss(x, y, loss.weights = 1)
 
 \item{loss.weights}{numeric vector of loss weights to incure for each instance of x. 
 Vector length should match length(y), but values are cycled if not of identical size.}
+
+\item{beta}{a numeric value setting the beta parameter is the f-beta score}
 }
 \value{
 a function taking one argument w and computing the loss value and the gradient at point w
@@ -29,12 +34,15 @@ Loss functions for binary classification
 \item \code{hingeLoss}: Hinge Loss for Linear Support Vector Machine (SVM)
 
 \item \code{rocLoss}: Linear classifier maximize area under its ROC curve
+
+\item \code{fbetaLoss}: F-beta score loss function
 }}
 \examples{
   x <- cbind(intercept=100,data.matrix(iris[1:2]))
   y <- ifelse(iris$Species=="setosa","setosa","not_setosa")
   w <- bmrm(hingeLoss(x,y))
   w <- bmrm(rocLoss(x,y))
+  w <- bmrm(fbetaLoss(x,y))
 }
 \references{
 Teo et al.
