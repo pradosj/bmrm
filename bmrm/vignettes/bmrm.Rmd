@@ -43,12 +43,13 @@ The parameter $\lambda$ controls the tradeoff between model fitting and model si
 Furthermore, flexibility of the framework makes it particulary easy to implement custom loss function for all your needs.
 
 
+## Intercept
 
-##Loss function
+## Loss function
 
 The loss functions has to accept a matrix W (or 0) and return both a vector of loss values and a matrix of gradients at input points W. When W=0, 
 
-###Custom loss
+### Custom loss
 
 
 
