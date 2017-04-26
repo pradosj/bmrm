@@ -13,12 +13,12 @@
 #'   JMLR 2010
 #' @seealso bmrm
 #' @examples
-#'   x <- cbind(data.matrix(iris[1:2]),1)
+#'   x <- cbind(intercept=100,data.matrix(iris[1:2]))
 #'   y <- iris[[3]]
-#'   w <- bmrm(lmsRegressionLoss(x,y),LAMBDA=0.1)
-#'   w <- bmrm(ladRegressionLoss(x,y),LAMBDA=0.1)
-#'   w <- bmrm(quantileRegressionLoss(x,y,q=0.5),LAMBDA=0.1)
-#'   w <- bmrm(epsilonInsensitiveRegressionLoss(x,y,epsilon=1),LAMBDA=0.1)
+#'   w <- bmrm(lmsRegressionLoss(x,y))
+#'   w <- bmrm(ladRegressionLoss(x,y))
+#'   w <- bmrm(quantileRegressionLoss(x,y,q=0.5))
+#'   w <- bmrm(epsilonInsensitiveRegressionLoss(x,y,epsilon=1))
 NULL
 
 
@@ -82,7 +82,6 @@ quantileRegressionLoss <- function(x,y,q=0.5,loss.weights=1) {
     return(val)
   }
 }
-
 
 
 #' @describeIn regressionLosses epsilon-insensitive regression (Vapnik et al. 1997)
@@ -154,35 +153,36 @@ logisticRegressionLoss <- function(x,y,loss.weights=1) {
 
 
 
-#' Hinge Loss function for SVM
-#'
+
+#' Loss functions for binary classification
+#' 
+#' @name binaryClassificationLosses
 #' @param x matrix of training instances (one instance by row)
-#' @param y numeric vector of values in (-1,+1) representing the training labels for each instance in x
-#' @param loss.weights numeric vector of loss weights to incure for each instance of x in case of misprediction. 
-#'        Vector length should match length(y), but values are cycled if not of identical size. 
-#'        Default to 1 so we define a standard 0/1 loss for SVM classifier. 
-#'        The parameter might be useful to adapt SVM learning in case of unbalanced class distribution.
+#' @param y a 2-levels factor representing the training labels for each instance in x
+#' @param loss.weights numeric vector of loss weights to incure for each instance of x. 
+#'        Vector length should match length(y), but values are cycled if not of identical size.
 #' @return a function taking one argument w and computing the loss value and the gradient at point w
-#' @export
 #' @references Teo et al.
 #'   A Scalable Modular Convex Solver for Regularized Risk Minimization.
 #'   KDD 2007
 #' @seealso bmrm
 #' @examples
-#'   x <- cbind(data.matrix(iris[1:2]),1)
-#'   y <- c(-1,1,1)[iris$Species]
-#'   w <- bmrm(hingeLoss(x,y),LAMBDA=0.1,verbose=TRUE)
+#'   x <- cbind(intercept=100,data.matrix(iris[1:2]))
+#'   y <- ifelse(iris$Species=="setosa","setosa","not_setosa")
+#'   w <- bmrm(hingeLoss(x,y))
+#'   w <- bmrm(rocLoss(x,y))
+NULL
+
+
+#' @describeIn binaryClassificationLosses Hinge Loss for Linear Support Vector Machine (SVM)
+#' @export
 hingeLoss <- function(x,y,loss.weights=1) {
+  y <- as.factor(y)
+  if (nlevels(y)!=2) stop("y must have exatly 2 levels")
   if (!is.matrix(x)) stop('x must be a numeric matrix')
-  if (is.numeric(y)) {
-    if (!all(y %in% c(-1,1))) stop('y must be a numeric vector of either -1 or +1, or a 2-levels factor')
-  } else {
-    y <- as.factor(y)
-    if (nlevels(y)!=2) stop("y must have exatly 2 levels")
-    y <- c(-1,1)[y]
-  }
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   loss.weights <- rep(loss.weights,length.out=length(y))
+  y <- c(-1,1)[y]
   
   function(w) {
     w <- cbind(matrix(numeric(),ncol(x),0),w)
@@ -196,24 +196,9 @@ hingeLoss <- function(x,y,loss.weights=1) {
 }
 
 
-
-#' The loss function to maximize area under the ROC curve
-#' 
-#' @param x matrix of training instances (one instance by row)
-#' @param y a 2-levels factor representing the training labels for each instance in x
-#' @param loss.weights numeric vector of loss weights to incure for each instance of x. 
-#'        Vector length should match length(y), but values are cycled if not of identical size.
-#' @return a function taking one argument w and computing the loss value and the gradient at point w
+#' @describeIn binaryClassificationLosses Linear classifier maximize area under its ROC curve
 #' @export
 #' @import matrixStats
-#' @references Teo et al.
-#'   Bundle Methods for Regularized Risk Minimization
-#'   JMLR 2010
-#' @seealso bmrm
-#' @examples
-#'   x <- cbind(data.matrix(iris[1:2]),1)
-#'   y <- c(-1,1,1)[iris$Species]
-#'   w <- bmrm(rocLoss(x,y),LAMBDA=0.1,verbose=TRUE)
 rocLoss <- function(x,y,loss.weights=1) {
   y <- as.factor(y)
   if (nlevels(y)!=2) stop("y must have exatly 2 levels")

@@ -45,12 +45,12 @@ Loss functions to perform a regression
 \item \code{epsilonInsensitiveRegressionLoss}: epsilon-insensitive regression (Vapnik et al. 1997)
 }}
 \examples{
-  x <- cbind(data.matrix(iris[1:2]),1)
+  x <- cbind(intercept=100,data.matrix(iris[1:2]))
   y <- iris[[3]]
-  w <- bmrm(lmsRegressionLoss(x,y),LAMBDA=0.1)
-  w <- bmrm(ladRegressionLoss(x,y),LAMBDA=0.1)
-  w <- bmrm(quantileRegressionLoss(x,y,q=0.5),LAMBDA=0.1)
-  w <- bmrm(epsilonInsensitiveRegressionLoss(x,y,epsilon=1),LAMBDA=0.1)
+  w <- bmrm(lmsRegressionLoss(x,y))
+  w <- bmrm(ladRegressionLoss(x,y))
+  w <- bmrm(quantileRegressionLoss(x,y,q=0.5))
+  w <- bmrm(epsilonInsensitiveRegressionLoss(x,y,epsilon=1))
 }
 \references{
 Teo et al.
