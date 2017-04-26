@@ -20,7 +20,7 @@ for instance t. By default, the parameter is set to a 0/1 loss matrix.}
 a function taking one argument w and computing the loss value and the gradient at point w
 }
 \description{
-Ontology Loss Function
+Ontology loss function may be used when the class labels are organized has an ontology structure
 }
 \examples{
   # -- Load the data

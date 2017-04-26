@@ -365,6 +365,8 @@ softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
 
 #' Ontology Loss Function
 #' 
+#' Ontology loss function may be used when the class labels are organized has an ontology structure
+#' 
 #' @param x instance matrix, where x(t,) defines the features of instance t
 #' @param y target vector where y(t) is an integer encoding target of x(t,)
 #' @param l loss matrix. l(t,p(t)) must be the loss for predicting target p(t) instead of y(t) 
