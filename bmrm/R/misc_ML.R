@@ -29,6 +29,6 @@ roc.curve <- function(f,y) {
   y <- as.logical(y)
   if (length(f)!=length(y)) stop("scores and y not of the same length")
   o <- order(f, decreasing=TRUE)
-  data.frame(FPR=cumsum(!y[o])/sum(!y[o]),TPR=cumsum(y)/sum(y),f=f[o])
+  data.frame(FPR=cumsum(!y[o])/sum(!y),TPR=cumsum(y[o])/sum(y),f=f[o])
 }
 
