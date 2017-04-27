@@ -29,6 +29,18 @@ roc.curve <- function(f,y) {
   y <- as.logical(y)
   if (length(f)!=length(y)) stop("scores and y not of the same length")
   o <- order(f, decreasing=TRUE)
-  data.frame(FPR=cumsum(!y[o])/sum(!y),TPR=cumsum(y[o])/sum(y),f=f[o])
+  roc <- data.frame(
+    f=f[o],
+    TP = cumsum(y[o]),
+    FP = cumsum(!y[o])
+  )
+  roc$TN <- sum(!y) - roc$FP
+  roc$FN <- sum(y) - roc$TP
+  roc$FPR <- roc$FP/sum(!y)
+  roc$sensitivity <- roc$recall <- roc$TPR <- roc$TP/sum(y)
+  roc$accuracy <- (roc$TP+roc$TN)/length(y)
+  roc$specificity <- roc$TNR <- roc$TN / (roc$TN + roc$FP)
+  roc$precision <- roc$TP/(roc$TP+roc$FP)
+  return(roc)
 }
 
