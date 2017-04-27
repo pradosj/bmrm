@@ -15,3 +15,20 @@ balanced.cv.fold <- function(y,num.cv=10) {
   fold
 }
 
+
+
+
+#' Compute data for ROC curve plotting
+#' 
+#' @param f decision value for each instance
+#' @param y a logical that specify binary labels
+#' @return a 3 columns data.frame() with 'FPR' and 'TPR' at each threshold value 'f'
+#' @author Julien Prados, inspired by Bob Horton code
+#' @export
+roc.curve <- function(f,y) {
+  y <- as.logical(y)
+  if (length(f)!=length(y)) stop("scores and y not of the same length")
+  o <- order(f, decreasing=TRUE)
+  data.frame(FPR=cumsum(!y[o])/sum(!y[o]),TPR=cumsum(y)/sum(y),f=f[o])
+}
+
