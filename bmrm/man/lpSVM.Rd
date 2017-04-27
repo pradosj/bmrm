@@ -18,6 +18,11 @@ svmMulticlassLP(x, y, LAMBDA = 1, loss.weights = 1)
 
 \item{y}{a response factor for each row of x. It must be a 2 levels factor for svmLP, or a >=2 levels factor for svmMulticlassLP}
 
+\item{LAMBDA}{control the regularization strength in the optimization process. This is the value used as coefficient of the regularization term.}
+
+\item{loss.weights}{numeric vector of loss weights to incure for each instance of x. 
+Vector length should match length(y), but values are cycled if not of identical size.}
+
 \item{object}{an object of class svmLP}
 
 \item{...}{unused, present to satisfy the generic predict() prototype}

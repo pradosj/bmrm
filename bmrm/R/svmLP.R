@@ -19,6 +19,9 @@
 #' @name lpSVM
 #' @param x a numeric data matrix to predict
 #' @param y a response factor for each row of x. It must be a 2 levels factor for svmLP, or a >=2 levels factor for svmMulticlassLP
+#' @param loss.weights numeric vector of loss weights to incure for each instance of x. 
+#'        Vector length should match length(y), but values are cycled if not of identical size.
+#' @param LAMBDA control the regularization strength in the optimization process. This is the value used as coefficient of the regularization term.
 #' @return the optimized weights matrix, with class svmLP
 #' @author Julien Prados
 #' 
