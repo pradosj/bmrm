@@ -4,10 +4,13 @@
 \alias{binaryClassificationLosses}
 \alias{fbetaLoss}
 \alias{hingeLoss}
+\alias{logisticLoss}
 \alias{rocLoss}
 \title{Loss functions for binary classification}
 \usage{
 hingeLoss(x, y, loss.weights = 1)
+
+logisticLoss(x, y, loss.weights = 1)
 
 rocLoss(x, y, loss.weights = 1)
 
@@ -33,7 +36,9 @@ Loss functions for binary classification
 \itemize{
 \item \code{hingeLoss}: Hinge Loss for Linear Support Vector Machine (SVM)
 
-\item \code{rocLoss}: Linear classifier maximize area under its ROC curve
+\item \code{logisticLoss}: logistic regression
+
+\item \code{rocLoss}: Find linear weights maximize area under its ROC curve
 
 \item \code{fbetaLoss}: F-beta score loss function
 }}
@@ -41,6 +46,7 @@ Loss functions for binary classification
   x <- cbind(intercept=100,data.matrix(iris[1:2]))
   y <- ifelse(iris$Species=="setosa","setosa","not_setosa")
   w <- bmrm(hingeLoss(x,y))
+  w <- bmrm(logisticLoss(x,y))
   w <- bmrm(rocLoss(x,y))
   w <- bmrm(fbetaLoss(x,y))
 }

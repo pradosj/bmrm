@@ -29,7 +29,7 @@ $$R_{emp} := \frac{1}{m}\sum{l(x_i,y_i,w)}, \lambda > 0.$$
 | Support Vector Machine (SVM)        | Linear Classifier   | `hingeLoss()`                        | $\max(0,1-ywx)$              |
 | Maximizing ROC area                 | Linear Classifier   | `rocLoss()`                          | @Teo_JMLR_2010, &sect;A.3.1  |
 | Maximizing fbeta score              | Linear Classifier   | `fbetaLoss()`                        | @Teo_JMLR_2010, &sect;A.3.5  |
-| Logistic Regression                 | Regressor           | `logisticRegressionLoss()`           | $\log(1+e^{-ywx})$           |
+| Logistic Regression                 | Regressor           | `logisticLoss()`           | $\log(1+e^{-ywx})$           |
 | Least mean square regression        | Linear Regressor    | `lmsRegressionLoss()`                | $(wx-y)^2/2$                 |
 | Least absolute deviation regression | Linear Regressor    | `ladRegressionLoss()`                | $abs(wx-y)$                  |
 | $\epsilon$-insensitive regression   | Linear Regressor    | `epsilonInsensitiveRegressionLoss()` | $\max(0,abs(wx-y)-\epsilon)$ |
