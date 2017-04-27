@@ -24,7 +24,7 @@ NULL
 
 #' @describeIn regressionLosses Least Mean Square regression
 #' @export
-lmsRegressionLoss <- function(x,y,loss.weights=1) {
+lmsRegressionLoss <- function(x,y,loss.weights=1/length(y)) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.numeric(y)) stop('y must be a numeric vector')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
@@ -44,7 +44,7 @@ lmsRegressionLoss <- function(x,y,loss.weights=1) {
 
 #' @describeIn regressionLosses Least Absolute Deviation regression
 #' @export
-ladRegressionLoss <- function(x,y,loss.weights=1) {
+ladRegressionLoss <- function(x,y,loss.weights=1/length(y)) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.numeric(y)) stop('y must be a numeric vector')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
@@ -65,7 +65,7 @@ ladRegressionLoss <- function(x,y,loss.weights=1) {
 #' @describeIn regressionLosses Quantile Regression
 #' @param q a numeric value in the range [0-1] defining quantile value to consider
 #' @export
-quantileRegressionLoss <- function(x,y,q=0.5,loss.weights=1) {
+quantileRegressionLoss <- function(x,y,q=0.5,loss.weights=1/length(y)) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.numeric(y)) stop('y must be a numeric vector')    
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
@@ -87,7 +87,7 @@ quantileRegressionLoss <- function(x,y,q=0.5,loss.weights=1) {
 #' @describeIn regressionLosses epsilon-insensitive regression (Vapnik et al. 1997)
 #' @param epsilon a numeric value setting tolerance of the epsilon-regression
 #' @export
-epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
+epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1/length(y)) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.numeric(y)) stop('y must be a numeric vector')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
@@ -145,7 +145,7 @@ NULL
 
 #' @describeIn binaryClassificationLosses Hinge Loss for Linear Support Vector Machine (SVM)
 #' @export
-hingeLoss <- function(x,y,loss.weights=1) {
+hingeLoss <- function(x,y,loss.weights=1/length(y)) {
   y <- as.factor(y)
   if (nlevels(y)!=2) stop("y must have exatly 2 levels")
   if (!is.matrix(x)) stop('x must be a numeric matrix')
@@ -167,7 +167,7 @@ hingeLoss <- function(x,y,loss.weights=1) {
 
 #' @describeIn binaryClassificationLosses logistic regression
 #' @export
-logisticLoss <- function(x,y,loss.weights=1) {
+logisticLoss <- function(x,y,loss.weights=1/length(y)) {
   y <- as.factor(y)
   if (nlevels(y)!=2) stop("y must have exatly 2 levels")
   if (!is.matrix(x)) stop('x must be a numeric matrix')
@@ -190,12 +190,11 @@ logisticLoss <- function(x,y,loss.weights=1) {
 #' @describeIn binaryClassificationLosses Find linear weights maximize area under its ROC curve
 #' @export
 #' @import matrixStats
-rocLoss <- function(x,y,loss.weights=1) {
+rocLoss <- function(x,y) {
   y <- as.factor(y)
   if (nlevels(y)!=2) stop("y must have exatly 2 levels")
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
-  loss.weights <- rep(loss.weights,length.out=length(y))
   y <- c(-1,1)[y]
   
   function(w) {
@@ -208,8 +207,7 @@ rocLoss <- function(x,y,loss.weights=1) {
     l <- 0*o
     l[cbind(as.vector(o),as.vector(col(o)))] <- ifelse(y[o]==-1,sp,-sm)
     l <- l/(sum(y==-1)*sum(y==+1))
-    l <- loss.weights * l
-    
+
     val <- colSums(l*c)
     gradient(val) <- crossprod(x,l)
     return(val)
