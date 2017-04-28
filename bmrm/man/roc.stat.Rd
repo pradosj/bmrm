@@ -19,10 +19,10 @@ Compute statistics for ROC curve plotting
 }
 \examples{
   x <- cbind(data.matrix(iris[1:4]))
-  y <- ifelse(iris$Species=="setosa","setosa","not_setosa")
+  y <- ifelse(iris$Species=="versicolor","versicolor","not_versicolor")
   w <- bmrm(rocLoss(x,y))
-  roc.stat(x \%*\% w)
+  with(roc.stat(x \%*\% w,y=="versicolor"),plot(FPR,TPR))
 }
 \author{
-Julien Prados, inspired by Bob Horton code
+Julien Prados, adapted from Bob Horton code
 }
