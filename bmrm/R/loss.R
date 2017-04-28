@@ -327,22 +327,20 @@ softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
   
   function(w) {
     w <- cbind(matrix(numeric(),ncol(x)*ncol(l),0),w)
-    W3D <- array(w,c(ncol(x),ncol(l),ncol(w)))
-    fp <- array(x %*% matrix(w,ncol(x)),dim = c(nrow(x),ncol(l),ncol(w)))
-    
-    
-    fy <- colSums(as.vector(t(x)) * W3D[,y,])
-    lp <- aperm(aperm(fp,c(1,3,2)) - as.vector(fy),c(1,3,2)) + as.vector(l)
-    p <- matrix(max.col(t(matrix(aperm(lp,c(2,1,3)),ncol(lp))),ties.method='first'),nrow(lp))
-    lp <- matrix(lp[cbind(as.vector(row(p)),as.vector(p),as.vector(col(p)))],nrow(lp))
+
+    fp <- x %*% matrix(w,ncol(x))
+    fp <- matrix(fp[,t(matrix(seq_len(ncol(fp)),ncol(l)))],ncol=ncol(l)) # resize fp matrix
+    fy <- fp[cbind(seq_len(nrow(fp)),y)]
+    lp <- fp - fy + l[arrayInd(seq_len(nrow(fp)),nrow(x)),]
+    p <- matrix(max.col(lp,ties.method='first'),nrow(x))
+    lp <- matrix(lp[cbind(seq_along(p),as.vector(p))],nrow(p))
     
     # compute gradient
     gy <- gp <- array(0,c(length(y),ncol(l),ncol(w)))
-    gp[cbind(seq_along(y),as.vector(p),as.vector(col(p)))] <- 1
-    gy[cbind(seq_along(y),y,1)] <- 1
-    gy[] <- gy[,,1]
+    gp[cbind(as.vector(row(p)),as.vector(p),as.vector(col(p)))] <- 1
+    gy[cbind(as.vector(row(p)),y,as.vector(col(p)))] <- 1
     grad <- gp - gy
-    
+
     val <- colSums(lp)
     gradient(val) <- array(crossprod(x,matrix(grad,nrow(grad))),dim(w))
     return(val)
