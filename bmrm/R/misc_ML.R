@@ -23,7 +23,7 @@ balanced.cv.fold <- function(y,num.cv=10) {
 #' @param f decision value for each instance
 #' @param y a logical that specify binary labels
 #' @return a data.frame() that compute for each threshold value 'f' roc curve statistics: TP, FP, TN, FN, FPR, TPR, sensitivity, specificity, precision, recall, accuracy
-#' @author Julien Prados, inspired by Bob Horton code
+#' @author Julien Prados, adapted from Bob Horton code
 #' @export
 #' @examples
 #'   x <- cbind(data.matrix(iris[1:4]))
