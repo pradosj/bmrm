@@ -386,14 +386,15 @@ ontologyLoss <- function(x,y,l=1 - table(seq_along(y),y),dag=diag(nlevels(y))) {
   
   function(w) {
     w <- cbind(matrix(numeric(),ncol(x)*ncol(dag),0),w)
-    fp <- array(x %*% matrix(w,ncol(x)),dim=c(nrow(x),ncol(dag),ncol(w)))
-    z <- dag %*% matrix(aperm(fp,c(2,1,3)),ncol(fp)) + as.vector(t(l))
-    Y <- matrix(max.col(t(z),ties.method = "first"),nrow(fp))
+    fp <- x %*% matrix(w,ncol(x))
+    fp <- matrix(fp[,t(matrix(seq_len(ncol(fp)),ncol(dag)))],ncol=ncol(dag)) # resize fp matrix
+    z <- tcrossprod(fp,dag) + l[arrayInd(seq_len(nrow(fp)),nrow(x)),]
+    Y <- matrix(max.col(z,ties.method="first"),nrow(x))
+    val <- colSums(matrix(z[cbind(seq_along(Y),as.vector(Y))] - z[cbind(seq_along(Y),y[row(Y)])],nrow(x)))
     G <- dag[Y,] - dag[y[row(Y)],]
-    z <- aperm(array(z,c(nrow(dag),nrow(x),ncol(w))),c(2,1,3))
-    val <- colSums(matrix(z[cbind(as.vector(row(Y)),as.vector(Y),as.vector(col(Y)))],nrow(z)) - z[cbind(as.vector(row(Y)),y[row(Y)],as.vector(col(Y)))])
-    G <- aperm(array(G,c(nrow(x),ncol(w),ncol(G))),c(1,3,2))
-    gradient(val) <- array(crossprod(x,matrix(G,nrow(x))),dim(w))
+    G <- crossprod(x,matrix(G,nrow(x)))
+    G <- array(G[,t(matrix(seq_len(ncol(G)),ncol(w)))],dim(w))
+    gradient(val) <- G
     return(val)
   }
 }
