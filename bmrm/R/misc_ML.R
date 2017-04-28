@@ -46,6 +46,7 @@ roc.stat <- function(f,y) {
   roc$accuracy <- (roc$TP+roc$TN)/length(y)
   roc$specificity <- roc$TNR <- roc$TN / (roc$TN + roc$FP)
   roc$precision <- roc$TP/(roc$TP+roc$FP)
+  attr(roc,"AUC") <- sum(diff(c(0,roc$FPR))*roc$TPR)
   return(roc)
 }
 
