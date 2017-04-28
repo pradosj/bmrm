@@ -8,9 +8,9 @@
 \alias{fbetaLoss}
 \title{Loss functions for binary classification}
 \usage{
-hingeLoss(x, y, loss.weights = 1/length(y))
+hingeLoss(x, y, loss.weights = 1)
 
-logisticLoss(x, y, loss.weights = 1/length(y))
+logisticLoss(x, y, loss.weights = 1)
 
 rocLoss(x, y)
 
