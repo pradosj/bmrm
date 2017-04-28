@@ -17,4 +17,3 @@ a factor of num.cv levels that assign to each sample a test fold
 \description{
 Split a dataset for Cross Validation taking into account class balance
 }
-

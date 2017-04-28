@@ -39,9 +39,6 @@ The code is inspired from Matlab code of Do and Artiere, but not tested.
 The function is not used yet, but might be used later to speed up bmrm/nrbm 
 convergence.
 }
-\author{
-Julien Prados
-}
 \references{
 Do and Artieres
   Regularized Bundle Methods for Convex and Non-Convex Risks
@@ -50,4 +47,6 @@ Do and Artieres
 \seealso{
 \code{\link{bmrm}} \code{\link{nrbm}}
 }
-
+\author{
+Julien Prados
+}

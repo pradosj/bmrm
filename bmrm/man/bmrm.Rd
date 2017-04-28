@@ -78,9 +78,6 @@ where regularization_norm is either L1 or L2.
   
   
 }
-\author{
-Julien Prados
-}
 \references{
 Teo et al.
   A Scalable Modular Convex Solver for Regularized Risk Minimization.
@@ -89,4 +86,6 @@ Teo et al.
 \seealso{
 \code{\link{hingeLoss}} \code{\link{softMarginVectorLoss}}
 }
-
+\author{
+Julien Prados
+}

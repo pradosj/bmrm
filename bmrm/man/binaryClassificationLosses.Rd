@@ -2,10 +2,10 @@
 % Please edit documentation in R/loss.R
 \name{binaryClassificationLosses}
 \alias{binaryClassificationLosses}
-\alias{fbetaLoss}
 \alias{hingeLoss}
 \alias{logisticLoss}
 \alias{rocLoss}
+\alias{fbetaLoss}
 \title{Loss functions for binary classification}
 \usage{
 hingeLoss(x, y, loss.weights = 1/length(y))
@@ -42,6 +42,7 @@ Loss functions for binary classification
 
 \item \code{fbetaLoss}: F-beta score loss function
 }}
+
 \examples{
   x <- cbind(intercept=100,data.matrix(iris[1:2]))
   y <- ifelse(iris$Species=="setosa","setosa","not_setosa")
@@ -58,4 +59,3 @@ Teo et al.
 \seealso{
 bmrm
 }
-

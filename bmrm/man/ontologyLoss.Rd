@@ -39,4 +39,3 @@ Teo et al.
   A Scalable Modular Convex Solver for Regularized Risk Minimization.
   KDD 2007
 }
-

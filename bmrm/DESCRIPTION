@@ -9,6 +9,9 @@ Imports:
     lpSolve,
     LowRankQP,
     matrixStats
+Suggests:
+    knitr
+VignetteBuilder: knitr
 Author: Julien Prados
 Maintainer: Julien Prados <julien.prados@unige.ch>
 Copyright: 2014, University of Geneva
@@ -23,4 +26,4 @@ Description: Bundle methods for minimization of convex and non-convex risk
     least absolute deviation regression (see package examples), etc... all with
     L1 and L2 regularization.
 License: GPL-3
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

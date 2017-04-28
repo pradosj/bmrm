@@ -49,4 +49,3 @@ Do and Artieres
   Regularized Bundle Methods for Convex and Non-Convex Risks
   JMLR 2012
 }
-

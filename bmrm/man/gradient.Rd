@@ -2,6 +2,7 @@
 % Please edit documentation in R/core_loss.R
 \name{gradient}
 \alias{gradient}
+\alias{gradient<-}
 \alias{gradient.default}
 \alias{gradient<-}
 \alias{gradient<-.default}
@@ -32,4 +33,3 @@ Return or set gradient attribute
 gradient attribute isused by loss/risk function to return the gradient of
 the function at a given point together with the function value
 }
-

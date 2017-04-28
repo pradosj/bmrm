@@ -20,4 +20,3 @@ Compute data for ROC curve plotting
 \author{
 Julien Prados, inspired by Bob Horton code
 }
-

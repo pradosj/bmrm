@@ -2,9 +2,9 @@
 % Please edit documentation in R/svmLP.R
 \name{lpSVM}
 \alias{lpSVM}
-\alias{predict.svmLP}
 \alias{svmLP}
 \alias{svmMulticlassLP}
+\alias{predict.svmLP}
 \title{Linearly Programmed SVM}
 \usage{
 svmLP(x, y, LAMBDA = 1, loss.weights = 1)
@@ -54,6 +54,7 @@ where |w| is the L1-norm of w
 
 \item \code{svmMulticlassLP}: linear programm solving multiclass-SVM with L1-regularization and L1-norm
 }}
+
 \examples{
   x <- cbind(100,data.matrix(iris[1:4]))
   y <- iris$Species
@@ -66,4 +67,3 @@ where |w| is the L1-norm of w
 \author{
 Julien Prados
 }
-

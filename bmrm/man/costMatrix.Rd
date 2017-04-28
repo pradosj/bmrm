@@ -21,4 +21,3 @@ Compute or check the structure of a cost matrix
 \seealso{
 bmrm, ordinalRegressionLoss
 }
-
