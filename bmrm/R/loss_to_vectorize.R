@@ -111,15 +111,15 @@ ordinalRegressionLoss <- function(x,y,C="0/1",impl=c("loglin","quadratic")) {
   }
   
   .quadratic <- function(w) {
-    w <- rep(w,length.out=ncol(x)) 
+    w <- cbind(matrix(numeric(),ncol(x),0),w)
     f <- x %*% w
     
     # alternative computation in quadratic time for debugging purpose only
     z <- expand.grid(i=factor(1:m),j=factor(1:m))
     z <- z[y[z$i] < y[z$j],]
-    z <- z[1+f[z$i]-f[z$j]>0,]
-    R <- sum(C[cbind(y[z$i],y[z$j])] * (1+f[z$i]-f[z$j]))
-    gradient(R) <- colSums(C[cbind(y[z$i],y[z$j])] * (x[z$i,]-x[z$j,]))
+    z$Cij <- C[cbind(y[z$i],y[z$j])]
+    R <- colSums(z$Cij * pmax(1+f[z$i,,drop=FALSE]-f[z$j,,drop=FALSE],0))
+    gradient(R) <- crossprod(z$Cij*(x[z$i,]-x[z$j,]),(1+f[z$i,,drop=FALSE]-f[z$j,,drop=FALSE])>0)
     return(R)
   }
   
