@@ -136,10 +136,10 @@ epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
 #' @examples
 #'   x <- cbind(intercept=100,data.matrix(iris[1:2]))
 #'   y <- ifelse(iris$Species=="setosa","setosa","not_setosa")
-#'   w <- bmrm(hingeLoss(x,y))
-#'   w <- bmrm(logisticLoss(x,y))
-#'   w <- bmrm(rocLoss(x,y))
-#'   w <- bmrm(fbetaLoss(x,y))
+#'   w <- bmrm(hingeLoss(x,y)); f <- x %*% w; Y <- sign(f)
+#'   w <- bmrm(logisticLoss(x,y)); f <- x %*% w; Y <- exp(f) / (1+exp(f));
+#'   w <- bmrm(rocLoss(x,y)); f <- x %*% w;
+#'   w <- bmrm(fbetaLoss(x,y)) f <- x %*% w;
 NULL
 
 
