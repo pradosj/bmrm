@@ -34,7 +34,7 @@ balanced.cv.fold <- function(y,num.cv=10) {
 roc.stat <- function(f,y) {
   if (!is.logical(y)) stop("y must be a logical vector")
   if (length(f)!=length(y)) stop("f and y must have same length")
-  o <- order(f, decreasing=TRUE)
+  o <- order(f, runif(length(y)), decreasing=TRUE)
   roc <- data.frame(
     f=c(-Inf,f[o]),
     TP = c(0,cumsum(y[o])),
