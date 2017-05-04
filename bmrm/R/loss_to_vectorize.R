@@ -45,6 +45,7 @@ costMatrix <- function(y,C=c("0/1","linear")) {
 #'   Bundle Methods for Regularized Risk Minimization
 #'   JMLR 2010
 #' @seealso bmrm
+#' @import matrixStats
 #' @examples
 #' # -- Load the data
 #' x <- data.matrix(iris[1:4])
@@ -79,34 +80,39 @@ ordinalRegressionLoss <- function(x,y,C="0/1",impl=c("loglin","quadratic")) {
   M <- (m*m - sum(mi*mi))/2
   C <- C / M
   
+  colOrder <- function(m) {
+    array(row(m)[order(col(m),m)],dim(m))
+  }
+  
   .loglin <- function(w) {
-    w <- rep(w,length.out=ncol(x))
+    w <- cbind(matrix(numeric(),ncol(x),0),w)
     f <- x %*% w
-    c <- c(f-0.5,f+0.5)
-    o <- order(c)
+    c <- rbind(f-0.5,f+0.5)
+    o <- colOrder(c)
+    j <- array(arrayInd(o,m),dim(o))
     
-    j <- ((o-1)%%m)+1
+    l <- array(0,c(2*m,ncol(w),length(mi)))
+    l[cbind(which(o<=m,arr.ind=TRUE),y[j[o<=m]])] <- 1
+    l <- array(matrixStats::colCumsums(matrix(l,nrow(l))),dim(l))
+
+    ijk <- arrayInd(seq_along(l),dim(l))
     
-    l <- matrix(0,2*m,length(mi))
-    l[cbind(which(o<=m),y[j[o<=m]])] <- 1
-    l <- apply(l,2,cumsum)
+    u <- array(0,c(2*m,ncol(w),length(mi)))
+    u[cbind(which(o>m,arr.ind=TRUE),y[j[o>m]])] <- 1
+    u <- mi[ijk[,3]] - array(matrixStats::colCumsums(matrix(u,nrow(u))),dim(u))
     
-    u <- matrix(0,2*m,length(mi))
-    u[cbind(which(o>m),y[j[o>m]])] <- 1
-    u <- mi[col(u)] - apply(u,2,cumsum)
+    Gu <- array(t(C)[y[j],],dim(u)) * u
+    Gu[ijk[,3]>=y[j]] <- 0
+    Gl <- array(C[y[j],],dim(l)) * l
+    Gl[ijk[,3]<=y[j]] <- 0
     
-    Gu <- t(C)[y[j],] * u
-    Gu[col(Gu)>=y[j]] <- 0
-    Gl <- C[y[j],] * l
-    Gl[col(Gl)<=y[j]] <- 0
+    v <- ifelse(o<=m,-rowSums(Gu,dims=2), rowSums(Gl,dims=2))
+    r <- colSums(v*c[cbind(as.vector(o),as.vector(col(o)))])
     
-    v <- ifelse(o<=m,-rowSums(Gu), rowSums(Gl))
-    r <- sum(v*c[o])
-    g <- matrix(NA,m,2)
-    g[cbind(j,1 + (o-1)%/%m)] <- v
-    g <- rowSums(g)
-    
-    gradient(r) <- crossprod(g,x)
+    g <- array(NA,c(m,ncol(w),2))
+    g[cbind(as.vector(j),as.vector(col(j)),as.vector(1 + (o-1)%/%m))] <- v
+    g <- rowSums(g,dims=2)
+    gradient(r) <- crossprod(x,g)
     return(r)
   }
   
