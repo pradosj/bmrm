@@ -16,6 +16,7 @@
 #' @param maxCP mximal number of cutting plane to use to limit memory footprint
 #' @param convexRisk a length 1 logical telling if the risk function riskFun is convex. 
 #'    If TRUE, use CRBM algorithm; if FALSE use NRBM algorithm from Do and Artieres, JMLR 2012
+#' @param LowRankQP.method a single character value defining the method used by LowRankQP (should be either "LU" or "CHOL")
 #' @return the optimal weight vector (w)
 #' @references Do and Artieres
 #'   Regularized Bundle Methods for Convex and Non-Convex Risks
@@ -31,7 +32,7 @@
 #'   w <- nrbm(ladRegressionLoss(X/100,Y/100),maxCP=50)
 #'   layout(1)
 #'   barplot(w)
-nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100L,convexRisk=TRUE) {
+nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100L,convexRisk=TRUE,LowRankQP.method="LU") {
   # intialize first point estimation
   R <- riskFun(w0)
   at <- as.vector(gradient(R))
@@ -78,7 +79,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
     # solve the optimization problem
     H <- matrix(0,1L+nrow(A2),1L+nrow(A2))
     H[-1,-1] <- tcrossprod(A2)
-    alpha <- LowRankQP(H,c(0,-LAMBDA*b2),matrix(1,1L,nrow(A2)+1L),1,rep(1,nrow(A2)+1L),method="LU")$alpha[-1L]
+    alpha <- LowRankQP(H,c(0,-LAMBDA*b2),matrix(1,1L,nrow(A2)+1L),1,rep(1,nrow(A2)+1L),method=LowRankQP.method)$alpha[-1L]
     
     # update aggregated cutting plane
     inactivity.score <- inactivity.score + pmax(1-alpha[-1L],0)
