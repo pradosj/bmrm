@@ -105,8 +105,8 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
       # solve possible conflicts with the new cutting plane
       if (f<ub) {
         st <- 0
-        s <- s + 0.5*LAMBDA*crossprod(ub.w-w)
-        s0 <- s0 + 0.5*LAMBDA*crossprod(ub.w-w)
+        s <- s + as.vector(0.5*LAMBDA*crossprod(ub.w-w))
+        s0 <- s0 + as.vector(0.5*LAMBDA*crossprod(ub.w-w))
         b <- pmin(b,R - (A %*% w) - s)
         b0 <- pmin(b0,R - crossprod(a0,w) - s0)
       } else { # null step
