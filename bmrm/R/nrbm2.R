@@ -20,7 +20,8 @@ nrbm2 <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=10
   
   ub.w <- w <- w0
   ub.R <- R
-  ub <- LAMBDA*0.5*crossprod(w0) + R
+  # ub <- LAMBDA*0.5*crossprod(w0) + R
+  ub <- LAMBDA*sum(abs(w0)) + R
   st <- 0
   is.newbest <- TRUE
   for (i in 1:MAX_ITER) {    
@@ -37,9 +38,10 @@ nrbm2 <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=10
     }
     
     # solve the optimization problem
-    H <- matrix(0,1L+nrow(A),1L+nrow(A))
-    H[-1,-1] <- tcrossprod(A)
-    alpha <- LowRankQP(H,c(0,-LAMBDA*b),matrix(1,1L,nrow(A)+1L),1,rep(1,nrow(A)+1L),method="LU")$alpha[-1L]
+    # H <- matrix(0,1L+nrow(A),1L+nrow(A))
+    # H[-1,-1] <- tcrossprod(A)
+    # alpha <- LowRankQP(H,c(0,-LAMBDA*b),matrix(1,1L,nrow(A)+1L),1,rep(1,nrow(A)+1L),method="LU")$alpha[-1L]
+    ##TODO
     
     # update aggregated cutting plane
     inactivity.score <- inactivity.score + pmax(1-alpha,0)
@@ -48,7 +50,8 @@ nrbm2 <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=10
     
     # return the optimum vector and corresponding objective value
     w <- as.vector(-crossprod(A,alpha) / LAMBDA)
-    lb <- LAMBDA*0.5*crossprod(w) + max(0,A %*% w + b)
+    #lb <- LAMBDA*0.5*crossprod(w) + max(0,A %*% w + b)
+    lb <- LAMBDA*sum(abs(w)) + max(0,A %*% w + b)
     
     # test for the end of convergence
     cat(sprintf("%d:gap=%g obj=%g reg=%g risk=%g w=[%g,%g]\n",i,ub-lb,ub,LAMBDA*0.5*crossprod(ub.w),ub.R,min(ub.w),max(ub.w)))
@@ -56,7 +59,8 @@ nrbm2 <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=10
     
     # estimate loss at the new underestimator optimum
     R <- riskFun(w)
-    f <- LAMBDA*0.5*crossprod(w) + R
+    #f <- LAMBDA*0.5*crossprod(w) + R
+    f <- LAMBDA*sum(abs(w)) + R
     
     # deduce parameters of the new cutting plane
     at <- as.vector(gradient(R))
