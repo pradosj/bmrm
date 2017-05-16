@@ -34,12 +34,13 @@ balanced.cv.fold <- function(y,num.cv=10) {
 roc.stat <- function(f,y) {
   if (!is.logical(y)) stop("y must be a logical vector")
   if (length(f)!=length(y)) stop("f and y must have same length")
-  o <- order(f, runif(length(y)), decreasing=TRUE)
+  o <- order(f, decreasing=TRUE)
   roc <- data.frame(
     f=c(-Inf,f[o]),
     TP = c(0,cumsum(y[o])),
     FP = c(0,cumsum(!y[o]))
   )
+  roc <- roc[rev(!duplicated(rev(roc$f))),]
   roc$TN <- sum(!y) - roc$FP
   roc$FN <- sum(y) - roc$TP
   roc$FPR <- roc$FP/sum(!y)
@@ -47,7 +48,10 @@ roc.stat <- function(f,y) {
   roc$accuracy <- (roc$TP+roc$TN)/length(y)
   roc$specificity <- roc$TNR <- roc$TN / (roc$TN + roc$FP)
   roc$precision <- roc$TP/(roc$TP+roc$FP)
-  attr(roc,"AUC") <- sum(diff(c(0,roc$FPR))*roc$TPR)
+  
+  dx <- diff(roc$FPR)
+  dy <- diff(roc$TPR)
+  attr(roc,"AUC") <- sum(dx*roc$TPR[seq_along(dx)] + dx*dy/2)
   return(roc)
 }
 
