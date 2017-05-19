@@ -24,8 +24,6 @@
 #' @author Julien Prados
 #' @seealso \code{\link{hingeLoss}} \code{\link{softMarginVectorLoss}}
 bmrm2 <- function(riskFun,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,w0=0,verbose=TRUE) {
-	regfun <- match.arg(regfun)
-	
 	loss <- riskFun(w0)
   g <- as.vector(gradient(loss))
   A <- matrix(numeric(0),0L,length(g))
