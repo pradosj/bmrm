@@ -139,7 +139,7 @@ epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
 #'   w <- bmrm(hingeLoss(x,y)); f <- x %*% w; Y <- sign(f)
 #'   w <- bmrm(logisticLoss(x,y)); f <- x %*% w; Y <- exp(f) / (1+exp(f));
 #'   w <- bmrm(rocLoss(x,y)); f <- x %*% w;
-#'   w <- bmrm(fbetaLoss(x,y)) f <- x %*% w;
+#'   w <- bmrm(fbetaLoss(x,y)); f <- x %*% w;
 NULL
 
 
