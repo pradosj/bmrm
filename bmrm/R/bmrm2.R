@@ -31,7 +31,7 @@ bmrm2 <- function(riskFun,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,w0=0,verbose=TR
   
 	w <- rep(w0,length.out=length(g))
 	ub <- LAMBDA*sum(abs(w)) + loss
-	log <- list(loss=numeric(),ub=numeric(),epsilon=numeric(),nnz=integer())
+	log <- list(loss=numeric(),ub=numeric(),epsilon=numeric(),nnz=integer(),ncst=integer())
 	for (i in 1:MAX_ITER) {
 	  # add the new cutting plane to the working set
 	  A <- rbind(A,g)
@@ -42,16 +42,22 @@ bmrm2 <- function(riskFun,LAMBDA=1,MAX_ITER=100,EPSILON_TOL=0.01,w0=0,verbose=TR
               objective.in = c(-1,rep_len(-LAMBDA,2L*ncol(A))),
               const.mat = cbind(-1,A,-A),
               const.dir = rep("<=",nrow(A)),
-              const.rhs = -b
+              const.rhs = -b,
+              compute.sens = 1
     )
     if (opt$status!=0) warning("issue in the LP solver:",opt$status)
     opt$W <- matrix(opt$solution[-1L],ncol=2L)
     w <- opt$W[,1L] - opt$W[,2L]
     lb <- -opt$objval
+    
+    # remove unused constraints
+    msk <- opt$duals[1:nrow(A)]!=0
+    A <- A[msk,]
+    b <- b[msk]
 
 	  # log optimization status
-	  log$loss[i]<-loss;log$ub[i]<-ub;log$epsilon[i]<-ub-lb;log$nnz[i]<-sum(w!=0)
-	  if (verbose) {cat(sprintf("%d:gap=%g obj=%g reg=%g risk=%g w=[%g,%g] nnz=%d\n",i,log$epsilon[i],log$ub[i],log$ub[i]-log$loss[i],log$loss[i],min(w),max(w),log$nnz[i]))}
+	  log$loss[i]<-loss;log$ub[i]<-ub;log$epsilon[i]<-ub-lb;log$nnz[i]<-sum(w!=0);log$ncst[i]<-length(b)
+	  if (verbose) {cat(sprintf("%d:gap=%g obj=%g reg=%g risk=%g w=[%g,%g] nnz=%d ncst=%d\n",i,log$epsilon[i],log$ub[i],log$ub[i]-log$loss[i],log$loss[i],min(w),max(w),log$nnz[i],log$ncst[i]))}
 	  
 	  # test for the end of convergence
 	  if (ub-lb < EPSILON_TOL) break
