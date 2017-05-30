@@ -48,7 +48,6 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
   # initialize aggregated cutting plane
   a0 <- b0 <- NULL
   s0 <- 0
-    
 
   w <- ub.w <- w0
   ub.R <- R
@@ -57,17 +56,24 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
   is.newbest <- TRUE
   for (i in 1:MAX_ITER) {    
     # add the new cutting plane to the working set
-    cp <- head(order(inactivity.score,na.last=FALSE),n=maxCP)
-    A <- rbind(at,A[cp,])
-    b <- c(bt,b[cp])
-    s <- c(st,s[cp])
+    if (nrow(A)<maxCP) {
+      A <- rbind(A,at)
+      b <- c(b,bt)
+      s <- c(s,st)
+      inactivity.score <- c(inactivity.score,0)
+      t <- nrow(A)
+    } else {
+      t <- which.max(inactivity.score)
+      A[t,] <- at
+      b[t] <- bt
+      s[t] <- st
+      inactivity.score[t] <- 0
+    }
     if (is.newbest) {
       inactivity.score[is.na(inactivity.score)] <- 0
-      inactivity.score<- c(NA_real_,inactivity.score[cp])
-    } else {
-      inactivity.score <- c(0,inactivity.score[cp])
+      inactivity.score[t] <- NA
     }
-      
+    
     #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
     # optimize the underestimator
     #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
@@ -134,9 +140,6 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
   if (i >= MAX_ITER) warning('max # of itertion exceeded')
   return(ub.w)
 }
-
-
-
 
 
 
