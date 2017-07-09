@@ -5,7 +5,8 @@
 \title{Convex and non-convex risk minimization with L2 regularization and limited memory}
 \usage{
 nrbm(riskFun, LAMBDA = 1, MAX_ITER = 1000L, EPSILON_TOL = 0.01, w0 = 0,
-  maxCP = 100L, convexRisk = TRUE, LowRankQP.method = "LU")
+  maxCP = 100L, convexRisk = TRUE, LowRankQP.method = "LU",
+  regularizer = c("l2", "l1"))
 }
 \arguments{
 \item{riskFun}{the risk function to use in the optimization (e.g.: hingeLoss, softMarginVectorLoss). 
@@ -28,6 +29,8 @@ the optimization end when the optimization gap is below this threshold}
 If TRUE, use CRBM algorithm; if FALSE use NRBM algorithm from Do and Artieres, JMLR 2012}
 
 \item{LowRankQP.method}{a single character value defining the method used by LowRankQP (should be either "LU" or "CHOL")}
+
+\item{regularizer}{}
 }
 \value{
 the optimal weight vector (w)
@@ -38,12 +41,37 @@ f(w) = 0.5*LAMBDA*l2norm(w) + riskFun(w)
 where riskFun is either a convex or a non-convex risk function.
 }
 \examples{
+  # -- Create a 2D dataset with the first 2 features of iris, with binary labels
+  x <- data.matrix(iris[1:2])
+  y <- c(-1,1,1)[iris$Species]
+
+  # -- Add a constant dimension to the dataset to learn the intercept
+  x <- cbind(intercept=1000,x)
+
+  # -- train scalar prediction models with maxMarginLoss and fbetaLoss
+  models <- list(
+    svm_L1 = nrbm(hingeLoss(x,y),LAMBDA=0.1,reg='l1'),
+    svm_L2 = nrbm(hingeLoss(x,y),LAMBDA=0.1,reg='l2'),
+    f1_L1 = nrbm(fbetaLoss(x,y),LAMBDA=0.01,reg='l1')
+  )
+
+  # -- Plot the dataset and the predictions
+  plot(x[,-1],pch=20+y,main="dataset & hyperplanes")
+  legend('bottomright',legend=names(models),col=seq_along(models),lty=1,cex=0.75,lwd=3)
+  for(i in seq_along(models)) {
+    w <- models[[i]]
+    if (w[3]!=0) abline(-w[1]*1000/w[3],-w[2]/w[3],col=i,lwd=3)
+  }
+
+
+  # -- fit a least absolute deviation linear model on a synthetic dataset
+  # -- containing 196 meaningful features and 4 noisy features. Then
+  # -- check if the model has detected the noise
   set.seed(123)
   X <- matrix(rnorm(4000*200), 4000, 200)
   beta <- c(rep(1,ncol(X)-4),0,0,0,0)
   Y <- X\%*\%beta + rnorm(nrow(X))
   w <- nrbm(ladRegressionLoss(X/100,Y/100),maxCP=50)
-  layout(1)
   barplot(w)
 }
 \references{

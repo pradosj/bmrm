@@ -17,6 +17,7 @@
 #' @param convexRisk a length 1 logical telling if the risk function riskFun is convex. 
 #'    If TRUE, use CRBM algorithm; if FALSE use NRBM algorithm from Do and Artieres, JMLR 2012
 #' @param LowRankQP.method a single character value defining the method used by LowRankQP (should be either "LU" or "CHOL")
+#' @param regularizer 
 #' @return the optimal weight vector (w)
 #' @references Do and Artieres
 #'   Regularized Bundle Methods for Convex and Non-Convex Risks
@@ -25,20 +26,56 @@
 #' @import LowRankQP
 #' @importFrom utils head
 #' @examples
+#'   # -- Create a 2D dataset with the first 2 features of iris, with binary labels
+#'   x <- data.matrix(iris[1:2])
+#'   y <- c(-1,1,1)[iris$Species]
+#'
+#'   # -- Add a constant dimension to the dataset to learn the intercept
+#'   x <- cbind(intercept=1000,x)
+#'
+#'   # -- train scalar prediction models with maxMarginLoss and fbetaLoss
+#'   models <- list(
+#'     svm_L1 = nrbm(hingeLoss(x,y),LAMBDA=0.1,reg='l1'),
+#'     svm_L2 = nrbm(hingeLoss(x,y),LAMBDA=0.1,reg='l2'),
+#'     f1_L1 = nrbm(fbetaLoss(x,y),LAMBDA=0.01,reg='l1')
+#'   )
+#'
+#'   # -- Plot the dataset and the predictions
+#'   plot(x[,-1],pch=20+y,main="dataset & hyperplanes")
+#'   legend('bottomright',legend=names(models),col=seq_along(models),lty=1,cex=0.75,lwd=3)
+#'   for(i in seq_along(models)) {
+#'     w <- models[[i]]
+#'     if (w[3]!=0) abline(-w[1]*1000/w[3],-w[2]/w[3],col=i,lwd=3)
+#'   }
+#'
+#'
+#'   # -- fit a least absolute deviation linear model on a synthetic dataset
+#'   # -- containing 196 meaningful features and 4 noisy features. Then
+#'   # -- check if the model has detected the noise
 #'   set.seed(123)
 #'   X <- matrix(rnorm(4000*200), 4000, 200)
 #'   beta <- c(rep(1,ncol(X)-4),0,0,0,0)
 #'   Y <- X%*%beta + rnorm(nrow(X))
 #'   w <- nrbm(ladRegressionLoss(X/100,Y/100),maxCP=50)
-#'   layout(1)
 #'   barplot(w)
-nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100L,convexRisk=TRUE,LowRankQP.method="LU") {
+nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100L,convexRisk=TRUE,LowRankQP.method="LU",regularizer=c("l2","l1")) {
+  if (maxCP<3) stop("maxCP should be >=3")
+  regularizer <- match.arg(regularizer)
+  if (regularizer=="l1" && !convexRisk) stop("l1 regularizer only support convex risk")
+
   # intialize first point estimation
   R <- riskFun(w0)
   at <- as.vector(gradient(R))
   w <- rep(w0,length.out=length(at))
   bt <- as.vector(R) - crossprod(w,at)
-  f <- LAMBDA*0.5*crossprod(w) + R
+  switch(regularizer,
+         l1 = {
+           f <- LAMBDA*sum(abs(w)) + R
+         },
+         l2 = {
+           f <- LAMBDA*0.5*crossprod(w) + R
+         }
+  )
   st <- 0
   
   # initialize aggregated working plane and working set
@@ -46,22 +83,47 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
   inactivity.score <- c(NA_real_,NA_real_)
   ub <- f;ub.w <- w;ub.R <- R;ub.t <- 2
   for (i in 1:MAX_ITER) {
-    # optimize underestimator
-    H <- matrix(0,1L+nrow(A),1L+nrow(A))
-    H[-1,-1] <- tcrossprod(A)
-    alpha <- LowRankQP(H,c(0,-LAMBDA*b),matrix(1,1L,nrow(H)),1,rep(1,nrow(H)),method=LowRankQP.method)$alpha[-1L]
-
+    
+    switch(regularizer,
+           l1 = {
+             # optimize underestimator
+             opt <- lp(direction = "max",
+                       objective.in = c(-1,rep_len(-LAMBDA,2L*ncol(A))),
+                       const.mat = cbind(-1,A,-A),
+                       const.dir = rep("<=",nrow(A)),
+                       const.rhs = -b,
+                       compute.sens = 1
+             )
+             if (opt$status!=0) warning("issue in the LP solver:",opt$status)
+             opt$W <- matrix(opt$solution[-1L],ncol=2L)
+             alpha <- opt$duals[1:nrow(A)]
+             
+             # compute the optimum point and corresponding objective value    
+             w <- opt$W[,1L] - opt$W[,2L]
+             lb <- -opt$objval
+             
+             # estimate loss at the new underestimator optimum
+             R <- riskFun(w)
+             f <- LAMBDA*sum(abs(w)) + R
+           },
+           l2 = {
+             # optimize underestimator
+             H <- matrix(0,1L+nrow(A),1L+nrow(A))
+             H[-1,-1] <- tcrossprod(A)
+             alpha <- LowRankQP(H,c(0,-LAMBDA*b),matrix(1,1L,nrow(H)),1,rep(1,nrow(H)),method=LowRankQP.method)$alpha[-1L]
+             
+             # compute the optimum point and corresponding objective value
+             w <- as.vector(-crossprod(A,alpha) / LAMBDA)
+             lb <- LAMBDA*0.5*crossprod(w) + max(0,A %*% w + b)
+             
+             # estimate loss at the new underestimator optimum
+             R <- riskFun(w)
+             f <- LAMBDA*0.5*crossprod(w) + R
+           }
+    )
     # update inactivity score
     inactivity.score <- inactivity.score + pmax(1-alpha,0)
-    
-    # compute the optimum point and corresponding objective value
-    w <- as.vector(-crossprod(A,alpha) / LAMBDA)
-    lb <- LAMBDA*0.5*crossprod(w) + max(0,A %*% w + b)
-    
-    # estimate loss at the new underestimator optimum
-    R <- riskFun(w)
-    f <- LAMBDA*0.5*crossprod(w) + R
-    
+
     # deduce parameters of the new cutting plane
     at <- as.vector(gradient(R))
     bt <- R - crossprod(w,at)
