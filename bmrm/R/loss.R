@@ -21,6 +21,11 @@
 #'   w <- nrbm(epsilonInsensitiveRegressionLoss(x,y,epsilon=1))
 NULL
 
+#' @export
+predict.regressionLoss <- function(object,x,...) {
+  f <- x %*% object
+  f
+}
 
 #' @describeIn regressionLosses Least Mean Square regression
 #' @export
@@ -37,6 +42,7 @@ lmsRegressionLoss <- function(x,y,loss.weights=1) {
     grad <- loss.weights * (f-y)
     lvalue(w) <- colSums(loss)
     gradient(w) <- crossprod(x,grad)
+    class(w) <- "regressionLoss"
     return(w)
   }
 }
@@ -57,6 +63,7 @@ ladRegressionLoss <- function(x,y,loss.weights=1) {
     grad <- loss.weights * sign(f-y)
     lvalue(w) <- colSums(loss)
     gradient(w) <- crossprod(x,grad)
+    class(w) <- "regressionLoss"
     return(w)
   }
 }
@@ -79,6 +86,7 @@ quantileRegressionLoss <- function(x,y,q=0.5,loss.weights=1) {
     grad <- loss.weights * ifelse(f>y,q,q-1)
     lvalue(w) <- colSums(loss)
     gradient(w) <- crossprod(x,grad)
+    class(w) <- "regressionLoss"
     return(w)
   }
 }
@@ -100,6 +108,7 @@ epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
     grad <- loss.weights * ifelse(abs(f-y)<epsilon,0,sign(f-y))
     lvalue(w) <- colSums(loss)
     gradient(w) <- crossprod(x,grad)
+    class(w) <- "regressionLoss"
     return(w)
   }
 }
@@ -142,6 +151,11 @@ epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
 #'   w <- nrbm(fbetaLoss(x,y)); f <- x %*% w;
 NULL
 
+#' @export
+predict.binaryLoss <- function(object,x,...) {
+  f <- x %*% object
+  f
+}
 
 #' @describeIn binaryClassificationLosses Hinge Loss for Linear Support Vector Machine (SVM)
 #' @export
@@ -160,6 +174,7 @@ hingeLoss <- function(x,y,loss.weights=1) {
     grad <- loss.weights * (loss>0) * (-y)
     lvalue(w) <- colSums(loss)
     gradient(w) <- crossprod(x,grad)
+    class(w) <- "binaryLoss"
     return(w)
   }
 }
@@ -182,8 +197,16 @@ logisticLoss <- function(x,y,loss.weights=1) {
     grad <- loss.weights * y*(1/(1+exp(-y*f)) - 1)
     lvalue(w) <- colSums(loss)
     gradient(w) <- crossprod(x,grad)
+    class(w) <- "logisticLoss"
     return(w)
   }
+}
+
+#' @export
+predict.logisticLoss <- function(object,x,...) {
+  f <- x %*% object
+  p <- exp(f) / (1+exp(f))
+  p
 }
 
 
@@ -210,6 +233,7 @@ rocLoss <- function(x,y) {
 
     lvalue(w) <- colSums(l*c)
     gradient(w) <- crossprod(x,l)
+    class(w) <- "binaryLoss"
     return(w)
   }
 }
@@ -264,6 +288,7 @@ fbetaLoss <- function(x,y,beta=1) {
     
     lvalue(w) <- R[cbind(mi,seq_along(mi))]
     gradient(w) <- crossprod(x,Y-y)
+    class(w) <- "binaryLoss"
     return(w)
   }
 }
