@@ -36,69 +36,27 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
   # intialize first point estimation
   R <- riskFun(w0)
   at <- as.vector(gradient(R))
-  w0 <- rep(w0,length.out=length(at))  
-  bt <- as.vector(R) - crossprod(w0,at)
-  
-  # initialize working set
-  A <- matrix(numeric(0),0L,length(at))
-  b <- numeric(0)
-  s <- numeric(0)
-  inactivity.score <- numeric(0)
-  
-  # initialize aggregated cutting plane
-  a0 <- b0 <- NULL
-  s0 <- 0
-
-  w <- ub.w <- w0
-  ub.R <- R
-  ub <- LAMBDA*0.5*crossprod(w0) + R
+  w <- rep(w0,length.out=length(at))
+  bt <- as.vector(R) - crossprod(w,at)
+  f <- LAMBDA*0.5*crossprod(w) + R
   st <- 0
-  is.newbest <- TRUE
-  for (i in 1:MAX_ITER) {    
-    # add the new cutting plane to the working set
-    if (nrow(A)<maxCP) {
-      A <- rbind(A,at)
-      b <- c(b,bt)
-      s <- c(s,st)
-      inactivity.score <- c(inactivity.score,0)
-      t <- nrow(A)
-    } else {
-      t <- which.max(inactivity.score)
-      A[t,] <- at
-      b[t] <- bt
-      s[t] <- st
-      inactivity.score[t] <- 0
-    }
-    if (is.newbest) {
-      inactivity.score[is.na(inactivity.score)] <- 0
-      inactivity.score[t] <- NA
-    }
+  
+  # initialize aggregated working plane and working set
+  A <- rbind(at,at);b <- c(bt,bt);s <- c(st,st)
+  inactivity.score <- c(NA_real_,NA_real_)
+  ub <- f;ub.w <- w;ub.R <- R;ub.t <- 2
+  for (i in 1:MAX_ITER) {
+    # optimize underestimator
+    H <- matrix(0,1L+nrow(A),1L+nrow(A))
+    H[-1,-1] <- tcrossprod(A)
+    alpha <- LowRankQP(H,c(0,-LAMBDA*b),matrix(1,1L,nrow(H)),1,rep(1,nrow(H)),method=LowRankQP.method)$alpha[-1L]
+
+    # update inactivity score
+    inactivity.score <- inactivity.score + pmax(1-alpha,0)
     
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-    # optimize the underestimator
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-    
-    # add aggregated cutting cutting plane to the working set (A,b)
-    A2 <- rbind(a0,A)
-    b2 <- c(b0,b)
-    
-    # solve the optimization problem
-    H <- matrix(0,1L+nrow(A2),1L+nrow(A2))
-    H[-1,-1] <- tcrossprod(A2)
-    alpha <- LowRankQP(H,c(0,-LAMBDA*b2),matrix(1,1L,nrow(A2)+1L),1,rep(1,nrow(A2)+1L),method=LowRankQP.method)$alpha[-1L]
-    
-    # update aggregated cutting plane
-    inactivity.score <- inactivity.score + pmax(1-alpha[-1L],0)
-    a0 <- colSums(alpha * A2)
-    b0 <- sum(alpha * b2)
-    
-    # return the optimum vector and corresponding objective value
-    w <- as.vector(-crossprod(A2,alpha) / LAMBDA)
-    lb <- LAMBDA*0.5*crossprod(w) + max(0,A2 %*% w + b2)
-    
-    # test for the end of convergence
-    cat(sprintf("%d:gap=%g obj=%g reg=%g risk=%g w=[%g,%g]\n",i,ub-lb,ub,LAMBDA*0.5*crossprod(ub.w),ub.R,min(ub.w),max(ub.w)))
-    if (ub-lb < EPSILON_TOL) break
+    # compute the optimum point and corresponding objective value
+    w <- as.vector(-crossprod(A,alpha) / LAMBDA)
+    lb <- LAMBDA*0.5*crossprod(w) + max(0,A %*% w + b)
     
     # estimate loss at the new underestimator optimum
     R <- riskFun(w)
@@ -107,15 +65,13 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
     # deduce parameters of the new cutting plane
     at <- as.vector(gradient(R))
     bt <- R - crossprod(w,at)
-    
+
     if (!convexRisk) {
       # solve possible conflicts with the new cutting plane
       if (f<ub) {
         st <- 0
         s <- s + as.vector(0.5*LAMBDA*crossprod(ub.w-w))
-        s0 <- s0 + as.vector(0.5*LAMBDA*crossprod(ub.w-w))
         b <- pmin(b,R - (A %*% w) - s)
-        b0 <- pmin(b0,R - crossprod(a0,w) - s0)
       } else { # null step
         st <- 0.5*LAMBDA*crossprod(w-ub.w)
         if (ub.R < st + crossprod(at,ub.w) + bt) {
@@ -130,12 +86,32 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
         }
       }
     }
-    is.newbest <- (f<ub)
-    if (is.newbest) {
-      ub <- f
-      ub.w <- w
-      ub.R <- R
+
+    # update aggregated cutting plane
+    A[1,] <- alpha %*% A
+    b[1] <- alpha %*% b
+    
+    # add the new cutting plane to the working set
+    if (nrow(A)<maxCP) {
+      A <- rbind(A,at);b <- c(b,bt);s <- c(s,st)
+      inactivity.score <- c(inactivity.score,0)
+      t <- length(b)
+    } else {
+      t <- which.max(inactivity.score)
+      A[t,] <- at;b[t] <- bt;s[t] <- st
+      inactivity.score[t] <- 0
     }
+    
+    # if new best found
+    if (f<ub) {
+      inactivity.score[ub.t] <- 0
+      ub <- f;ub.w <- w;ub.R <- R;ub.t <- t
+      inactivity.score[ub.t] <- NA
+    }
+    
+    # test end of the convergence
+    cat(sprintf("%d:gap=%g obj=%g reg=%g risk=%g w=[%g,%g]\n",i,ub-lb,ub,LAMBDA*0.5*crossprod(ub.w),ub.R,min(ub.w),max(ub.w)))
+    if (ub-lb < EPSILON_TOL) break
   }
   if (i >= MAX_ITER) warning('max # of itertion exceeded')
   return(ub.w)
