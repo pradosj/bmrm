@@ -59,6 +59,7 @@
 #'   w <- nrbm(ladRegressionLoss(X/100,Y/100),maxCP=50)
 #'   barplot(w)
 nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100L,convexRisk=TRUE,LowRankQP.method="LU",regularizer=c("l2","l1")) {
+  # check parameters
   if (maxCP<3) stop("maxCP should be >=3")
   regularizer <- match.arg(regularizer)
   if (regularizer=="l1" && !convexRisk) stop("l1 regularizer only support convex risk")
@@ -69,12 +70,8 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
   w <- rep(w0,length.out=length(at))
   bt <- as.vector(R) - crossprod(w,at)
   switch(regularizer,
-         l1 = {
-           f <- LAMBDA*sum(abs(w)) + R
-         },
-         l2 = {
-           f <- LAMBDA*0.5*crossprod(w) + R
-         }
+         l1 = {f <- LAMBDA*sum(abs(w)) + R},
+         l2 = {f <- LAMBDA*0.5*crossprod(w) + R}
   )
   st <- 0
   
@@ -87,12 +84,9 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
     switch(regularizer,
            l1 = {
              # optimize underestimator
-             opt <- lp(direction = "max",
+             opt <- lp(compute.sens = 1, direction = "max",
                        objective.in = c(-1,rep_len(-LAMBDA,2L*ncol(A))),
-                       const.mat = cbind(-1,A,-A),
-                       const.dir = rep("<=",nrow(A)),
-                       const.rhs = -b,
-                       compute.sens = 1
+                       const.mat = cbind(-1,A,-A), const.dir = rep("<=",nrow(A)),const.rhs = -b
              )
              if (opt$status!=0) warning("issue in the LP solver:",opt$status)
              opt$W <- matrix(opt$solution[-1L],ncol=2L)
@@ -129,6 +123,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
     bt <- R - crossprod(w,at)
 
     if (!convexRisk) {
+      # L2 regularization only
       # solve possible conflicts with the new cutting plane
       if (f<ub) {
         st <- 0
