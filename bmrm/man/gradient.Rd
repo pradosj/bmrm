@@ -30,6 +30,6 @@ attr(x,"gradient")
 Return or set gradient attribute
 }
 \details{
-gradient attribute isused by loss/risk function to return the gradient of
+gradient attribute is used by loss/risk function to return the gradient of
 the function at a given point together with the function value
 }

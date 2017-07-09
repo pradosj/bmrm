@@ -48,10 +48,10 @@ Loss functions to perform a regression
 \examples{
   x <- cbind(intercept=100,data.matrix(iris[1:2]))
   y <- iris[[3]]
-  w <- bmrm(lmsRegressionLoss(x,y))
-  w <- bmrm(ladRegressionLoss(x,y))
-  w <- bmrm(quantileRegressionLoss(x,y,q=0.5))
-  w <- bmrm(epsilonInsensitiveRegressionLoss(x,y,epsilon=1))
+  w <- nrbm(lmsRegressionLoss(x,y))
+  w <- nrbm(ladRegressionLoss(x,y))
+  w <- nrbm(quantileRegressionLoss(x,y,q=0.5))
+  w <- nrbm(epsilonInsensitiveRegressionLoss(x,y,epsilon=1))
 }
 \references{
 Teo et al.
@@ -59,5 +59,5 @@ Teo et al.
   JMLR 2010
 }
 \seealso{
-bmrm
+nrbm
 }

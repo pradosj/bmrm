@@ -27,8 +27,8 @@ x <- data.matrix(iris[1:4])
 y <- as.integer(iris$Species)
 
 # -- Train the model
-w <- bmrm(ordinalRegressionLoss(x,y),LAMBDA=0.001,EPSILON_TOL=0.0001)
-w2 <- bmrm(ordinalRegressionLoss(x,y,impl="quadratic"),LAMBDA=0.001,EPSILON_TOL=0.0001)
+w <- nrbm(ordinalRegressionLoss(x,y),LAMBDA=0.001,EPSILON_TOL=0.0001)
+w2 <- nrbm(ordinalRegressionLoss(x,y,impl="quadratic"),LAMBDA=0.001,EPSILON_TOL=0.0001)
 
 # -- plot predictions
 f <- x \%*\% w
@@ -49,5 +49,5 @@ Teo et al.
   JMLR 2010
 }
 \seealso{
-bmrm
+nrbm
 }

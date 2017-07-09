@@ -11,14 +11,14 @@
 #' @references Teo et al.
 #'   Bundle Methods for Regularized Risk Minimization
 #'   JMLR 2010
-#' @seealso bmrm
+#' @seealso nrbm
 #' @examples
 #'   x <- cbind(intercept=100,data.matrix(iris[1:2]))
 #'   y <- iris[[3]]
-#'   w <- bmrm(lmsRegressionLoss(x,y))
-#'   w <- bmrm(ladRegressionLoss(x,y))
-#'   w <- bmrm(quantileRegressionLoss(x,y,q=0.5))
-#'   w <- bmrm(epsilonInsensitiveRegressionLoss(x,y,epsilon=1))
+#'   w <- nrbm(lmsRegressionLoss(x,y))
+#'   w <- nrbm(ladRegressionLoss(x,y))
+#'   w <- nrbm(quantileRegressionLoss(x,y,q=0.5))
+#'   w <- nrbm(epsilonInsensitiveRegressionLoss(x,y,epsilon=1))
 NULL
 
 
@@ -35,9 +35,9 @@ lmsRegressionLoss <- function(x,y,loss.weights=1) {
     f <- x %*% w
     loss <- loss.weights * 0.5*(f-y)^2
     grad <- loss.weights * (f-y)
-    val <- colSums(loss)
-    gradient(val) <- crossprod(x,grad)
-    return(val)
+    lvalue(w) <- colSums(loss)
+    gradient(w) <- crossprod(x,grad)
+    return(w)
   }
 }
 
@@ -55,9 +55,9 @@ ladRegressionLoss <- function(x,y,loss.weights=1) {
     f <- x %*% w
     loss <- loss.weights * abs(f-y)
     grad <- loss.weights * sign(f-y)
-    val <- colSums(loss)
-    gradient(val) <- crossprod(x,grad)
-    return(val)
+    lvalue(w) <- colSums(loss)
+    gradient(w) <- crossprod(x,grad)
+    return(w)
   }
 }
 
@@ -77,9 +77,9 @@ quantileRegressionLoss <- function(x,y,q=0.5,loss.weights=1) {
     f <- x %*% w
     loss <- loss.weights * pmax(q*(f-y),(1-q)*(y-f))
     grad <- loss.weights * ifelse(f>y,q,q-1)
-    val <- colSums(loss)
-    gradient(val) <- crossprod(x,grad)
-    return(val)
+    lvalue(w) <- colSums(loss)
+    gradient(w) <- crossprod(x,grad)
+    return(w)
   }
 }
 
@@ -98,9 +98,9 @@ epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
     f <- x %*% w
     loss <- loss.weights * pmax(abs(f-y)-epsilon,0)
     grad <- loss.weights * ifelse(abs(f-y)<epsilon,0,sign(f-y))
-    val <- colSums(loss)
-    gradient(val) <- crossprod(x,grad)
-    return(val)
+    lvalue(w) <- colSums(loss)
+    gradient(w) <- crossprod(x,grad)
+    return(w)
   }
 }
 
@@ -132,14 +132,14 @@ epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
 #' @references Teo et al.
 #'   A Scalable Modular Convex Solver for Regularized Risk Minimization.
 #'   KDD 2007
-#' @seealso bmrm
+#' @seealso nrbm
 #' @examples
 #'   x <- cbind(intercept=100,data.matrix(iris[1:2]))
 #'   y <- ifelse(iris$Species=="setosa","setosa","not_setosa")
-#'   w <- bmrm(hingeLoss(x,y)); f <- x %*% w; Y <- sign(f)
-#'   w <- bmrm(logisticLoss(x,y)); f <- x %*% w; Y <- exp(f) / (1+exp(f));
-#'   w <- bmrm(rocLoss(x,y)); f <- x %*% w;
-#'   w <- bmrm(fbetaLoss(x,y)); f <- x %*% w;
+#'   w <- nrbm(hingeLoss(x,y)); f <- x %*% w; Y <- sign(f)
+#'   w <- nrbm(logisticLoss(x,y)); f <- x %*% w; Y <- exp(f) / (1+exp(f));
+#'   w <- nrbm(rocLoss(x,y)); f <- x %*% w;
+#'   w <- nrbm(fbetaLoss(x,y)); f <- x %*% w;
 NULL
 
 
@@ -158,9 +158,9 @@ hingeLoss <- function(x,y,loss.weights=1) {
     f <- x %*% w
     loss <- loss.weights * pmax(1-y*f,0)
     grad <- loss.weights * (loss>0) * (-y)
-    val <- colSums(loss)
-    gradient(val) <- crossprod(x,grad)
-    return(val)
+    lvalue(w) <- colSums(loss)
+    gradient(w) <- crossprod(x,grad)
+    return(w)
   }
 }
 
@@ -180,9 +180,9 @@ logisticLoss <- function(x,y,loss.weights=1) {
     f <- x %*% w
     loss <- loss.weights * log(1+exp(-y*f))
     grad <- loss.weights * y*(1/(1+exp(-y*f)) - 1)
-    val <- colSums(loss)
-    gradient(val) <- crossprod(x,grad)
-    return(val)
+    lvalue(w) <- colSums(loss)
+    gradient(w) <- crossprod(x,grad)
+    return(w)
   }
 }
 
@@ -208,9 +208,9 @@ rocLoss <- function(x,y) {
     l[cbind(as.vector(o),as.vector(col(o)))] <- ifelse(y[o]==-1,sp,-sm)
     l <- l/(sum(y==-1)*sum(y==+1))
 
-    val <- colSums(l*c)
-    gradient(val) <- crossprod(x,l)
-    return(val)
+    lvalue(w) <- colSums(l*c)
+    gradient(w) <- crossprod(x,l)
+    return(w)
   }
 }
 
@@ -262,9 +262,9 @@ fbetaLoss <- function(x,y,beta=1) {
     msk <- t(t(row(Y))<ij$j[mi])
     Y[cbind(on[msk],col(Y)[msk])] <- -1
     
-    val <- R[cbind(mi,seq_along(mi))]
-    gradient(val) <- crossprod(x,Y-y)
-    return(val)
+    lvalue(w) <- R[cbind(mi,seq_along(mi))]
+    gradient(w) <- crossprod(x,Y-y)
+    return(w)
   }
 }
 
@@ -300,7 +300,7 @@ fbetaLoss <- function(x,y,beta=1) {
 #'   y <- iris$Species
 #'   
 #'   # -- build the multiclass SVM model
-#'   w <- bmrm(softMarginVectorLoss(x,y))
+#'   w <- nrbm(softMarginVectorLoss(x,y))
 #'   dim(w) <- c(ncol(x),nlevels(y))
 #'   dimnames(w) <- list(colnames(x),levels(y))
 #'   F <- x %*% w
@@ -341,9 +341,9 @@ softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
     gy[cbind(as.vector(row(p)),y,as.vector(col(p)))] <- 1
     grad <- gp - gy
 
-    val <- colSums(lp)
-    gradient(val) <- array(crossprod(x,matrix(grad,nrow(grad))),dim(w))
-    return(val)
+    lvalue(w) <- colSums(lp)
+    gradient(w) <- array(crossprod(x,matrix(grad,nrow(grad))),dim(w))
+    return(w)
   }
 }
 
@@ -390,12 +390,12 @@ ontologyLoss <- function(x,y,l=1 - table(seq_along(y),y),dag=diag(nlevels(y))) {
     fp <- matrix(fp[,t(matrix(seq_len(ncol(fp)),ncol(dag)))],ncol=ncol(dag)) # resize fp matrix
     z <- tcrossprod(fp,dag) + l[arrayInd(seq_len(nrow(fp)),nrow(x)),]
     Y <- matrix(max.col(z,ties.method="first"),nrow(x))
-    val <- colSums(matrix(z[cbind(seq_along(Y),as.vector(Y))] - z[cbind(seq_along(Y),y[row(Y)])],nrow(x)))
+    lvalue(w) <- colSums(matrix(z[cbind(seq_along(Y),as.vector(Y))] - z[cbind(seq_along(Y),y[row(Y)])],nrow(x)))
     G <- dag[Y,] - dag[y[row(Y)],]
     G <- crossprod(x,matrix(G,nrow(x)))
     G <- array(G[,t(matrix(seq_len(ncol(G)),ncol(w)))],dim(w))
-    gradient(val) <- G
-    return(val)
+    gradient(w) <- G
+    return(w)
   }
 }
 
@@ -414,7 +414,7 @@ ontologyLoss <- function(x,y,l=1 - table(seq_along(y),y),dag=diag(nlevels(y))) {
 #'        If a character string the accepted values are "0/1" for a 0-1 cost matrix or "linear" for linear cost.
 #' @return the cost matrix object
 #' @export
-#' @seealso bmrm, ordinalRegressionLoss
+#' @seealso nrbm, ordinalRegressionLoss
 costMatrix <- function(y,C=c("0/1","linear")) {
   y <- as.factor(y)
   if (is.character(C)) {
@@ -447,7 +447,7 @@ costMatrix <- function(y,C=c("0/1","linear")) {
 #' @references Teo et al.
 #'   Bundle Methods for Regularized Risk Minimization
 #'   JMLR 2010
-#' @seealso bmrm
+#' @seealso nrbm
 #' @import matrixStats
 #' @examples
 #' # -- Load the data
@@ -455,8 +455,8 @@ costMatrix <- function(y,C=c("0/1","linear")) {
 #' y <- as.integer(iris$Species)
 #' 
 #' # -- Train the model
-#' w <- bmrm(ordinalRegressionLoss(x,y),LAMBDA=0.001,EPSILON_TOL=0.0001)
-#' w2 <- bmrm(ordinalRegressionLoss(x,y,impl="quadratic"),LAMBDA=0.001,EPSILON_TOL=0.0001)
+#' w <- nrbm(ordinalRegressionLoss(x,y),LAMBDA=0.001,EPSILON_TOL=0.0001)
+#' w2 <- nrbm(ordinalRegressionLoss(x,y,impl="quadratic"),LAMBDA=0.001,EPSILON_TOL=0.0001)
 #' 
 #' # -- plot predictions
 #' f <- x %*% w
@@ -510,13 +510,13 @@ ordinalRegressionLoss <- function(x,y,C="0/1",impl=c("loglin","quadratic")) {
     Gl[ijk[,3]<=y[j]] <- 0
     
     v <- ifelse(o<=m,-rowSums(Gu,dims=2), rowSums(Gl,dims=2))
-    r <- colSums(v*c[cbind(as.vector(o),as.vector(col(o)))])
+    lvalue(w) <- colSums(v*c[cbind(as.vector(o),as.vector(col(o)))])
     
     g <- array(NA,c(m,ncol(w),2))
     g[cbind(as.vector(j),as.vector(col(j)),as.vector(1 + (o-1)%/%m))] <- v
     g <- rowSums(g,dims=2)
-    gradient(r) <- crossprod(x,g)
-    return(r)
+    gradient(w) <- crossprod(x,g)
+    return(w)
   }
   
   .quadratic <- function(w) {
@@ -527,9 +527,9 @@ ordinalRegressionLoss <- function(x,y,C="0/1",impl=c("loglin","quadratic")) {
     z <- expand.grid(i=factor(1:m),j=factor(1:m))
     z <- z[y[z$i] < y[z$j],]
     z$Cij <- C[cbind(y[z$i],y[z$j])]
-    R <- colSums(z$Cij * pmax(1+f[z$i,,drop=FALSE]-f[z$j,,drop=FALSE],0))
-    gradient(R) <- crossprod(z$Cij*(x[z$i,]-x[z$j,]),(1+f[z$i,,drop=FALSE]-f[z$j,,drop=FALSE])>0)
-    return(R)
+    lvalue(w) <- colSums(z$Cij * pmax(1+f[z$i,,drop=FALSE]-f[z$j,,drop=FALSE],0))
+    gradient(w) <- crossprod(z$Cij*(x[z$i,]-x[z$j,]),(1+f[z$i,,drop=FALSE]-f[z$j,,drop=FALSE])>0)
+    return(w)
   }
   
   switch(impl,loglin=.loglin,quadratic=.quadratic)

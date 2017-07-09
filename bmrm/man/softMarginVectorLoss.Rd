@@ -26,7 +26,7 @@ Soft Margin Vector Loss function for multiclass SVM
   y <- iris$Species
   
   # -- build the multiclass SVM model
-  w <- bmrm(softMarginVectorLoss(x,y))
+  w <- nrbm(softMarginVectorLoss(x,y))
   dim(w) <- c(ncol(x),nlevels(y))
   dimnames(w) <- list(colnames(x),levels(y))
   F <- x \%*\% w

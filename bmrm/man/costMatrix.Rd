@@ -19,5 +19,5 @@ the cost matrix object
 Compute or check the structure of a cost matrix
 }
 \seealso{
-bmrm, ordinalRegressionLoss
+nrbm, ordinalRegressionLoss
 }

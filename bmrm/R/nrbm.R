@@ -68,10 +68,10 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
   R <- riskFun(w0)
   at <- as.vector(gradient(R))
   w <- rep(w0,length.out=length(at))
-  bt <- as.vector(R) - crossprod(w,at)
+  bt <- as.vector(lvalue(R)) - crossprod(w,at)
   switch(regularizer,
-         l1 = {f <- LAMBDA*sum(abs(w)) + R},
-         l2 = {f <- LAMBDA*0.5*crossprod(w) + R}
+         l1 = {f <- LAMBDA*sum(abs(w)) + lvalue(R)},
+         l2 = {f <- LAMBDA*0.5*crossprod(w) + lvalue(R)}
   )
   st <- 0
   
@@ -98,7 +98,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
              
              # estimate loss at the new underestimator optimum
              R <- riskFun(w)
-             f <- LAMBDA*sum(abs(w)) + R
+             f <- LAMBDA*sum(abs(w)) + lvalue(R)
            },
            l2 = {
              # optimize underestimator
@@ -112,7 +112,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
              
              # estimate loss at the new underestimator optimum
              R <- riskFun(w)
-             f <- LAMBDA*0.5*crossprod(w) + R
+             f <- LAMBDA*0.5*crossprod(w) + lvalue(R)
            }
     )
     # update inactivity score
@@ -120,7 +120,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
 
     # deduce parameters of the new cutting plane
     at <- as.vector(gradient(R))
-    bt <- R - crossprod(w,at)
+    bt <- lvalue(R) - crossprod(w,at)
 
     if (!convexRisk) {
       # L2 regularization only
@@ -128,11 +128,11 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
       if (f<ub) {
         st <- 0
         s <- s + as.vector(0.5*LAMBDA*crossprod(ub.w-w))
-        b <- pmin(b,R - (A %*% w) - s)
+        b <- pmin(b,lvalue(R) - (A %*% w) - s)
       } else { # null step
         st <- 0.5*LAMBDA*crossprod(w-ub.w)
-        if (ub.R < st + crossprod(at,ub.w) + bt) {
-          U <- ub.R - crossprod(at,ub.w) - st
+        if (lvalue(ub.R) < st + crossprod(at,ub.w) + bt) {
+          U <- lvalue(ub.R) - crossprod(at,ub.w) - st
           L <- ub - crossprod(at,w) - 0.5*LAMBDA*crossprod(w)
           if (L<=U) {
             bt <- L
@@ -167,7 +167,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
     }
     
     # test end of the convergence
-    cat(sprintf("%d:gap=%g obj=%g reg=%g risk=%g w=[%g,%g]\n",i,ub-lb,ub,LAMBDA*0.5*crossprod(ub.w),ub.R,min(ub.w),max(ub.w)))
+    cat(sprintf("%d:gap=%g obj=%g reg=%g risk=%g w=[%g,%g]\n",i,ub-lb,ub,LAMBDA*0.5*crossprod(ub.w),lvalue(ub.R),min(ub.w),max(ub.w)))
     if (ub-lb < EPSILON_TOL) break
   }
   if (i >= MAX_ITER) warning('max # of itertion exceeded')
