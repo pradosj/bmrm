@@ -57,7 +57,7 @@
 #'   beta <- c(rep(1,ncol(X)-4),0,0,0,0)
 #'   Y <- X%*%beta + rnorm(nrow(X))
 #'   w <- nrbm(ladRegressionLoss(X/100,Y/100),maxCP=50)
-#'   barplot(w)
+#'   barplot(as.vector(w))
 nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100L,convexRisk=TRUE,LowRankQP.method="LU",regularizer=c("l2","l1")) {
   # check parameters
   if (maxCP<3) stop("maxCP should be >=3")
@@ -65,20 +65,19 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
   if (regularizer=="l1" && !convexRisk) stop("l1 regularizer only support convex risk")
 
   # intialize first point estimation
-  R <- riskFun(w0)
-  at <- as.vector(gradient(R))
-  w <- rep(w0,length.out=length(at))
-  bt <- as.vector(lvalue(R)) - crossprod(w,at)
+  w <- riskFun(w0)
+  at <- as.vector(gradient(w))
+  bt <- as.vector(lvalue(w)) - crossprod(w,at)
   switch(regularizer,
-         l1 = {f <- LAMBDA*sum(abs(w)) + lvalue(R)},
-         l2 = {f <- LAMBDA*0.5*crossprod(w) + lvalue(R)}
+         l1 = {f <- LAMBDA*sum(abs(w)) + lvalue(w)},
+         l2 = {f <- LAMBDA*0.5*crossprod(w) + lvalue(w)}
   )
   st <- 0
   
   # initialize aggregated working plane and working set
   A <- rbind(at,at);b <- c(bt,bt);s <- c(st,st)
   inactivity.score <- c(NA_real_,NA_real_)
-  ub <- f;ub.w <- w;ub.R <- R;ub.t <- 2
+  ub <- f;ub.w <- w;ub.t <- 2
   for (i in 1:MAX_ITER) {
     
     switch(regularizer,
@@ -97,8 +96,8 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
              lb <- -opt$objval
              
              # estimate loss at the new underestimator optimum
-             R <- riskFun(w)
-             f <- LAMBDA*sum(abs(w)) + lvalue(R)
+             w <- riskFun(w)
+             f <- LAMBDA*sum(abs(w)) + lvalue(w)
            },
            l2 = {
              # optimize underestimator
@@ -111,16 +110,16 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
              lb <- LAMBDA*0.5*crossprod(w) + max(0,A %*% w + b)
              
              # estimate loss at the new underestimator optimum
-             R <- riskFun(w)
-             f <- LAMBDA*0.5*crossprod(w) + lvalue(R)
+             w <- riskFun(w)
+             f <- LAMBDA*0.5*crossprod(w) + lvalue(w)
            }
     )
     # update inactivity score
     inactivity.score <- inactivity.score + pmax(1-alpha,0)
 
     # deduce parameters of the new cutting plane
-    at <- as.vector(gradient(R))
-    bt <- lvalue(R) - crossprod(w,at)
+    at <- as.vector(gradient(w))
+    bt <- lvalue(w) - crossprod(w,at)
 
     if (!convexRisk) {
       # L2 regularization only
@@ -128,11 +127,11 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
       if (f<ub) {
         st <- 0
         s <- s + as.vector(0.5*LAMBDA*crossprod(ub.w-w))
-        b <- pmin(b,lvalue(R) - (A %*% w) - s)
+        b <- pmin(b,lvalue(w) - (A %*% w) - s)
       } else { # null step
         st <- 0.5*LAMBDA*crossprod(w-ub.w)
-        if (lvalue(ub.R) < st + crossprod(at,ub.w) + bt) {
-          U <- lvalue(ub.R) - crossprod(at,ub.w) - st
+        if (lvalue(ub.w) < st + crossprod(at,ub.w) + bt) {
+          U <- lvalue(ub.w) - crossprod(at,ub.w) - st
           L <- ub - crossprod(at,w) - 0.5*LAMBDA*crossprod(w)
           if (L<=U) {
             bt <- L
@@ -162,12 +161,12 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100
     # if new best found
     if (f<ub) {
       inactivity.score[ub.t] <- 0
-      ub <- f;ub.w <- w;ub.R <- R;ub.t <- t
+      ub <- f;ub.w <- w;ub.t <- t
       inactivity.score[ub.t] <- NA
     }
     
     # test end of the convergence
-    cat(sprintf("%d:gap=%g obj=%g reg=%g risk=%g w=[%g,%g]\n",i,ub-lb,ub,LAMBDA*0.5*crossprod(ub.w),lvalue(ub.R),min(ub.w),max(ub.w)))
+    cat(sprintf("%d:gap=%g obj=%g reg=%g risk=%g w=[%g,%g]\n",i,ub-lb,ub,LAMBDA*0.5*crossprod(ub.w),lvalue(ub.w),min(ub.w),max(ub.w)))
     if (ub-lb < EPSILON_TOL) break
   }
   if (i >= MAX_ITER) warning('max # of itertion exceeded')

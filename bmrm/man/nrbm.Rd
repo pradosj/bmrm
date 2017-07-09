@@ -72,7 +72,7 @@ where riskFun is either a convex or a non-convex risk function.
   beta <- c(rep(1,ncol(X)-4),0,0,0,0)
   Y <- X\%*\%beta + rnorm(nrow(X))
   w <- nrbm(ladRegressionLoss(X/100,Y/100),maxCP=50)
-  barplot(w)
+  barplot(as.vector(w))
 }
 \references{
 Do and Artieres
