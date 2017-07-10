@@ -319,49 +319,39 @@ predict.fbetaLoss <- function(object,x,...) {
 #'   
 #'   # -- build the multiclass SVM model
 #'   w <- nrbm(softMarginVectorLoss(x,y))
-#'   dim(w) <- c(ncol(x),nlevels(y))
-#'   dimnames(w) <- list(colnames(x),levels(y))
-#'   F <- x %*% w
-#'   pred <- colnames(F)[max.col(F)]
-#'   table(pred,y)
+#'   table(predict(w,x),y)
 #'   
 #'   # -- Plot the dataset, the decision boundaries, the convergence curve, and the predictions
 #'   gx <- seq(min(x[,2]),max(x[,2]),length=200) # positions of the probes on x-axis
 #'   gy <- seq(min(x[,3]),max(x[,3]),length=200) # positions of the probes on y-axis
-#'   Y <- outer(gx,gy,function(a,b){
-#'      max.col(cbind(100,a,b) %*% w)
-#'   })
-#'   layout(matrix(c(1,3,2,3),2,2))
-#'   image(gx,gy,Y,asp=1,main="dataset & decision boundaries",xlab=colnames(x)[1],ylab=colnames(x)[2])
+#'   Y <- outer(gx,gy,function(a,b) {predict(w,cbind(100,a,b))})
+#'   layout(1:2)
+#'   image(gx,gy,unclass(Y),asp=1,main="dataset & decision boundaries",xlab=colnames(x)[2],ylab=colnames(x)[3])
 #'   points(x[,-1],pch=19+as.integer(y))
-#'   plot(attr(w,"log")$epsilon,type="o",ylab="epsilon gap",xlab="iteration")
 #'   plot(row(F),F,pch=19+col(F),ylab="prediction values",xlab="sample")
 softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.factor(y)) stop('y must be a factor')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   if (!identical(nrow(x),nrow(l))) stop('dimensions of x and l mismatch')
-  if (nlevels(y)>ncol(l)) stop('some values in y are out of range of the loss matrix')
+  if (any(levels(y)!=colnames(l))) stop('colnames(l) must match with levels(y)')
   
   function(w) {
-    .NotYetImplemented() # need to come back to vector form instead of matrix form
-    w <- cbind(matrix(numeric(),ncol(x)*ncol(l),0),w)
-
-    fp <- x %*% matrix(w,ncol(x))
-    fp <- matrix(fp[,t(matrix(seq_len(ncol(fp)),ncol(l)))],ncol=ncol(l)) # resize fp matrix
-    fy <- fp[cbind(seq_len(nrow(fp)),y)]
-    lp <- fp - fy + l[arrayInd(seq_len(nrow(fp)),nrow(x)),]
-    p <- matrix(max.col(lp,ties.method='first'),nrow(x))
-    lp <- matrix(lp[cbind(seq_along(p),as.vector(p))],nrow(p))
+    w <- matrix(w,ncol(x),ncol(l),dimnames=list(colnames(x),levels(y)))
+    fp <- x %*% w
+    fy <- rowSums(x * t(w[,y]))
+    lp <- fp - fy + l
+    p <- max.col(lp,ties.method='first')
+    lp <- lp[cbind(1:length(p),p)]
     
     # compute gradient
-    gy <- gp <- array(0,c(length(y),ncol(l),ncol(w)))
-    gp[cbind(as.vector(row(p)),as.vector(p),as.vector(col(p)))] <- 1
-    gy[cbind(as.vector(row(p)),y,as.vector(col(p)))] <- 1
+    gy <- gp <- matrix(0,length(y),ncol(w))
+    gp[cbind(seq_along(y),p)] <- 1
+    gy[cbind(seq_along(y),y)] <- 1
     grad <- gp - gy
 
-    lvalue(w) <- colSums(lp)
-    gradient(w) <- array(crossprod(x,matrix(grad,nrow(grad))),dim(w))
+    lvalue(w) <- sum(lp)
+    gradient(w) <- crossprod(x,grad)
     class(w) <- "softMarginVectorLoss"
     return(w)
   }
@@ -369,10 +359,9 @@ softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
 
 #' @export
 predict.softMarginVectorLoss <- function(object,x,...) {
-  .NotYetImplemented()
   f <- x %*% object
   y <- max.col(f,ties.method="first")
-  y <- factor(colnames(y)[y],colnames(object))
+  y <- factor(colnames(object)[y],colnames(object))
   attr(f,"decision.value") <- f
   y
 }

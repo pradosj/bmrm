@@ -27,22 +27,15 @@ Soft Margin Vector Loss function for multiclass SVM
   
   # -- build the multiclass SVM model
   w <- nrbm(softMarginVectorLoss(x,y))
-  dim(w) <- c(ncol(x),nlevels(y))
-  dimnames(w) <- list(colnames(x),levels(y))
-  F <- x \%*\% w
-  pred <- colnames(F)[max.col(F)]
-  table(pred,y)
+  table(predict(w,x),y)
   
   # -- Plot the dataset, the decision boundaries, the convergence curve, and the predictions
   gx <- seq(min(x[,2]),max(x[,2]),length=200) # positions of the probes on x-axis
   gy <- seq(min(x[,3]),max(x[,3]),length=200) # positions of the probes on y-axis
-  Y <- outer(gx,gy,function(a,b){
-     max.col(cbind(100,a,b) \%*\% w)
-  })
-  layout(matrix(c(1,3,2,3),2,2))
-  image(gx,gy,Y,asp=1,main="dataset & decision boundaries",xlab=colnames(x)[1],ylab=colnames(x)[2])
+  Y <- outer(gx,gy,function(a,b) {predict(w,cbind(100,a,b))})
+  layout(1:2)
+  image(gx,gy,unclass(Y),asp=1,main="dataset & decision boundaries",xlab=colnames(x)[2],ylab=colnames(x)[3])
   points(x[,-1],pch=19+as.integer(y))
-  plot(attr(w,"log")$epsilon,type="o",ylab="epsilon gap",xlab="iteration")
   plot(row(F),F,pch=19+col(F),ylab="prediction values",xlab="sample")
 }
 \references{
