@@ -56,7 +56,7 @@ where riskFun is either a convex or a non-convex risk function.
   )
 
   # -- Plot the dataset and the predictions
-  plot(x[,-1],pch=20+y,main="dataset & hyperplanes")
+  plot(x[,-1],pch=ifelse(iris$Species=="setosa",1,2),main="dataset & hyperplanes")
   legend('bottomright',legend=names(models),col=seq_along(models),lty=1,cex=0.75,lwd=3)
   for(i in seq_along(models)) {
     w <- models[[i]]
