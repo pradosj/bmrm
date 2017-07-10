@@ -10,7 +10,8 @@ nrbm(riskFun, LAMBDA = 1, MAX_ITER = 1000L, EPSILON_TOL = 0.01, w0 = 0,
 }
 \arguments{
 \item{riskFun}{the risk function to use in the optimization (e.g.: hingeLoss, softMarginVectorLoss). 
-The function must evaluate the loss value and its gradient for a given point vector (w).}
+The function must evaluate the loss value and its gradient for a given point vector (w).
+The function must return the given point vector w, with attributes "lvalue" and "gradient" set.}
 
 \item{LAMBDA}{control the regularization strength in the optimization process. 
 This is the value used as coefficient of the regularization term.}

@@ -22,7 +22,7 @@
 NULL
 
 #' @export
-predict.regressionLoss <- function(object,x,...) {
+predict.linearRegressionLoss <- function(object,x,...) {
   f <- x %*% object
   f
 }
@@ -42,7 +42,7 @@ lmsRegressionLoss <- function(x,y,loss.weights=1) {
     grad <- loss.weights * (f-y)
     lvalue(w) <- colSums(loss)
     gradient(w) <- crossprod(x,grad)
-    class(w) <- "regressionLoss"
+    class(w) <- "linearRegressionLoss"
     return(w)
   }
 }
@@ -63,7 +63,7 @@ ladRegressionLoss <- function(x,y,loss.weights=1) {
     grad <- loss.weights * sign(f-y)
     lvalue(w) <- colSums(loss)
     gradient(w) <- crossprod(x,grad)
-    class(w) <- "regressionLoss"
+    class(w) <- "linearRegressionLoss"
     return(w)
   }
 }
@@ -86,7 +86,7 @@ quantileRegressionLoss <- function(x,y,q=0.5,loss.weights=1) {
     grad <- loss.weights * ifelse(f>y,q,q-1)
     lvalue(w) <- colSums(loss)
     gradient(w) <- crossprod(x,grad)
-    class(w) <- "regressionLoss"
+    class(w) <- "linearRegressionLoss"
     return(w)
   }
 }
@@ -108,7 +108,7 @@ epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
     grad <- loss.weights * ifelse(abs(f-y)<epsilon,0,sign(f-y))
     lvalue(w) <- colSums(loss)
     gradient(w) <- crossprod(x,grad)
-    class(w) <- "regressionLoss"
+    class(w) <- "linearRegressionLoss"
     return(w)
   }
 }
@@ -144,37 +144,36 @@ epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
 #' @seealso nrbm
 #' @examples
 #'   x <- cbind(intercept=100,data.matrix(iris[1:2]))
-#'   y <- ifelse(iris$Species=="setosa","setosa","not_setosa")
-#'   w <- nrbm(hingeLoss(x,y)); f <- x %*% w; Y <- sign(f)
-#'   w <- nrbm(logisticLoss(x,y)); f <- x %*% w; Y <- exp(f) / (1+exp(f));
-#'   w <- nrbm(rocLoss(x,y)); f <- x %*% w;
-#'   w <- nrbm(fbetaLoss(x,y)); f <- x %*% w;
+#'   w <- nrbm(hingeLoss(x,iris$Species=="setosa"));predict(w,x)
+#'   w <- nrbm(logisticLoss(x,iris$Species=="setosa"));predict(w,x)
+#'   w <- nrbm(rocLoss(x,iris$Species=="setosa"));predict(w,x)
+#'   w <- nrbm(fbetaLoss(x,iris$Species=="setosa"));predict(w,x)
 NULL
 
 #' @export
-predict.binaryLoss <- function(object,x,...) {
+predict.hingeLoss <- function(object,x,...) {
   f <- x %*% object
-  f
+  y <- f>0
+  attr(y,"decision.value") <- f
+  y
 }
 
 #' @describeIn binaryClassificationLosses Hinge Loss for Linear Support Vector Machine (SVM)
 #' @export
 hingeLoss <- function(x,y,loss.weights=1) {
-  y <- as.factor(y)
-  if (nlevels(y)!=2) stop("y must have exatly 2 levels")
+  if (!is.logical(y)) stop("y must be logical")
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   loss.weights <- rep(loss.weights,length.out=length(y))
-  y <- c(-1,1)[y]
-  
+
   function(w) {
-    w <- cbind(matrix(numeric(),ncol(x),0),w)
+    w <- rep(w,length.out=ncol(x))
     f <- x %*% w
-    loss <- loss.weights * pmax(1-y*f,0)
-    grad <- loss.weights * (loss>0) * (-y)
-    lvalue(w) <- colSums(loss)
+    loss <- loss.weights * pmax(ifelse(y,-f+1,f+1),0)
+    grad <- loss.weights * (loss>0) * ifelse(y,-1,+1)
+    lvalue(w) <- sum(loss)
     gradient(w) <- crossprod(x,grad)
-    class(w) <- "binaryLoss"
+    class(w) <- "hingeLoss"
     return(w)
   }
 }
@@ -183,19 +182,17 @@ hingeLoss <- function(x,y,loss.weights=1) {
 #' @describeIn binaryClassificationLosses logistic regression
 #' @export
 logisticLoss <- function(x,y,loss.weights=1) {
-  y <- as.factor(y)
-  if (nlevels(y)!=2) stop("y must have exatly 2 levels")
+  if (!is.logical(y)) stop("y must be logical")
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   loss.weights <- rep(loss.weights,length.out=length(y))
-  y <- c(-1,1)[y]
-  
+
   function(w) {
-    w <- cbind(matrix(numeric(),ncol(x),0),w)
+    w <- rep(w,length.out=ncol(x))
     f <- x %*% w
-    loss <- loss.weights * log(1+exp(-y*f))
-    grad <- loss.weights * y*(1/(1+exp(-y*f)) - 1)
-    lvalue(w) <- colSums(loss)
+    loss <- loss.weights * log(1+exp(ifelse(y,-f,+f)))
+    grad <- loss.weights * ifelse(y, 1/(1+exp(-f))-1, -1/(1+exp(+f))+1)
+    lvalue(w) <- sum(loss)
     gradient(w) <- crossprod(x,grad)
     class(w) <- "logisticLoss"
     return(w)
@@ -206,7 +203,9 @@ logisticLoss <- function(x,y,loss.weights=1) {
 predict.logisticLoss <- function(object,x,...) {
   f <- x %*% object
   p <- exp(f) / (1+exp(f))
-  p
+  y <- p>0.5
+  attr(y,"decision.value") <- p
+  y
 }
 
 
@@ -214,54 +213,55 @@ predict.logisticLoss <- function(object,x,...) {
 #' @export
 #' @import matrixStats
 rocLoss <- function(x,y) {
-  y <- as.factor(y)
-  if (nlevels(y)!=2) stop("y must have exatly 2 levels")
+  if (!is.logical(y)) stop("y must be logical")
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
-  y <- c(-1,1)[y]
-  
-  function(w) {
-    w <- cbind(matrix(numeric(),ncol(x),0),w)
-    c <- x %*% w - 0.5*y
-    o <- matrix(row(c)[order(col(c),c)],nrow(c))
-    
-    sp <- matrixStats::colCumsums(0+matrix(y[o]==+1,nrow(o)))
-    sm <- sum(y==-1) - matrixStats::colCumsums(0+matrix(y[o]==-1,nrow(o)))
-    l <- 0*o
-    l[cbind(as.vector(o),as.vector(col(o)))] <- ifelse(y[o]==-1,sp,-sm)
-    l <- l/(sum(y==-1)*sum(y==+1))
 
-    lvalue(w) <- colSums(l*c)
-    gradient(w) <- crossprod(x,l)
-    class(w) <- "binaryLoss"
+  function(w) {
+    w <- rep(w,length.out=ncol(x))
+    c <- x %*% w - ifelse(y,0.5,-0.5)
+    o <- order(c)
+    
+    sp <- cumsum(y[o])
+    sm <- sum(!y) - cumsum(!y[o])
+    l <- numeric(length(o))
+    l[o] <- ifelse(!y[o],sp,-sm)
+    l <- l/(sum(!y)*sum(y))
+
+    lvalue(w) <- crossprod(l,c)
+    gradient(w) <- crossprod(l,x)
+    class(w) <- "rocLoss"
     return(w)
   }
 }
 
-
+#' @export
+predict.rocLoss <- function(object,x,...) {
+  f <- x %*% object
+  f
+}
 
 #' @describeIn binaryClassificationLosses F-beta score loss function
 #' @param beta a numeric value setting the beta parameter is the f-beta score
 #' @export
 fbetaLoss <- function(x,y,beta=1) {
-  y <- as.factor(y)
-  if (nlevels(y)!=2) stop("y must have exatly 2 levels")
+  if (!is.logical(y)) stop("y must be logical")
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
-  y <- c(-1,1)[y]
-  
+
   .fbeta <- function(TP,TN,P,N,beta) {
     beta2 <- beta*beta
     (1+beta2)*TP / (TP+N-TN+beta2*P)
   }
   
   function(w) {
+    .NotYetImplemented() # need to come back to vector form instead of matrix form
     w <- cbind(matrix(numeric(),ncol(x),0),w)
     f <- x %*% w
     
     o <- matrix(row(f)[order(col(f),-f)],nrow(f))
-    op <- matrix(o[y[o]==1],ncol=ncol(o))
-    on <- matrix(o[y[o]==-1],ncol=ncol(o))
+    op <- matrix(o[y[o]],ncol=ncol(o))
+    on <- matrix(o[!y[o]],ncol=ncol(o))
     on <- on[rev(seq(nrow(on))),,drop=FALSE]
     p <- local({
       F <- matrix(f[cbind(as.vector(op),as.vector(col(op)))],nrow(op))
@@ -278,7 +278,7 @@ fbetaLoss <- function(x,y,beta=1) {
     R <- 1 - .fbeta(ij$i-1,ij$j-1,nrow(op),nrow(on),beta) - p[ij$i,,drop=FALSE] + n[ij$j,,drop=FALSE]
     
     mi <- max.col(t(R),ties.method="first")
-    Y <- matrix(-y,length(y),ncol(w))
+    Y <- matrix(-ifelse(y,1,-1),length(y),ncol(w))
     
     msk <- t(t(row(Y))<ij$i[mi])
     Y[cbind(op[msk],col(Y)[msk])] <- 1
@@ -287,13 +287,19 @@ fbetaLoss <- function(x,y,beta=1) {
     Y[cbind(on[msk],col(Y)[msk])] <- -1
     
     lvalue(w) <- R[cbind(mi,seq_along(mi))]
-    gradient(w) <- crossprod(x,Y-y)
-    class(w) <- "binaryLoss"
+    gradient(w) <- crossprod(x,Y-ifelse(y,1,-1))
+    class(w) <- "fbetaLoss"
     return(w)
   }
 }
 
-
+#' @export
+predict.fbetaLoss <- function(object,x,...) {
+  f <- x %*% object
+  y <- f>0
+  attr(y,"decision.value") <- f
+  y
+}
 
 
 
@@ -351,6 +357,7 @@ softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
   if (nlevels(y)>ncol(l)) stop('some values in y are out of range of the loss matrix')
   
   function(w) {
+    .NotYetImplemented() # need to come back to vector form instead of matrix form
     w <- cbind(matrix(numeric(),ncol(x)*ncol(l),0),w)
 
     fp <- x %*% matrix(w,ncol(x))
@@ -368,8 +375,19 @@ softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
 
     lvalue(w) <- colSums(lp)
     gradient(w) <- array(crossprod(x,matrix(grad,nrow(grad))),dim(w))
+    class(w) <- "softMarginVectorLoss"
     return(w)
   }
+}
+
+#' @export
+predict.softMarginVectorLoss <- function(object,x,...) {
+  .NotYetImplemented()
+  f <- x %*% object
+  y <- max.col(f,ties.method="first")
+  y <- factor(colnames(y)[y],colnames(object))
+  attr(f,"decision.value") <- f
+  y
 }
 
 
@@ -420,10 +438,19 @@ ontologyLoss <- function(x,y,l=1 - table(seq_along(y),y),dag=diag(nlevels(y))) {
     G <- crossprod(x,matrix(G,nrow(x)))
     G <- array(G[,t(matrix(seq_len(ncol(G)),ncol(w)))],dim(w))
     gradient(w) <- G
+    class(w) <- "ontologyLoss"
     return(w)
   }
 }
 
+#' @export
+predict.ontologyLoss <- function(object,x,...) {
+  .NotYetImplemented()
+  f <- x %*% object
+  y <- max.col(f,ties.method="first")
+  attr(f,"decision.value") <- f
+  y
+}
 
 
 

@@ -45,11 +45,10 @@ Loss functions for binary classification
 
 \examples{
   x <- cbind(intercept=100,data.matrix(iris[1:2]))
-  y <- ifelse(iris$Species=="setosa","setosa","not_setosa")
-  w <- nrbm(hingeLoss(x,y)); f <- x \%*\% w; Y <- sign(f)
-  w <- nrbm(logisticLoss(x,y)); f <- x \%*\% w; Y <- exp(f) / (1+exp(f));
-  w <- nrbm(rocLoss(x,y)); f <- x \%*\% w;
-  w <- nrbm(fbetaLoss(x,y)); f <- x \%*\% w;
+  w <- nrbm(hingeLoss(x,iris$Species=="setosa"));predict(w,x)
+  w <- nrbm(logisticLoss(x,iris$Species=="setosa"));predict(w,x)
+  w <- nrbm(rocLoss(x,iris$Species=="setosa"));predict(w,x)
+  w <- nrbm(fbetaLoss(x,iris$Species=="setosa"));predict(w,x)
 }
 \references{
 Teo et al.
