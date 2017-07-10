@@ -29,16 +29,15 @@
 #' @examples
 #'   # -- Create a 2D dataset with the first 2 features of iris, with binary labels
 #'   x <- data.matrix(iris[1:2])
-#'   y <- c(-1,1,1)[iris$Species]
 #'
 #'   # -- Add a constant dimension to the dataset to learn the intercept
 #'   x <- cbind(intercept=1000,x)
 #'
 #'   # -- train scalar prediction models with maxMarginLoss and fbetaLoss
 #'   models <- list(
-#'     svm_L1 = nrbm(hingeLoss(x,y),LAMBDA=0.1,reg='l1'),
-#'     svm_L2 = nrbm(hingeLoss(x,y),LAMBDA=0.1,reg='l2'),
-#'     f1_L1 = nrbm(fbetaLoss(x,y),LAMBDA=0.01,reg='l1')
+#'     svm_L1 = nrbm(hingeLoss(x,iris$Species=="setosa"),LAMBDA=0.1,reg='l1'),
+#'     svm_L2 = nrbm(hingeLoss(x,iris$Species=="setosa"),LAMBDA=0.1,reg='l2'),
+#'     f1_L1 = nrbm(fbetaLoss(x,iris$Species=="setosa"),LAMBDA=0.01,reg='l1')
 #'   )
 #'
 #'   # -- Plot the dataset and the predictions
@@ -59,7 +58,7 @@
 #'   Y <- X%*%beta + rnorm(nrow(X))
 #'   w <- nrbm(ladRegressionLoss(X/100,Y/100),maxCP=50)
 #'   barplot(as.vector(w))
-nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=100L,convexRisk=TRUE,LowRankQP.method="LU",regularizer=c("l2","l1")) {
+nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L,convexRisk=TRUE,LowRankQP.method="LU",regularizer=c("l2","l1")) {
   # check parameters
   if (maxCP<3) stop("maxCP should be >=3")
   regularizer <- match.arg(regularizer)
