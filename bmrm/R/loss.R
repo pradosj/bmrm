@@ -23,8 +23,7 @@ NULL
 
 #' @export
 predict.linearRegressionLoss <- function(object,x,...) {
-  f <- x %*% object
-  f
+  x %*% object
 }
 
 #' @describeIn regressionLosses Least Mean Square regression
@@ -36,11 +35,11 @@ lmsRegressionLoss <- function(x,y,loss.weights=1) {
   loss.weights <- rep(loss.weights,length.out=length(y))
   
   function(w) {
-    w <- cbind(matrix(numeric(),ncol(x),0),w)
+    w <- rep(w,length.out=ncol(x))
     f <- x %*% w
     loss <- loss.weights * 0.5*(f-y)^2
     grad <- loss.weights * (f-y)
-    lvalue(w) <- colSums(loss)
+    lvalue(w) <- sum(loss)
     gradient(w) <- crossprod(x,grad)
     class(w) <- "linearRegressionLoss"
     return(w)
@@ -57,11 +56,11 @@ ladRegressionLoss <- function(x,y,loss.weights=1) {
   loss.weights <- rep(loss.weights,length.out=length(y))
 
   function(w) {
-    w <- cbind(matrix(numeric(),ncol(x),0),w)
+    w <- rep(w,length.out=ncol(x))
     f <- x %*% w
     loss <- loss.weights * abs(f-y)
     grad <- loss.weights * sign(f-y)
-    lvalue(w) <- colSums(loss)
+    lvalue(w) <- sum(loss)
     gradient(w) <- crossprod(x,grad)
     class(w) <- "linearRegressionLoss"
     return(w)
@@ -80,11 +79,11 @@ quantileRegressionLoss <- function(x,y,q=0.5,loss.weights=1) {
   loss.weights <- rep(loss.weights,length.out=length(y))
   
   function(w) {
-    w <- cbind(matrix(numeric(),ncol(x),0),w)
+    w <- rep(w,length.out=ncol(x))
     f <- x %*% w
     loss <- loss.weights * pmax(q*(f-y),(1-q)*(y-f))
     grad <- loss.weights * ifelse(f>y,q,q-1)
-    lvalue(w) <- colSums(loss)
+    lvalue(w) <- sum(loss)
     gradient(w) <- crossprod(x,grad)
     class(w) <- "linearRegressionLoss"
     return(w)
@@ -102,11 +101,11 @@ epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
   loss.weights <- rep(loss.weights,length.out=length(y))
   
   function(w) {
-    w <- cbind(matrix(numeric(),ncol(x),0),w)
+    w <- rep(w,length.out=ncol(x))
     f <- x %*% w
     loss <- loss.weights * pmax(abs(f-y)-epsilon,0)
     grad <- loss.weights * ifelse(abs(f-y)<epsilon,0,sign(f-y))
-    lvalue(w) <- colSums(loss)
+    lvalue(w) <- sum(loss)
     gradient(w) <- crossprod(x,grad)
     class(w) <- "linearRegressionLoss"
     return(w)
