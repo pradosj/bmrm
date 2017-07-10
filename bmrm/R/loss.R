@@ -390,9 +390,7 @@ predict.softMarginVectorLoss <- function(object,x,...) {
 #'                   0,1,1,0,
 #'                   0,1,0,1),3,4,byrow=TRUE)
 #'   w <- nrbm(ontologyLoss(x,y,dag=dag))
-#'   w <- matrix(w,ncol(x))
-#'   f <- x %*% tcrossprod(w,dag)
-#'   table(y,max.col(f))
+#'   table(predict(w,x),y)
 ontologyLoss <- function(x,y,l=1 - table(seq_along(y),y),dag=diag(nlevels(y))) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.factor(y)) stop('y must be a factor')
@@ -404,27 +402,24 @@ ontologyLoss <- function(x,y,l=1 - table(seq_along(y),y),dag=diag(nlevels(y))) {
   if (nlevels(y)!=ncol(l)) stop('ncol(l) do not match with nlevels(y)')
   
   function(w) {
-    w <- cbind(matrix(numeric(),ncol(x)*ncol(dag),0),w)
-    fp <- x %*% matrix(w,ncol(x))
-    fp <- matrix(fp[,t(matrix(seq_len(ncol(fp)),ncol(dag)))],ncol=ncol(dag)) # resize fp matrix
-    z <- tcrossprod(fp,dag) + l[arrayInd(seq_len(nrow(fp)),nrow(x)),]
-    Y <- matrix(max.col(z,ties.method="first"),nrow(x))
-    lvalue(w) <- colSums(matrix(z[cbind(seq_along(Y),as.vector(Y))] - z[cbind(seq_along(Y),y[row(Y)])],nrow(x)))
-    G <- dag[Y,] - dag[y[row(Y)],]
-    G <- crossprod(x,matrix(G,nrow(x)))
-    G <- array(G[,t(matrix(seq_len(ncol(G)),ncol(w)))],dim(w))
-    gradient(w) <- G
+    w <- matrix(w,ncol(x),ncol(dag))
+    fp <- x %*% w
+    z <- tcrossprod(fp,dag) + l
+    Y <- max.col(z,ties.method = "first")
+    G <- dag[Y,] - dag[y,]
+    lvalue(w) <- sum(z[cbind(seq_along(Y),Y)] - z[cbind(seq_along(y),y)])
+    gradient(w) <- crossprod(x,G)
     class(w) <- "ontologyLoss"
+    attr(w,"dag") <- dag
     return(w)
   }
 }
 
 #' @export
 predict.ontologyLoss <- function(object,x,...) {
-  .NotYetImplemented()
-  f <- x %*% object
+  f <- x %*% tcrossprod(w,attr(w,"dag"))
   y <- max.col(f,ties.method="first")
-  attr(f,"decision.value") <- f
+  attr(y,"decision.value") <- f
   y
 }
 

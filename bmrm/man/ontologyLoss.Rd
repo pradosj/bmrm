@@ -30,9 +30,7 @@ Ontology loss function may be used when the class labels are organized has an on
                   0,1,1,0,
                   0,1,0,1),3,4,byrow=TRUE)
   w <- nrbm(ontologyLoss(x,y,dag=dag))
-  w <- matrix(w,ncol(x))
-  f <- x \%*\% tcrossprod(w,dag)
-  table(y,max.col(f))
+  table(predict(w,x),y)
 }
 \references{
 Teo et al.
