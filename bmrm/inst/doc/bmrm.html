@@ -12,7 +12,7 @@
 
 <meta name="author" content="Julien Prados, University of Geneva" />
 
-<meta name="date" content="2017-04-28" />
+<meta name="date" content="2017-07-11" />
 
 <title>bmrm User Guide</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore"><code>bmrm</code> User Guide</h1>
 <h4 class="author"><em>Julien Prados, University of Geneva</em></h4>
-<h4 class="date"><em>2017-04-28</em></h4>
+<h4 class="date"><em>2017-07-11</em></h4>
 
 
 
@@ -88,10 +88,10 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <table>
 <caption>List of learning algorithms implemented in <code>bmrm</code> package. </caption>
 <colgroup>
-<col width="29%"></col>
-<col width="16%"></col>
-<col width="30%"></col>
-<col width="23%"></col>
+<col width="27%"></col>
+<col width="21%"></col>
+<col width="28%"></col>
+<col width="22%"></col>
 </colgroup>
 <thead>
 <tr class="header">
@@ -104,25 +104,25 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <tbody>
 <tr class="odd">
 <td>Support Vector Machine (SVM)</td>
-<td>Linear Classifier</td>
+<td>Linear Binary Classifier</td>
 <td><code>hingeLoss()</code></td>
 <td><span class="math inline">\(\max(0,1-ywx)\)</span></td>
 </tr>
 <tr class="even">
 <td>Maximizing ROC area</td>
-<td>Linear Classifier</td>
+<td>Linear Binary Classifier</td>
 <td><code>rocLoss()</code></td>
 <td><span class="citation">Teo et al. (2010)</span>, §A.3.1</td>
 </tr>
 <tr class="odd">
 <td>Maximizing fbeta score</td>
-<td>Linear Classifier</td>
+<td>Linear Binary Classifier</td>
 <td><code>fbetaLoss()</code></td>
 <td><span class="citation">Teo et al. (2010)</span>, §A.3.5</td>
 </tr>
 <tr class="even">
 <td>Logistic Regression</td>
-<td>Regressor</td>
+<td>Linear Binary Classifier</td>
 <td><code>logisticLoss()</code></td>
 <td><span class="math inline">\(\log(1+e^{-ywx})\)</span></td>
 </tr>
@@ -171,26 +171,24 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </tbody>
 </table>
 <p>In addition to this implemented algorithms, the package is flexible enought to allow easy implementation of custom methods adapted to your learning problem.</p>
-<p>Regarding regularization, <code>bmrm</code> package can handle both L1 and L2 regularization of the parameter vector <span class="math inline">\(w\)</span>. L1 regularization is obtained by computing the L1-norm of the parameter vector (<span class="math inline">\(\Omega(w)=|w|\)</span>); while L2 regularization is computed by using the L2-norm of the parameter vector (<span class="math inline">\(\Omega(w)=||w||\)</span>). In theory, L1 regularization yield better model sparsity and may be prefered. However, the implementation available for L2-regularizer is much more memory efficient. The parameter <span class="math inline">\(\lambda\)</span> control the tradeoff between model fitting and model simplicity, and should be tuned to account for overfitting.</p>
+<p>Regarding regularization, <code>bmrm</code> package can handle both L1 and L2 regularization of the parameter vector <span class="math inline">\(w\)</span>. L1 regularization is obtained by computing the L1-norm of the parameter vector (<span class="math inline">\(\Omega(w)=|w|\)</span>); while L2 regularization is computed by using the L2-norm of the parameter vector (<span class="math inline">\(\Omega(w)=||w||\)</span>). In theory, L1 regularization yield better model sparsity and may be prefered. However, the implementation available for L2-regularizer is much more memory efficient and can handle non-convex loss functions. The parameter <span class="math inline">\(\lambda\)</span> control the tradeoff between model fitting and model simplicity, and should be tuned to account for overfitting.</p>
 <p>Most of the time, the loss functions are convex and all the ones implemented in the package are. However, non-convex losses can also be handle by the package if necessary. See section <a href="#choosing-the-optimization-algorithms">Choosing the Optimization Algorithms</a> for more details.</p>
 </div>
 <div id="quick-start" class="section level2">
 <h2>Quick start</h2>
-<p>In this quick start guide, we show how to train a multiclass-SVM on iris dataset.</p>
+<p>In this quick start guide, we show how to train a multiclass-SVM on iris dataset with an intercept.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">    <span class="kw">library</span>(bmrm)
     x &lt;-<span class="st"> </span><span class="kw">cbind</span>(<span class="dt">intercept=</span><span class="dv">100</span>,<span class="kw">data.matrix</span>(iris[<span class="kw">c</span>(<span class="st">&quot;Sepal.Length&quot;</span>,<span class="st">&quot;Sepal.Width&quot;</span>,<span class="st">&quot;Petal.Length&quot;</span>,<span class="st">&quot;Petal.Width&quot;</span>)]))
     y &lt;-<span class="st"> </span>iris$Species
     w &lt;-<span class="st"> </span><span class="kw">nrbm</span>(<span class="kw">softMarginVectorLoss</span>(x,iris$Species))
-    w &lt;-<span class="st"> </span><span class="kw">matrix</span>(w,<span class="kw">ncol</span>(x),<span class="dt">dimnames=</span><span class="kw">list</span>(<span class="kw">colnames</span>(x),<span class="kw">levels</span>(iris$Species)))
-    predictions &lt;-<span class="st"> </span><span class="kw">colnames</span>(w)[<span class="kw">max.col</span>(x %*%<span class="st"> </span>w)]
-    <span class="kw">table</span>(<span class="dt">target=</span>y,<span class="dt">prediction=</span>predictions)</code></pre></div>
+    <span class="kw">table</span>(<span class="dt">target=</span>y,<span class="dt">prediction=</span><span class="kw">predict</span>(w,x))</code></pre></div>
 </div>
 <div id="models-intercept" class="section level2">
 <h2>Models Intercept</h2>
 </div>
 <div id="choosing-the-optimization-algorithms" class="section level2">
 <h2>Choosing the Optimization Algorithms</h2>
-<p><code>bmrm</code> package implements two algorithms proposed by <span class="citation">Teo et al. (2010)</span> and <span class="citation">Do and Artieres (2012)</span> to solve the above minimization problem. The methods are respectively called <code>bmrm()</code>and <code>nrbm()</code>. <code>nrbm()</code> is a memory optimized version of <code>bmrm()</code> that can handle non-convex risk when parameter <code>convexRisk=FALSE</code>. <code>nrbm()</code> should always be prefered over <code>bmrm()</code>, but it is limited to L2-regularization. In contrast, <code>bmrm()</code> can handle L1-regularization, but is more memory consuming and doesn’t support non-convex losses. The table below summarize the recommendend optimization algorithm to use for the possible use cases.</p>
+<p><code>bmrm</code> package implement the algorithm proposed by <span class="citation">Do and Artieres (2012)</span> to solve the above minimization problem and a L1-regularized verion of the algorithm as well. The methods are respectively called <code>nrbm()</code> and <code>nrbmL1()</code>. <code>nrbm()</code> is memory optimized version and can handle non-convex risk when parameter <code>convexRisk=FALSE</code>. In contrast, <code>nrbmL1()</code> can handle L1-regularization, but doesn’t support non-convex losses. In addition, by default <code>nrbmL1()</code> doesn’t provide memory optimization to guaranty convergence of the algorithm. Memory optimization is however possible by setting parameter <code>maxCP</code> to a value typically below 100, but in this case convergence of the algorithm is not guaranty.</p>
 <table>
 <caption>Recommended optimization method in the different use cases.</caption>
 <thead>
@@ -204,7 +202,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <tr class="odd">
 <td>L1</td>
 <td>Yes</td>
-<td><code>bmrm()</code></td>
+<td><code>nrbmL1()</code></td>
 </tr>
 <tr class="even">
 <td>L2</td>
@@ -216,7 +214,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </div>
 <div id="loss-function" class="section level2">
 <h2>Loss function</h2>
-<p>The loss functions has to accept a matrix W (or 0) and return both a vector of loss values and a matrix of gradients at input points W. When W=0,</p>
+<p>The loss functions has to accept a point estimate w (or 0) and return it with attributes <code>lvalue</code> and <code>gradient</code> set. <code>lvalue</code> contains the estimated loss value at the estimated point <code>w</code>; <code>gradient</code> contains the estimated gradient vector at the estimated point <code>w</code>.</p>
 <div id="custom-loss" class="section level3">
 <h3>Custom loss</h3>
 </div>
