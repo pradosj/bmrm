@@ -506,57 +506,57 @@ ordinalRegressionLoss <- function(x,y,C="0/1",impl=c("loglin","quadratic")) {
   M <- (m*m - sum(mi*mi))/2
   C <- C / M
   
-  colOrder <- function(m) {
-    array(row(m)[order(col(m),m)],dim(m))
-  }
-  
   .loglin <- function(w) {
-    w <- cbind(matrix(numeric(),ncol(x),0),w)
+    w <- rep(w,length.out=ncol(x))
     f <- x %*% w
-    c <- rbind(f-0.5,f+0.5)
-    o <- colOrder(c)
-    j <- array(arrayInd(o,m),dim(o))
+    c <- c(f-0.5,f+0.5)
+    o <- order(c)
+    j <- ((o-1)%%m)+1
     
-    l <- array(0,c(2*m,ncol(w),length(mi)))
-    l[cbind(which(o<=m,arr.ind=TRUE),y[j[o<=m]])] <- 1
-    l <- array(matrixStats::colCumsums(matrix(l,nrow(l))),dim(l))
+    l <- matrix(0,2*m,length(mi))
+    l[cbind(which(o<=m),y[j[o<=m]])] <- 1
+    l <- matrixStats::colCumsums(l)
     
-    ijk <- arrayInd(seq_along(l),dim(l))
+    u <- matrix(0,2*m,length(mi))
+    u[cbind(which(o>m),y[j[o>m]])] <- 1
+    u <- mi[col(u)] - matrixStats::colCumsums(u)
     
-    u <- array(0,c(2*m,ncol(w),length(mi)))
-    u[cbind(which(o>m,arr.ind=TRUE),y[j[o>m]])] <- 1
-    u <- mi[ijk[,3]] - array(matrixStats::colCumsums(matrix(u,nrow(u))),dim(u))
+    Gu <- t(C)[y[j],] * u
+    Gu[col(Gu)>=y[j]] <- 0
+    Gl <- C[y[j],] * l
+    Gl[col(Gl)<=y[j]] <- 0
     
-    Gu <- array(t(C)[y[j],],dim(u)) * u
-    Gu[ijk[,3]>=y[j]] <- 0
-    Gl <- array(C[y[j],],dim(l)) * l
-    Gl[ijk[,3]<=y[j]] <- 0
+    v <- ifelse(o<=m,-rowSums(Gu), rowSums(Gl))
+    lvalue(w) <- sum(v*c[o])
     
-    v <- ifelse(o<=m,-rowSums(Gu,dims=2), rowSums(Gl,dims=2))
-    lvalue(w) <- colSums(v*c[cbind(as.vector(o),as.vector(col(o)))])
-    
-    g <- array(NA,c(m,ncol(w),2))
-    g[cbind(as.vector(j),as.vector(col(j)),as.vector(1 + (o-1)%/%m))] <- v
-    g <- rowSums(g,dims=2)
-    gradient(w) <- crossprod(x,g)
+    g <- matrix(NA,m,2)
+    g[cbind(j,1 + (o-1)%/%m)] <- v
+    g <- rowSums(g)
+    gradient(w) <- crossprod(g,x)
+    attr(w,"class") <- "ordinalRegressionLoss"
     return(w)
   }
   
   .quadratic <- function(w) {
-    w <- cbind(matrix(numeric(),ncol(x),0),w)
+    w <- rep(w,length.out=ncol(x))
     f <- x %*% w
     
     # alternative computation in quadratic time for debugging purpose only
     z <- expand.grid(i=factor(1:m),j=factor(1:m))
     z <- z[y[z$i] < y[z$j],]
     z$Cij <- C[cbind(y[z$i],y[z$j])]
-    lvalue(w) <- colSums(z$Cij * pmax(1+f[z$i,,drop=FALSE]-f[z$j,,drop=FALSE],0))
-    gradient(w) <- crossprod(z$Cij*(x[z$i,]-x[z$j,]),(1+f[z$i,,drop=FALSE]-f[z$j,,drop=FALSE])>0)
+    lvalue(w) <- sum(z$Cij * pmax(1+f[z$i,drop=FALSE]-f[z$j,drop=FALSE],0))
+    gradient(w) <- crossprod(z$Cij*(x[z$i,]-x[z$j,]),(1+f[z$i]-f[z$j])>0)
+    attr(w,"class") <- "ordinalRegressionLoss"
     return(w)
   }
   
   switch(impl,loglin=.loglin,quadratic=.quadratic)
 }
 
+#' @export
+predict.ordinalRegressionLoss <- function(object,x,...) {
+  x %*% object
+}
 
 
