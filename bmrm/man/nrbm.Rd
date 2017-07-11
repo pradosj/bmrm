@@ -2,11 +2,15 @@
 % Please edit documentation in R/nrbm.R
 \name{nrbm}
 \alias{nrbm}
+\alias{nrbm}
+\alias{nrbmL1}
 \title{Convex and non-convex risk minimization with L2 regularization and limited memory}
 \usage{
 nrbm(riskFun, LAMBDA = 1, MAX_ITER = 1000L, EPSILON_TOL = 0.01, w0 = 0,
-  maxCP = 50L, convexRisk = TRUE, LowRankQP.method = "LU",
-  regularizer = c("l2", "l1"))
+  maxCP = 50L, convexRisk = TRUE, LowRankQP.method = "LU")
+
+nrbmL1(riskFun, LAMBDA = 1, MAX_ITER = 1000L, EPSILON_TOL = 0.01,
+  w0 = 0, maxCP = 50L)
 }
 \arguments{
 \item{riskFun}{the risk function to use in the optimization (e.g.: hingeLoss, softMarginVectorLoss). 
@@ -30,8 +34,6 @@ the optimization end when the optimization gap is below this threshold}
 If TRUE, use CRBM algorithm; if FALSE use NRBM algorithm from Do and Artieres, JMLR 2012}
 
 \item{LowRankQP.method}{a single character value defining the method used by LowRankQP (should be either "LU" or "CHOL")}
-
-\item{regularizer}{}
 }
 \value{
 the optimal weight vector (w)
@@ -41,6 +43,13 @@ Use algorithm of Do and Artieres, JMLR 2012 to find w minimizing:
 f(w) = 0.5*LAMBDA*l2norm(w) + riskFun(w)
 where riskFun is either a convex or a non-convex risk function.
 }
+\section{Functions}{
+\itemize{
+\item \code{nrbm}: original L2-regularized version of nrbm
+
+\item \code{nrbmL1}: L1-regularized version of nrbm that can only handle convex risk
+}}
+
 \examples{
   # -- Create a 2D dataset with the first 2 features of iris, with binary labels
   x <- data.matrix(iris[1:2])
@@ -50,9 +59,9 @@ where riskFun is either a convex or a non-convex risk function.
 
   # -- train scalar prediction models with maxMarginLoss and fbetaLoss
   models <- list(
-    svm_L1 = nrbm(hingeLoss(x,iris$Species=="setosa"),LAMBDA=0.1,reg='l1'),
-    svm_L2 = nrbm(hingeLoss(x,iris$Species=="setosa"),LAMBDA=0.1,reg='l2'),
-    f1_L1 = nrbm(fbetaLoss(x,iris$Species=="setosa"),LAMBDA=0.01,reg='l1')
+    svm_L1 = nrbmL1(hingeLoss(x,iris$Species=="setosa"),LAMBDA=0.1),
+    svm_L2 = nrbm(hingeLoss(x,iris$Species=="setosa"),LAMBDA=0.1),
+    f1_L1 = nrbmL1(fbetaLoss(x,iris$Species=="setosa"),LAMBDA=0.01)
   )
 
   # -- Plot the dataset and the predictions
