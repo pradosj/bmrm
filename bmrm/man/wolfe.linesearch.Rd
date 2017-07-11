@@ -45,7 +45,7 @@ Do and Artieres
   JMLR 2012
 }
 \seealso{
-\code{\link{bmrm}} \code{\link{nrbm}}
+\code{\link{nrbm}}
 }
 \author{
 Julien Prados

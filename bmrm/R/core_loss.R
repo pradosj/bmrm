@@ -47,7 +47,7 @@ gradient.default <- function(x,...) attr(x, "gradient")
 #' @aliases lvalue<-
 #' @title Return or set lvalue attribute
 #' @param x any R object
-#' @param lvalue new loss value to set
+#' @param value new loss value to set
 #' @param ... additional paramters 
 #' @return attr(x,"lvalue")
 #' @export

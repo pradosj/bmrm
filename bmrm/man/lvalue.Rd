@@ -21,7 +21,7 @@ lvalue(x, ...) <- value
 
 \item{...}{additional paramters}
 
-\item{lvalue}{new loss value to set}
+\item{value}{new loss value to set}
 }
 \value{
 attr(x,"lvalue")

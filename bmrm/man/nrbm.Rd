@@ -9,8 +9,8 @@
 nrbm(riskFun, LAMBDA = 1, MAX_ITER = 1000L, EPSILON_TOL = 0.01, w0 = 0,
   maxCP = 50L, convexRisk = TRUE, LowRankQP.method = "LU")
 
-nrbmL1(riskFun, LAMBDA = 1, MAX_ITER = 1000L, EPSILON_TOL = 0.01,
-  w0 = 0, maxCP = 50L)
+nrbmL1(riskFun, LAMBDA = 1, MAX_ITER = 300L, EPSILON_TOL = 0.01, w0 = 0,
+  maxCP = +Inf)
 }
 \arguments{
 \item{riskFun}{the risk function to use in the optimization (e.g.: hingeLoss, softMarginVectorLoss). 

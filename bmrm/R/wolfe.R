@@ -25,7 +25,7 @@
 #'   Regularized Bundle Methods for Convex and Non-Convex Risks
 #'   JMLR 2012
 #' @author Julien Prados
-#' @seealso \code{\link{bmrm}} \code{\link{nrbm}}
+#' @seealso \code{\link{nrbm}}
 wolfe.linesearch <- function(f, x0, f0, s0, ..., a1=0.5, amax=1.1, c1=1e-4, c2=0.9, maxiter=5L) {
   gradient(f0) <- crossprod(gradient(f0),s0)
   
