@@ -2,7 +2,7 @@
 
 #' Loss functions to perform a regression
 #' 
-#' @name regressionLosses
+#' @name linearRegressionLoss
 #' @param x matrix of training instances (one instance by row)
 #' @param y numeric vector of values representing the training labels for each instance in x
 #' @param loss.weights numeric vector of loss weights to incure for each instance of x. 
@@ -26,7 +26,7 @@ predict.linearRegressionLoss <- function(object,x,...) {
   x %*% object
 }
 
-#' @describeIn regressionLosses Least Mean Square regression
+#' @describeIn linearRegressionLoss Least Mean Square regression
 #' @export
 lmsRegressionLoss <- function(x,y,loss.weights=1) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
@@ -47,7 +47,7 @@ lmsRegressionLoss <- function(x,y,loss.weights=1) {
 }
 
 
-#' @describeIn regressionLosses Least Absolute Deviation regression
+#' @describeIn linearRegressionLoss Least Absolute Deviation regression
 #' @export
 ladRegressionLoss <- function(x,y,loss.weights=1) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
@@ -68,7 +68,7 @@ ladRegressionLoss <- function(x,y,loss.weights=1) {
 }
 
 
-#' @describeIn regressionLosses Quantile Regression
+#' @describeIn linearRegressionLoss Quantile Regression
 #' @param q a numeric value in the range [0-1] defining quantile value to consider
 #' @export
 quantileRegressionLoss <- function(x,y,q=0.5,loss.weights=1) {
@@ -91,7 +91,7 @@ quantileRegressionLoss <- function(x,y,q=0.5,loss.weights=1) {
 }
 
 
-#' @describeIn regressionLosses epsilon-insensitive regression (Vapnik et al. 1997)
+#' @describeIn linearRegressionLoss epsilon-insensitive regression (Vapnik et al. 1997)
 #' @param epsilon a numeric value setting tolerance of the epsilon-regression
 #' @export
 epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
@@ -131,7 +131,7 @@ epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
 
 #' Loss functions for binary classification
 #' 
-#' @name binaryClassificationLosses
+#' @name binaryClassificationLoss
 #' @param x matrix of training instances (one instance by row)
 #' @param y a 2-levels factor representing the training labels for each instance in x
 #' @param loss.weights numeric vector of loss weights to incure for each instance of x. 
@@ -150,14 +150,14 @@ epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
 NULL
 
 #' @export
-predict.hingeLoss <- function(object,x,...) {
+predict.binaryClassificationLoss <- function(object,x,...) {
   f <- x %*% object
   y <- f>0
   attr(y,"decision.value") <- f
   y
 }
 
-#' @describeIn binaryClassificationLosses Hinge Loss for Linear Support Vector Machine (SVM)
+#' @describeIn binaryClassificationLoss Hinge Loss for Linear Support Vector Machine (SVM)
 #' @export
 hingeLoss <- function(x,y,loss.weights=1) {
   if (!is.logical(y)) stop("y must be logical")
@@ -172,13 +172,13 @@ hingeLoss <- function(x,y,loss.weights=1) {
     grad <- loss.weights * (loss>0) * ifelse(y,-1,+1)
     lvalue(w) <- sum(loss)
     gradient(w) <- crossprod(x,grad)
-    class(w) <- "hingeLoss"
+    class(w) <- c("hingeLoss","binaryClassificationLoss")
     return(w)
   }
 }
 
 
-#' @describeIn binaryClassificationLosses logistic regression
+#' @describeIn binaryClassificationLoss logistic regression
 #' @export
 logisticLoss <- function(x,y,loss.weights=1) {
   if (!is.logical(y)) stop("y must be logical")
@@ -193,22 +193,21 @@ logisticLoss <- function(x,y,loss.weights=1) {
     grad <- loss.weights * ifelse(y, 1/(1+exp(-f))-1, -1/(1+exp(+f))+1)
     lvalue(w) <- sum(loss)
     gradient(w) <- crossprod(x,grad)
-    class(w) <- "logisticLoss"
+    class(w) <- c("logisticLoss","binaryClassificationLoss")
     return(w)
   }
 }
 
 #' @export
 predict.logisticLoss <- function(object,x,...) {
-  f <- x %*% object
-  p <- exp(f) / (1+exp(f))
-  y <- p>0.5
-  attr(y,"decision.value") <- p
+  y <- NextMethod()
+  f <- attr(y,"decision.value")
+  attr(y,"probability") <- exp(f) / (1+exp(f))
   y
 }
 
 
-#' @describeIn binaryClassificationLosses Find linear weights maximize area under its ROC curve
+#' @describeIn binaryClassificationLoss Find linear weights maximize area under its ROC curve
 #' @export
 #' @import matrixStats
 rocLoss <- function(x,y) {
@@ -240,7 +239,7 @@ predict.rocLoss <- function(object,x,...) {
   f
 }
 
-#' @describeIn binaryClassificationLosses F-beta score loss function
+#' @describeIn binaryClassificationLoss F-beta score loss function
 #' @param beta a numeric value setting the beta parameter is the f-beta score
 #' @export
 fbetaLoss <- function(x,y,beta=1) {
@@ -275,18 +274,11 @@ fbetaLoss <- function(x,y,beta=1) {
     
     lvalue(w) <- R[ij]
     gradient(w) <- crossprod(x,Y-ifelse(y,1,-1))
-    class(w) <- "fbetaLoss"
+    class(w) <- c("fbetaLoss","binaryClassificationLoss")
     return(w)
   }
 }
 
-#' @export
-predict.fbetaLoss <- function(object,x,...) {
-  f <- x %*% object
-  y <- f>0
-  attr(y,"decision.value") <- f
-  y
-}
 
 
 
