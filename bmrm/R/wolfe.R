@@ -59,10 +59,10 @@ wolfe.linesearch <- function(f, x0, f0, s0, ..., a1=0.5, amax=1.1, c1=1e-4, c2=0
     list(astar=aj,xstar=xj,fstar=fj)
   }
   
+  ai <- a1
   ai_1 <- 0
   fi_1 <- f0
   for(i in seq_len(maxiter)) {
-    ai <- if (i==1L) a1 else (ai + amax)/2
     xi <- x0+ai*s0
     fi <- f(xi,...)
     gradient(fi) <- crossprod(gradient(fi),s0)
@@ -75,6 +75,7 @@ wolfe.linesearch <- function(f, x0, f0, s0, ..., a1=0.5, amax=1.1, c1=1e-4, c2=0
     # update variables for next iteration
     ai_1 <- ai
     fi_1 <- fi
+    ai <- (ai + amax)/2
   }
   if (i==maxiter) warning("iteration stop after maxiter loops") 
   list(astar=ai, xstar=xi, fstar=fi)
