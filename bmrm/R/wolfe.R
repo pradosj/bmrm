@@ -29,7 +29,7 @@
 wolfe.linesearch <- function(f, x0, f0, s0, ..., a1=0.5, amax=1.1, c1=1e-4, c2=0.9, maxiter=5L) {
   gradient(f0) <- crossprod(gradient(f0),s0)
   
-  zoom <- function(alo, ahi, flo, fhi) {
+  zoom <- function(alo, ahi, flo, fhi, maxiter) {
     if (alo>ahi) stop("[alo,ahi] is empty")
     for(i in seq_len(maxiter)) {
       # find aj in [alo,ahi] using cubic interpolation
@@ -67,9 +67,9 @@ wolfe.linesearch <- function(f, x0, f0, s0, ..., a1=0.5, amax=1.1, c1=1e-4, c2=0
     fi <- f(xi,...)
     gradient(fi) <- crossprod(gradient(fi),s0)
     
-    if (fi > (f0+c1*ai*gradient(f0)) || (fi >= fi_1 && i > 1)) return(zoom(ai_1, ai, fi_1, fi))
+    if (fi > (f0+c1*ai*gradient(f0)) || (fi >= fi_1 && i > 1)) return(zoom(ai_1, ai, fi_1, fi, maxiter=maxiter-i))
     if (abs(gradient(fi)) <= -c2*gradient(f0)) break
-    if (gradient(fi) >= 0) return(zoom(ai, ai_1, fi, fi_1))
+    if (gradient(fi) >= 0) return(zoom(ai, ai_1, fi, fi_1, maxiter=maxiter-i))
     if (abs(ai - amax) <= 0.01*amax) break
    
     # update variables for next iteration
