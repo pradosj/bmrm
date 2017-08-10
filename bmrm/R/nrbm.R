@@ -19,6 +19,7 @@
 #' @param convexRisk a length 1 logical telling if the risk function riskFun is convex. 
 #'    If TRUE, use CRBM algorithm; if FALSE use NRBM algorithm from Do and Artieres, JMLR 2012
 #' @param LowRankQP.method a single character value defining the method used by LowRankQP (should be either "LU" or "CHOL")
+#' @param line.search a logical, when TRUE use line search to speed up convergence
 #' @return the optimal weight vector (w)
 #' @references Do and Artieres
 #'   Regularized Bundle Methods for Convex and Non-Convex Risks
@@ -63,7 +64,7 @@ NULL
 
 #' @describeIn nrbm original L2-regularized version of nrbm
 #' @export
-nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L,convexRisk=TRUE,LowRankQP.method="LU") {
+nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L,convexRisk=TRUE,LowRankQP.method="LU",line.search=FALSE) {
   # check parameters
   if (maxCP<3) stop("maxCP should be >=3")
 
@@ -89,6 +90,11 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L
      w <- as.vector(-crossprod(A,alpha) / LAMBDA)
      lb <- LAMBDA*0.5*crossprod(as.vector(w)) + max(0,A %*% as.vector(w) + b)
      
+     if (line.search) {
+       .NotYetImplemented()
+       #wolfe.linesearch(f=function(w){}, f0=ub, x0=ub.w, s0=w-ub.w)
+     }
+     
      # estimate loss at the new underestimator optimum
      w <- riskFun(w)
      f <- LAMBDA*0.5*crossprod(as.vector(w)) + lvalue(w)
@@ -102,7 +108,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L
 
     if (!convexRisk) {
       # solve possible conflicts with the new cutting plane
-      if (f<ub) {
+      if (f<ub) { # descent step
         st <- 0
         s <- s + as.vector(0.5*LAMBDA*crossprod(as.vector(ub.w)-as.vector(w)))
         b <- pmin(b,lvalue(w) - (A %*% as.vector(w)) - s)
@@ -159,7 +165,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L
 
 #' @describeIn nrbm L1-regularized version of nrbm that can only handle convex risk
 #' @export
-nrbmL1 <- function(riskFun,LAMBDA=1,MAX_ITER=300L,EPSILON_TOL=0.01,w0=0,maxCP=+Inf) {
+nrbmL1 <- function(riskFun,LAMBDA=1,MAX_ITER=300L,EPSILON_TOL=0.01,w0=0,maxCP=+Inf,line.search=FALSE) {
   # check parameters
   if (maxCP<3) stop("maxCP should be >=3")
 
@@ -186,6 +192,11 @@ nrbmL1 <- function(riskFun,LAMBDA=1,MAX_ITER=300L,EPSILON_TOL=0.01,w0=0,maxCP=+I
      # compute the optimum point and corresponding objective value    
      w <- opt$W[,1L] - opt$W[,2L]
      lb <- -opt$objval
+     
+     if (line.search) {
+       .NotYetImplemented()
+       #wolfe.linesearch(f=function(w){}, f0=ub, x0=ub.w, s0=w-ub.w)
+     }
      
      # estimate loss at the new underestimator optimum
      w <- riskFun(w)
