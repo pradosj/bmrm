@@ -7,10 +7,11 @@
 \title{Convex and non-convex risk minimization with L2 regularization and limited memory}
 \usage{
 nrbm(riskFun, LAMBDA = 1, MAX_ITER = 1000L, EPSILON_TOL = 0.01, w0 = 0,
-  maxCP = 50L, convexRisk = TRUE, LowRankQP.method = "LU")
+  maxCP = 50L, convexRisk = TRUE, LowRankQP.method = "LU",
+  line.search = TRUE)
 
 nrbmL1(riskFun, LAMBDA = 1, MAX_ITER = 300L, EPSILON_TOL = 0.01, w0 = 0,
-  maxCP = +Inf)
+  maxCP = +Inf, line.search = TRUE)
 }
 \arguments{
 \item{riskFun}{the risk function to use in the optimization (e.g.: hingeLoss, softMarginVectorLoss). 
@@ -34,6 +35,8 @@ the optimization end when the optimization gap is below this threshold}
 If TRUE, use CRBM algorithm; if FALSE use NRBM algorithm from Do and Artieres, JMLR 2012}
 
 \item{LowRankQP.method}{a single character value defining the method used by LowRankQP (should be either "LU" or "CHOL")}
+
+\item{line.search}{a logical, when TRUE use line search to speed up convergence}
 }
 \value{
 the optimal weight vector (w)

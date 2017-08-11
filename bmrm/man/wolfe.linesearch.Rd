@@ -4,7 +4,7 @@
 \alias{wolfe.linesearch}
 \title{Wolfe Line Search}
 \usage{
-wolfe.linesearch(f, x0, f0, s0, ..., a1 = 0.5, amax = 1.1, c1 = 1e-04,
+wolfe.linesearch(f, x0, s0, ..., a1 = 0.5, amax = 1.1, c1 = 1e-04,
   c2 = 0.9, maxiter = 5L)
 }
 \arguments{
@@ -13,8 +13,6 @@ representing the optimization point and return a numeric value, with
 gradient attribute setted}
 
 \item{x0}{initial search point}
-
-\item{f0}{initial function value}
 
 \item{s0}{direction of the search from x0}
 
