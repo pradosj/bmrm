@@ -1,4 +1,25 @@
 
+L1RegularizedLoss <- function(riskFun,LAMBDA) {
+  function(w) {
+    w <- riskFun(w)
+    lvalue(w) <- as.vector(LAMBDA*sum(abs(w)) + lvalue(w))
+    gradient(w) <- LAMBDA*sign(w) + gradient(w)
+    class(w) <- "L1RegularizedLoss"
+    w
+  }
+}
+
+L2RegularizedLoss <- function(riskFun,LAMBDA) {
+  function(w) {
+    w <- riskFun(w)
+    lvalue(w) <- as.vector(LAMBDA*0.5*crossprod(as.vector(w)) + lvalue(w))
+    gradient(w) <- LAMBDA*w + gradient(w)
+    class(w) <- "L2RegularizedLoss"
+    w
+  }
+}
+
+
 #' Convex and non-convex risk minimization with L2 regularization and limited memory
 #' 
 #' Use algorithm of Do and Artieres, JMLR 2012 to find w minimizing: 
@@ -64,7 +85,7 @@ NULL
 
 #' @describeIn nrbm original L2-regularized version of nrbm
 #' @export
-nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L,convexRisk=TRUE,LowRankQP.method="LU",line.search=FALSE) {
+nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L,convexRisk=TRUE,LowRankQP.method="LU",line.search=TRUE) {
   # check parameters
   if (maxCP<3) stop("maxCP should be >=3")
 
@@ -72,7 +93,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L
   w <- riskFun(w0)
   at <- as.vector(gradient(w))
   bt <- as.vector(lvalue(w)) - crossprod(as.vector(w),at)
-  f <- LAMBDA*0.5*crossprod(as.vector(w)) + lvalue(w)
+  f <- as.vector(LAMBDA*0.5*crossprod(as.vector(w)) + lvalue(w))
   st <- 0
   
   # initialize aggregated working plane and working set
@@ -88,16 +109,19 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L
      
      # compute the optimum point and corresponding objective value
      w <- as.vector(-crossprod(A,alpha) / LAMBDA)
-     lb <- LAMBDA*0.5*crossprod(as.vector(w)) + max(0,A %*% as.vector(w) + b)
-     
      if (line.search) {
-       .NotYetImplemented()
-       #wolfe.linesearch(f=function(w){}, f0=ub, x0=ub.w, s0=w-ub.w)
+       w <- local({
+         lvalue(ub.w) <- ub
+         gradient(ub.w) <- gradient(ub.w) + LAMBDA*as.vector(ub.w)
+         wolfe.linesearch(L2RegularizedLoss(riskFun,LAMBDA), x0=ub.w, s0=w-ub.w)  
+       })
      }
+     lb <- as.vector(LAMBDA*0.5*crossprod(as.vector(w)) + max(0,A %*% as.vector(w) + b))
+     
      
      # estimate loss at the new underestimator optimum
      w <- riskFun(w)
-     f <- LAMBDA*0.5*crossprod(as.vector(w)) + lvalue(w)
+     f <- as.vector(LAMBDA*0.5*crossprod(as.vector(w)) + lvalue(w))
 
     # update inactivity score
     inactivity.score <- inactivity.score + pmax(1-alpha,0)
@@ -165,7 +189,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L
 
 #' @describeIn nrbm L1-regularized version of nrbm that can only handle convex risk
 #' @export
-nrbmL1 <- function(riskFun,LAMBDA=1,MAX_ITER=300L,EPSILON_TOL=0.01,w0=0,maxCP=+Inf,line.search=FALSE) {
+nrbmL1 <- function(riskFun,LAMBDA=1,MAX_ITER=300L,EPSILON_TOL=0.01,w0=0,maxCP=+Inf,line.search=TRUE) {
   # check parameters
   if (maxCP<3) stop("maxCP should be >=3")
 
@@ -191,12 +215,14 @@ nrbmL1 <- function(riskFun,LAMBDA=1,MAX_ITER=300L,EPSILON_TOL=0.01,w0=0,maxCP=+I
      
      # compute the optimum point and corresponding objective value    
      w <- opt$W[,1L] - opt$W[,2L]
-     lb <- -opt$objval
-     
      if (line.search) {
-       .NotYetImplemented()
-       #wolfe.linesearch(f=function(w){}, f0=ub, x0=ub.w, s0=w-ub.w)
+       w <- local({
+         lvalue(ub.w) <- ub
+         gradient(ub.w) <- gradient(ub.w) + LAMBDA*sign(ub.w)
+         wolfe.linesearch(L1RegularizedLoss(riskFun,LAMBDA), x0=ub.w, s0=w-ub.w)  
+       })
      }
+     lb <- -opt$objval
      
      # estimate loss at the new underestimator optimum
      w <- riskFun(w)

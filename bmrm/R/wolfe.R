@@ -12,7 +12,6 @@
 #'   representing the optimization point and return a numeric value, with 
 #'   gradient attribute setted
 #' @param x0 initial search point
-#' @param f0 initial function value
 #' @param s0 direction of the search from x0
 #' @param ... additional parameters passed to f()
 #' @param a1 first step coefficient guess
@@ -24,59 +23,57 @@
 #' @references Do and Artieres
 #'   Regularized Bundle Methods for Convex and Non-Convex Risks
 #'   JMLR 2012
+#' @export
 #' @author Julien Prados
 #' @seealso \code{\link{nrbm}}
-wolfe.linesearch <- function(f, x0, f0, s0, ..., a1=0.5, amax=1.1, c1=1e-4, c2=0.9, maxiter=5L) {
-  gradient(f0) <- crossprod(gradient(f0),s0)
+wolfe.linesearch <- function(f, x0, s0, ..., a1=0.5, amax=1.1, c1=1e-4, c2=0.9, maxiter=5L) {
+  if (is.null(lvalue(x0))) x0 <- f(x0, ...)
+  g0 <- as.vector(crossprod(gradient(x0),s0))
   
-  zoom <- function(alo, ahi, flo, fhi, maxiter) {
+  zoom <- function(alo, ahi, flo, fhi, glo, ghi, maxiter) {
     if (alo>ahi) stop("[alo,ahi] is empty")
-    for(i in seq_len(maxiter)) {
+    for(j in seq_len(maxiter)) {
       # find aj in [alo,ahi] using cubic interpolation
-      d1 <- gradient(flo) + gradient(fhi) - 3*(flo-fhi)/(alo-ahi)
-      d2 <- sqrt(max(d1*d1 - gradient(flo)*gradient(fhi),0))
-      aj <- ahi - (ahi-alo)*(gradient(fhi)+d2-d1)/(gradient(fhi)-gradient(flo)+2*d2)      
+      d1 <- glo + ghi - 3*(flo-fhi)/(alo-ahi)
+      d2 <- sqrt(max(d1*d1 - glo*ghi,0))
+      aj <- ahi - (ahi-alo)*(ghi+d2-d1)/(ghi-glo+2*d2)
       if (aj < alo || aj > ahi) aj <- (alo+ahi)/2
       
-      xj <- x0 + aj*s0
-      fj <- f(xj, ...)
-      gradient(fj) <- crossprod(gradient(fj),s0)
-      if (fj > f0 + c1*aj*gradient(f0) || fj > flo) {
+      xj <- f(x0 + aj*s0, ...)
+      gj <- as.vector(crossprod(gradient(xj),s0))
+      if (lvalue(xj) > lvalue(x0) + c1*aj*g0 || lvalue(xj) > flo) {
         ahi <- aj
-        fhi <- fj
+        fhi <- lvalue(xj)
       } else {
-        if (abs(gradient(fj)) <= -c2*gradient(f0)) break;
-        if (gradient(fj)*(ahi-alo) >= 0) {
+        if (abs(gj) <= -c2*g0) break;
+        if (gj*(ahi-alo) >= 0) {
           ahi <- alo
           fhi <- flo
         }
         alo <- aj
-        flo <- fj
+        flo <- lvalue(xj)
       }
       if (abs(alo-ahi) <= 0.01*alo) break;
     }
-    if (i==maxiter) warning("iteration stop after maxiter loops")
-    list(astar=aj,xstar=xj,fstar=fj)
+    xj
   }
   
+  
+  ai_1 <- 0;fi_1 <- lvalue(x0);gi_1 <- g0
   ai <- a1
-  ai_1 <- 0
-  fi_1 <- f0
   for(i in seq_len(maxiter)) {
-    xi <- x0+ai*s0
-    fi <- f(xi,...)
-    gradient(fi) <- crossprod(gradient(fi),s0)
-    
-    if (fi > (f0+c1*ai*gradient(f0)) || (fi >= fi_1 && i > 1)) return(zoom(ai_1, ai, fi_1, fi, maxiter=maxiter-i))
-    if (abs(gradient(fi)) <= -c2*gradient(f0)) break
-    if (gradient(fi) >= 0) return(zoom(ai, ai_1, fi, fi_1, maxiter=maxiter-i))
+    xi <- f(x0+ai*s0,...)
+    gi <- as.vector(crossprod(gradient(xi),s0))
+
+    # test for end of search
+    if ((lvalue(xi) > lvalue(x0)+c1*ai*g0) || (lvalue(xi) >= fi_1 && i > 1)) return(zoom(ai_1, ai, fi_1, lvalue(xi), gi_1, gi, maxiter=maxiter-i))
+    if (abs(gi) <= -c2*g0) break
+    if (gi >= 0) return(zoom(ai, ai_1, lvalue(xi), fi_1, gi, gi_1, maxiter=maxiter-i))
     if (abs(ai - amax) <= 0.01*amax) break
    
     # update variables for next iteration
-    ai_1 <- ai
-    fi_1 <- fi
+    ai_1 <- ai; fi_1 <- lvalue(xi); gi_1 <- gi
     ai <- (ai + amax)/2
   }
-  if (i==maxiter) warning("iteration stop after maxiter loops") 
-  list(astar=ai, xstar=xi, fstar=fi)
+  xi
 }
