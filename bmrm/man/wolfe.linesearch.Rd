@@ -5,7 +5,7 @@
 \title{Wolfe Line Search}
 \usage{
 wolfe.linesearch(f, x0, s0, ..., a1 = 0.5, amax = 1.1, c1 = 1e-04,
-  c2 = 0.9, maxiter = 5L)
+  c2 = 0.9, maxiter = 5L, reg.adjust = identity)
 }
 \arguments{
 \item{f}{a function to minimize. It must accept as first argument a numeric vector

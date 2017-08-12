@@ -1,23 +1,4 @@
 
-L1RegularizedLoss <- function(riskFun,LAMBDA) {
-  function(w) {
-    w <- riskFun(w)
-    lvalue(w) <- as.vector(LAMBDA*sum(abs(w)) + lvalue(w))
-    gradient(w) <- LAMBDA*sign(w) + gradient(w)
-    class(w) <- "L1RegularizedLoss"
-    w
-  }
-}
-
-L2RegularizedLoss <- function(riskFun,LAMBDA) {
-  function(w) {
-    w <- riskFun(w)
-    lvalue(w) <- as.vector(LAMBDA*0.5*crossprod(as.vector(w)) + lvalue(w))
-    gradient(w) <- LAMBDA*w + gradient(w)
-    class(w) <- "L2RegularizedLoss"
-    w
-  }
-}
 
 
 #' Convex and non-convex risk minimization with L2 regularization and limited memory
@@ -109,15 +90,15 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L
      
      # compute the optimum point and corresponding objective value
      w <- as.vector(-crossprod(A,alpha) / LAMBDA)
-     if (line.search) {
-       w <- local({
-         lvalue(ub.w) <- ub
-         gradient(ub.w) <- gradient(ub.w) + LAMBDA*as.vector(ub.w)
-         wolfe.linesearch(L2RegularizedLoss(riskFun,LAMBDA), x0=ub.w, s0=w-ub.w)  
-       })
-     }
      lb <- as.vector(LAMBDA*0.5*crossprod(as.vector(w)) + max(0,A %*% as.vector(w) + b))
      
+     if (line.search) {
+       w <- wolfe.linesearch(riskFun,x0=ub.w,s0=w-as.vector(ub.w),reg.adjust=function(w){
+         lvalue(w) <- lvalue(w) + as.vector(LAMBDA*0.5*crossprod(w))
+         gradient(w) <- gradient(w) + LAMBDA*as.vector(w)
+         w
+       })
+     }
      
      # estimate loss at the new underestimator optimum
      w <- riskFun(w)
@@ -215,14 +196,15 @@ nrbmL1 <- function(riskFun,LAMBDA=1,MAX_ITER=300L,EPSILON_TOL=0.01,w0=0,maxCP=+I
      
      # compute the optimum point and corresponding objective value    
      w <- opt$W[,1L] - opt$W[,2L]
+     lb <- -opt$objval
+     
      if (line.search) {
-       w <- local({
-         lvalue(ub.w) <- ub
-         gradient(ub.w) <- gradient(ub.w) + LAMBDA*sign(ub.w)
-         wolfe.linesearch(L1RegularizedLoss(riskFun,LAMBDA), x0=ub.w, s0=w-ub.w)  
+       w <- wolfe.linesearch(riskFun,x0=ub.w,s0=w-as.vector(ub.w),reg.adjust=function(w){
+         lvalue(w) <- lvalue(w) + LAMBDA*sum(abs(w))
+         gradient(w) <- gradient(w) + LAMBDA*sign(w)
+         w
        })
      }
-     lb <- -opt$objval
      
      # estimate loss at the new underestimator optimum
      w <- riskFun(w)
