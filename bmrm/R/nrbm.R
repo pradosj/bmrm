@@ -156,7 +156,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L
     
     # test end of the convergence
     cat(sprintf("%d:gap=%g obj=%g reg=%g risk=%g w=[%g,%g]\n",i,ub-lb,ub,LAMBDA*0.5*crossprod(as.vector(ub.w)),lvalue(ub.w),min(ub.w),max(ub.w)))
-    if (ub-lb < EPSILON_TOL) break
+    if (ub-lb < ub*EPSILON_TOL) break
   }
   if (i >= MAX_ITER) warning('max # of itertion exceeded')
   return(ub.w)
@@ -241,7 +241,7 @@ nrbmL1 <- function(riskFun,LAMBDA=1,MAX_ITER=300L,EPSILON_TOL=0.01,w0=0,maxCP=+I
     
     # test end of the convergence
     cat(sprintf("%d:gap=%g obj=%g reg=%g risk=%g w=[%g,%g]\n",i,ub-lb,ub,LAMBDA*sum(abs(ub.w)),lvalue(ub.w),min(ub.w),max(ub.w)))
-    if (ub-lb < EPSILON_TOL) break
+    if (ub-lb < ub*EPSILON_TOL) break
   }
   if (i >= MAX_ITER) warning('max # of itertion exceeded')
   return(ub.w)
