@@ -41,7 +41,8 @@ wolfe.linesearch <- function(f, x0, s0, ..., a1=0.5, amax=1.1, c1=1e-4, c2=0.9, 
         if (aj < alo || aj > ahi) aj <- (alo+ahi)/2
       else
         if (aj > alo || aj < ahi) aj = (alo+ahi)/2;
-      xj <- reg.adjust(f(x0 + aj*s0, ...))
+      Xj <- f(x0 + aj*s0, ...)
+      xj <- reg.adjust(Xj)
       gj <- as.vector(crossprod(gradient(xj),s0))
       if (lvalue(xj) > lvalue(x0) + c1*aj*g0 || lvalue(xj) > flo) {
         ahi <- aj
@@ -57,25 +58,30 @@ wolfe.linesearch <- function(f, x0, s0, ..., a1=0.5, amax=1.1, c1=1e-4, c2=0.9, 
       }
       if (abs(alo-ahi) <= 0.01*alo) break;
     }
-    xj
+    attr(Xj,"neval") <- j
+    Xj
   }
   
   
   ai_1 <- 0;fi_1 <- lvalue(x0);gi_1 <- g0
   ai <- a1
   for(i in seq_len(maxiter)) {
-    xi <- reg.adjust(f(x0+ai*s0,...))
+    Xi <- f(x0+ai*s0,...)
+    xi <- reg.adjust(Xi)
     gi <- as.vector(crossprod(gradient(xi),s0))
     
     # test for end of search
-    if ((lvalue(xi) > lvalue(x0)+c1*ai*g0) || (lvalue(xi) >= fi_1 && i > 1)) return(zoom(ai_1, ai, fi_1, lvalue(xi), gi_1, gi, maxiter=maxiter-i))
+    if ((lvalue(xi) > lvalue(x0)+c1*ai*g0) || (lvalue(xi) >= fi_1 && i > 1)) {Xi <- zoom(ai_1, ai, fi_1, lvalue(xi), gi_1, gi, maxiter=maxiter-i+1);break}
     if (abs(gi) <= -c2*g0) break
-    if (gi >= 0) return(zoom(ai, ai_1, lvalue(xi), fi_1, gi, gi_1, maxiter=maxiter-i))
+    if (gi >= 0) {Xi <- zoom(ai, ai_1, lvalue(xi), fi_1, gi, gi_1, maxiter=maxiter-i+1);break}
     if (abs(ai - amax) <= 0.01*amax) break
     
     # update variables for next iteration
     ai_1 <- ai; fi_1 <- lvalue(xi); gi_1 <- gi
     ai <- (ai + amax)/2
   }
-  xi
+  attr(Xi,"neval") <- i + ifelse(is.null(attr(Xi,"neval")),0,attr(Xi,"neval"))
+  Xi
 }
+
+

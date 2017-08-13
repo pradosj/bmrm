@@ -226,8 +226,8 @@ rocLoss <- function(x,y) {
     l[o] <- ifelse(!y[o],sp,-sm)
     l <- l/(sum(!y)*sum(y))
 
-    lvalue(w) <- crossprod(l,c)
-    gradient(w) <- crossprod(l,x)
+    lvalue(w) <- as.vector(crossprod(l,c))
+    gradient(w) <- crossprod(x,l)
     class(w) <- "rocLoss"
     return(w)
   }

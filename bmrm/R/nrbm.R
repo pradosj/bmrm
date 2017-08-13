@@ -71,6 +71,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L
   if (maxCP<3) stop("maxCP should be >=3")
 
   # intialize first point estimation
+  neval <- 1
   w <- riskFun(w0)
   at <- as.vector(gradient(w))
   bt <- as.vector(lvalue(w)) - crossprod(as.vector(w),at)
@@ -98,6 +99,9 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L
          gradient(w) <- gradient(w) + LAMBDA*as.vector(w)
          w
        })
+       neval <- neval + attr(w,"neval")
+     } else {
+       neval <- neval + 1
      }
      
      # estimate loss at the new underestimator optimum
@@ -155,7 +159,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L
     }
     
     # test end of the convergence
-    cat(sprintf("%d:gap=%g obj=%g reg=%g risk=%g w=[%g,%g]\n",i,ub-lb,ub,LAMBDA*0.5*crossprod(as.vector(ub.w)),lvalue(ub.w),min(ub.w),max(ub.w)))
+    cat(sprintf("%d:ncall=%d gap=%g obj=%g reg=%g risk=%g w=[%g,%g]\n",i,neval,ub-lb,ub,LAMBDA*0.5*crossprod(as.vector(ub.w)),lvalue(ub.w),min(ub.w),max(ub.w)))
     if (ub-lb < ub*EPSILON_TOL) break
   }
   if (i >= MAX_ITER) warning('max # of itertion exceeded')
@@ -175,6 +179,7 @@ nrbmL1 <- function(riskFun,LAMBDA=1,MAX_ITER=300L,EPSILON_TOL=0.01,w0=0,maxCP=+I
   if (maxCP<3) stop("maxCP should be >=3")
 
   # intialize first point estimation
+  neval <- 1
   w <- riskFun(w0)
   at <- as.vector(gradient(w))
   bt <- as.vector(lvalue(w)) - crossprod(as.vector(w),at)
@@ -204,6 +209,9 @@ nrbmL1 <- function(riskFun,LAMBDA=1,MAX_ITER=300L,EPSILON_TOL=0.01,w0=0,maxCP=+I
          gradient(w) <- gradient(w) + LAMBDA*sign(w)
          w
        })
+       neval <- neval + attr(w,"neval")
+     } else {
+       neval <- neval + 1
      }
      
      # estimate loss at the new underestimator optimum
@@ -240,7 +248,7 @@ nrbmL1 <- function(riskFun,LAMBDA=1,MAX_ITER=300L,EPSILON_TOL=0.01,w0=0,maxCP=+I
     }
     
     # test end of the convergence
-    cat(sprintf("%d:gap=%g obj=%g reg=%g risk=%g w=[%g,%g]\n",i,ub-lb,ub,LAMBDA*sum(abs(ub.w)),lvalue(ub.w),min(ub.w),max(ub.w)))
+    cat(sprintf("%d:ncall=%d gap=%g obj=%g reg=%g risk=%g w=[%g,%g]\n",i,neval,ub-lb,ub,LAMBDA*sum(abs(ub.w)),lvalue(ub.w),min(ub.w),max(ub.w)))
     if (ub-lb < ub*EPSILON_TOL) break
   }
   if (i >= MAX_ITER) warning('max # of itertion exceeded')
