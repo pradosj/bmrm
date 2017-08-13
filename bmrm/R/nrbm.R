@@ -38,9 +38,10 @@
 #'
 #'   # -- train scalar prediction models with maxMarginLoss and fbetaLoss
 #'   models <- list(
-#'     svm_L1 = nrbmL1(hingeLoss(x,iris$Species=="setosa"),LAMBDA=0.1),
-#'     svm_L2 = nrbm(hingeLoss(x,iris$Species=="setosa"),LAMBDA=0.1),
-#'     f1_L1 = nrbmL1(fbetaLoss(x,iris$Species=="setosa"),LAMBDA=0.01)
+#'     svm_L1 = nrbmL1(hingeLoss(x,iris$Species=="setosa"),LAMBDA=1),
+#'     svm_L2 = nrbm(hingeLoss(x,iris$Species=="setosa"),LAMBDA=1),
+#'     f1_L1 = nrbmL1(fbetaLoss(x,iris$Species=="setosa"),LAMBDA=1),
+#'     tsvm_L2 = nrbm(tsvmLoss(x,ifelse(iris$Species=="versicolor",NA,iris$Species=="setosa")),LAMBDA=1)
 #'   )
 #'
 #'   # -- Plot the dataset and the predictions
@@ -95,7 +96,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L
      lb <- as.vector(LAMBDA*0.5*crossprod(as.vector(w)) + max(0,A %*% as.vector(w) + b))
      
      if (line.search) {
-       w <- wolfe.linesearch(riskFun,x0=ub.w,s0=w-as.vector(ub.w),f.adjust=function(w){
+       w <- wolfe.linesearch(riskFun,x0=ub.w,s0=w-as.vector(ub.w),f.adjust=function(w) {
          lvalue(w) <- lvalue(w) + as.vector(LAMBDA*0.5*crossprod(w))
          gradient(w) <- gradient(w) + LAMBDA*as.vector(w)
          w

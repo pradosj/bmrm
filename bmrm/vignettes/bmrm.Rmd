@@ -54,9 +54,8 @@ In this quick start guide, we show how to train a multiclass-SVM on iris dataset
 ```{r, echo=TRUE, results='hide'}
     library(bmrm)
     x <- cbind(intercept=100,data.matrix(iris[c("Sepal.Length","Sepal.Width","Petal.Length","Petal.Width")]))
-    y <- iris$Species
     w <- nrbm(softMarginVectorLoss(x,iris$Species))
-    table(target=y,prediction=predict(w,x))
+    table(target=iris$Species,prediction=predict(w,x))
 ```
     
     

@@ -335,21 +335,24 @@ softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
   if (any(levels(y)!=colnames(l))) stop('colnames(l) must match with levels(y)')
   
   set.convex(function(w) {
-    w <- matrix(w,ncol(x),ncol(l),dimnames=list(colnames(x),levels(y)))
-    fp <- x %*% w
-    fy <- rowSums(x * t(w[,y]))
+    W <- matrix(w,ncol(x),ncol(l),dimnames=list(colnames(x),levels(y)))
+    fp <- x %*% W
+    fy <- rowSums(x * t(W[,y]))
     lp <- fp - fy + l
     p <- max.col(lp,ties.method='first')
     lp <- lp[cbind(1:length(p),p)]
     
     # compute gradient
-    gy <- gp <- matrix(0,length(y),ncol(w))
+    gy <- gp <- matrix(0,length(y),ncol(W))
     gp[cbind(seq_along(y),p)] <- 1
     gy[cbind(seq_along(y),y)] <- 1
     grad <- gp - gy
 
+    w <- as.vector(W)
+    attr(w,"model.dim") <- dim(W)
+    attr(w,"model.dimnames") <- dimnames(W)
     lvalue(w) <- sum(lp)
-    gradient(w) <- crossprod(x,grad)
+    gradient(w) <- as.vector(crossprod(x,grad))
     class(w) <- "softMarginVectorLoss"
     return(w)
   })
@@ -357,9 +360,10 @@ softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
 
 #' @export
 predict.softMarginVectorLoss <- function(object,x,...) {
-  f <- x %*% object
+  W <- array(object,attr(object,"model.dim"),attr(object,"model.dimnames"))
+  f <- x %*% W
   y <- max.col(f,ties.method="first")
-  y <- factor(colnames(object)[y],colnames(object))
+  y <- factor(colnames(W)[y],colnames(W))
   attr(f,"decision.value") <- f
   y
 }
