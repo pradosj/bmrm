@@ -66,3 +66,45 @@ lvalue.default <- function(x,...) attr(x, "lvalue")
 "lvalue<-.default" <- function(x,...,value) {attr(x, "lvalue") <- value;x}
 
 
+
+
+
+
+
+#' Return or set is.convex attribute
+#' 
+#' is.convex attribute is used by loss/risk function to determine if it is convex
+#' 
+#' @name is.convex
+#' @rdname is.convex
+#' @aliases is.convex<-
+#' @title Return or set is.convex attribute
+#' @param x any R object
+#' @param value new loss value to set
+#' @param ... additional paramters 
+#' @return attr(x,"is.convex")
+#' @export
+is.convex <- function(x,...) UseMethod("is.convex")
+
+#' @rdname is.convex
+#' @export
+is.convex.default <- function(x,...) {
+  if (is.null(attr(x, "is.convex"))) return(FALSE)
+  attr(x, "is.convex")
+}
+
+#' @rdname is.convex
+#' @export
+"is.convex<-" <- function(x,...,value) UseMethod("is.convex<-")
+
+#' @rdname is.convex
+#' @export
+"is.convex<-.default" <- function(x,...,value) {attr(x, "is.convex") <- value;x}
+
+
+
+
+
+
+
+

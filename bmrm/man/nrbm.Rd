@@ -7,7 +7,7 @@
 \title{Convex and non-convex risk minimization with L2 regularization and limited memory}
 \usage{
 nrbm(riskFun, LAMBDA = 1, MAX_ITER = 1000L, EPSILON_TOL = 0.01, w0 = 0,
-  maxCP = 50L, convexRisk = TRUE, LowRankQP.method = "LU",
+  maxCP = 50L, convexRisk = is.convex(riskFun), LowRankQP.method = "LU",
   line.search = TRUE)
 
 nrbmL1(riskFun, LAMBDA = 1, MAX_ITER = 300L, EPSILON_TOL = 0.01, w0 = 0,

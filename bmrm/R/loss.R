@@ -1,5 +1,12 @@
 
 
+
+set.convex <- function(f) {
+  is.convex(f) <- TRUE
+  f
+}
+
+
 #' Loss functions to perform a regression
 #' 
 #' @name linearRegressionLoss
@@ -34,7 +41,7 @@ lmsRegressionLoss <- function(x,y,loss.weights=1) {
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   loss.weights <- rep(loss.weights,length.out=length(y))
   
-  function(w) {
+  set.convex(function(w) {
     w <- rep(w,length.out=ncol(x))
     f <- x %*% w
     loss <- loss.weights * 0.5*(f-y)^2
@@ -43,7 +50,7 @@ lmsRegressionLoss <- function(x,y,loss.weights=1) {
     gradient(w) <- crossprod(x,grad)
     class(w) <- "linearRegressionLoss"
     return(w)
-  }
+  })
 }
 
 
@@ -55,7 +62,7 @@ ladRegressionLoss <- function(x,y,loss.weights=1) {
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   loss.weights <- rep(loss.weights,length.out=length(y))
 
-  function(w) {
+  set.convex(function(w) {
     w <- rep(w,length.out=ncol(x))
     f <- x %*% w
     loss <- loss.weights * abs(f-y)
@@ -64,7 +71,7 @@ ladRegressionLoss <- function(x,y,loss.weights=1) {
     gradient(w) <- crossprod(x,grad)
     class(w) <- "linearRegressionLoss"
     return(w)
-  }
+  })
 }
 
 
@@ -78,7 +85,7 @@ quantileRegressionLoss <- function(x,y,q=0.5,loss.weights=1) {
   if (length(q)!=1 || q<0 || q>1) stop('q must be a length one numeric in the range [0-1]')
   loss.weights <- rep(loss.weights,length.out=length(y))
   
-  function(w) {
+  set.convex(function(w) {
     w <- rep(w,length.out=ncol(x))
     f <- x %*% w
     loss <- loss.weights * pmax(q*(f-y),(1-q)*(y-f))
@@ -87,7 +94,7 @@ quantileRegressionLoss <- function(x,y,q=0.5,loss.weights=1) {
     gradient(w) <- crossprod(x,grad)
     class(w) <- "linearRegressionLoss"
     return(w)
-  }
+  })
 }
 
 
@@ -100,7 +107,7 @@ epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   loss.weights <- rep(loss.weights,length.out=length(y))
   
-  function(w) {
+  set.convex(function(w) {
     w <- rep(w,length.out=ncol(x))
     f <- x %*% w
     loss <- loss.weights * pmax(abs(f-y)-epsilon,0)
@@ -109,7 +116,7 @@ epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
     gradient(w) <- crossprod(x,grad)
     class(w) <- "linearRegressionLoss"
     return(w)
-  }
+  })
 }
 
 
@@ -165,7 +172,7 @@ hingeLoss <- function(x,y,loss.weights=1) {
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   loss.weights <- rep(loss.weights,length.out=length(y))
 
-  function(w) {
+  set.convex(function(w) {
     w <- rep(w,length.out=ncol(x))
     f <- x %*% w
     loss <- loss.weights * pmax(ifelse(y,-f+1,f+1),0)
@@ -174,7 +181,7 @@ hingeLoss <- function(x,y,loss.weights=1) {
     gradient(w) <- crossprod(x,grad)
     class(w) <- c("hingeLoss","binaryClassificationLoss")
     return(w)
-  }
+  })
 }
 
 
@@ -186,7 +193,7 @@ logisticLoss <- function(x,y,loss.weights=1) {
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   loss.weights <- rep(loss.weights,length.out=length(y))
 
-  function(w) {
+  set.convex(function(w) {
     w <- rep(w,length.out=ncol(x))
     f <- x %*% w
     loss <- loss.weights * log(1+exp(ifelse(y,-f,+f)))
@@ -195,7 +202,7 @@ logisticLoss <- function(x,y,loss.weights=1) {
     gradient(w) <- crossprod(x,grad)
     class(w) <- c("logisticLoss","binaryClassificationLoss")
     return(w)
-  }
+  })
 }
 
 #' @export
@@ -215,7 +222,7 @@ rocLoss <- function(x,y) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
 
-  function(w) {
+  set.convex(function(w) {
     w <- rep(w,length.out=ncol(x))
     c <- x %*% w - ifelse(y,0.5,-0.5)
     o <- order(c)
@@ -230,7 +237,7 @@ rocLoss <- function(x,y) {
     gradient(w) <- crossprod(x,l)
     class(w) <- "rocLoss"
     return(w)
-  }
+  })
 }
 
 #' @export
@@ -252,7 +259,7 @@ fbetaLoss <- function(x,y,beta=1) {
     (1+beta2)*TP / (TP+N-TN+beta2*P)
   }
   
-  function(w) {
+  set.convex(function(w) {
     w <- rep(w,length.out=ncol(x))
     f <- x %*% w
     
@@ -276,7 +283,7 @@ fbetaLoss <- function(x,y,beta=1) {
     gradient(w) <- crossprod(x,Y-ifelse(y,1,-1))
     class(w) <- c("fbetaLoss","binaryClassificationLoss")
     return(w)
-  }
+  })
 }
 
 
@@ -327,7 +334,7 @@ softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
   if (!identical(nrow(x),nrow(l))) stop('dimensions of x and l mismatch')
   if (any(levels(y)!=colnames(l))) stop('colnames(l) must match with levels(y)')
   
-  function(w) {
+  set.convex(function(w) {
     w <- matrix(w,ncol(x),ncol(l),dimnames=list(colnames(x),levels(y)))
     fp <- x %*% w
     fy <- rowSums(x * t(w[,y]))
@@ -345,7 +352,7 @@ softMarginVectorLoss <- function(x,y,l=1 - table(seq_along(y),y)) {
     gradient(w) <- crossprod(x,grad)
     class(w) <- "softMarginVectorLoss"
     return(w)
-  }
+  })
 }
 
 #' @export
@@ -392,7 +399,7 @@ ontologyLoss <- function(x,y,l=1 - table(seq_along(y),y),dag=diag(nlevels(y))) {
   if (!identical(nrow(x),nrow(l))) stop('dimensions of x and l mismatch')
   if (nlevels(y)!=ncol(l)) stop('ncol(l) do not match with nlevels(y)')
   
-  function(w) {
+  set.convex(function(w) {
     w <- matrix(w,ncol(x),ncol(dag))
     fp <- x %*% w
     z <- tcrossprod(fp,dag) + l
@@ -403,7 +410,7 @@ ontologyLoss <- function(x,y,l=1 - table(seq_along(y),y),dag=diag(nlevels(y))) {
     class(w) <- "ontologyLoss"
     attr(w,"dag") <- dag
     return(w)
-  }
+  })
 }
 
 #' @export
@@ -542,7 +549,7 @@ ordinalRegressionLoss <- function(x,y,C="0/1",impl=c("loglin","quadratic")) {
     return(w)
   }
   
-  switch(impl,loglin=.loglin,quadratic=.quadratic)
+  set.convex(switch(impl,loglin=.loglin,quadratic=.quadratic))
 }
 
 #' @export
