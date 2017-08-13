@@ -19,15 +19,16 @@
 #' @param c1 lower bound
 #' @param c2 upper bound
 #' @param maxiter maximum number of iteration for this linesearch
-#' @return the optimal point as a 3 element list
+#' @param f.adjust an adjustment method to adjust lvalue and gradient of f
+#' @return the optimal point
 #' @references Do and Artieres
 #'   Regularized Bundle Methods for Convex and Non-Convex Risks
 #'   JMLR 2012
 #' @export
 #' @author Julien Prados
 #' @seealso \code{\link{nrbm}}
-wolfe.linesearch <- function(f, x0, s0, ..., a1=0.5, amax=1.1, c1=1e-4, c2=0.9, maxiter=5L,reg.adjust=identity) {
-  x0 <- reg.adjust(x0)
+wolfe.linesearch <- function(f, x0, s0, ..., a1=0.5, amax=1.1, c1=1e-4, c2=0.9, maxiter=5L,f.adjust=identity) {
+  x0 <- f.adjust(x0)
   g0 <- as.vector(crossprod(gradient(x0),s0))
   
   zoom <- function(alo, ahi, flo, fhi, glo, ghi, maxiter) {
@@ -42,7 +43,7 @@ wolfe.linesearch <- function(f, x0, s0, ..., a1=0.5, amax=1.1, c1=1e-4, c2=0.9, 
       else
         if (aj > alo || aj < ahi) aj = (alo+ahi)/2;
       Xj <- f(x0 + aj*s0, ...)
-      xj <- reg.adjust(Xj)
+      xj <- f.adjust(Xj)
       gj <- as.vector(crossprod(gradient(xj),s0))
       if (lvalue(xj) > lvalue(x0) + c1*aj*g0 || lvalue(xj) > flo) {
         ahi <- aj
@@ -67,7 +68,7 @@ wolfe.linesearch <- function(f, x0, s0, ..., a1=0.5, amax=1.1, c1=1e-4, c2=0.9, 
   ai <- a1
   for(i in seq_len(maxiter)) {
     Xi <- f(x0+ai*s0,...)
-    xi <- reg.adjust(Xi)
+    xi <- f.adjust(Xi)
     gi <- as.vector(crossprod(gradient(xi),s0))
     
     # test for end of search

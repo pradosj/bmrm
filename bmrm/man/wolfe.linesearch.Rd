@@ -5,7 +5,7 @@
 \title{Wolfe Line Search}
 \usage{
 wolfe.linesearch(f, x0, s0, ..., a1 = 0.5, amax = 1.1, c1 = 1e-04,
-  c2 = 0.9, maxiter = 5L, reg.adjust = identity)
+  c2 = 0.9, maxiter = 5L, f.adjust = identity)
 }
 \arguments{
 \item{f}{a function to minimize. It must accept as first argument a numeric vector
@@ -27,9 +27,11 @@ gradient attribute setted}
 \item{c2}{upper bound}
 
 \item{maxiter}{maximum number of iteration for this linesearch}
+
+\item{f.adjust}{an adjustment method to adjust lvalue and gradient of f}
 }
 \value{
-the optimal point as a 3 element list
+the optimal point
 }
 \description{
 Implements Wolfe Line Search algorithm.

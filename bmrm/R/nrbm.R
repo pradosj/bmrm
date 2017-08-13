@@ -94,7 +94,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L
      lb <- as.vector(LAMBDA*0.5*crossprod(as.vector(w)) + max(0,A %*% as.vector(w) + b))
      
      if (line.search) {
-       w <- wolfe.linesearch(riskFun,x0=ub.w,s0=w-as.vector(ub.w),reg.adjust=function(w){
+       w <- wolfe.linesearch(riskFun,x0=ub.w,s0=w-as.vector(ub.w),f.adjust=function(w){
          lvalue(w) <- lvalue(w) + as.vector(LAMBDA*0.5*crossprod(w))
          gradient(w) <- gradient(w) + LAMBDA*as.vector(w)
          w
@@ -204,7 +204,7 @@ nrbmL1 <- function(riskFun,LAMBDA=1,MAX_ITER=300L,EPSILON_TOL=0.01,w0=0,maxCP=+I
      lb <- -opt$objval
      
      if (line.search) {
-       w <- wolfe.linesearch(riskFun,x0=ub.w,s0=w-as.vector(ub.w),reg.adjust=function(w){
+       w <- wolfe.linesearch(riskFun,x0=ub.w,s0=w-as.vector(ub.w),f.adjust=function(w){
          lvalue(w) <- lvalue(w) + LAMBDA*sum(abs(w))
          gradient(w) <- gradient(w) + LAMBDA*sign(w)
          w
