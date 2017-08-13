@@ -65,7 +65,9 @@ where riskFun is either a convex or a non-convex risk function.
     svm_L1 = nrbmL1(hingeLoss(x,iris$Species=="setosa"),LAMBDA=1),
     svm_L2 = nrbm(hingeLoss(x,iris$Species=="setosa"),LAMBDA=1),
     f1_L1 = nrbmL1(fbetaLoss(x,iris$Species=="setosa"),LAMBDA=1),
-    tsvm_L2 = nrbm(tsvmLoss(x,ifelse(iris$Species=="versicolor",NA,iris$Species=="setosa")),LAMBDA=1)
+    tsvm_L2 = nrbm(tsvmLoss(x,
+                   ifelse(iris$Species=="versicolor",NA,iris$Species=="setosa")),
+                   LAMBDA=1)
   )
 
   # -- Plot the dataset and the predictions
