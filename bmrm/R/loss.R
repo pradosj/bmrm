@@ -133,7 +133,7 @@ epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
 #' 
 #' @name binaryClassificationLoss
 #' @param x matrix of training instances (one instance by row)
-#' @param y a 2-levels factor representing the training labels for each instance in x
+#' @param y a logical vector representing the training labels for each instance in x
 #' @param loss.weights numeric vector of loss weights to incure for each instance of x. 
 #'        Vector length should match length(y), but values are cycled if not of identical size.
 #' @return a function taking one argument w and computing the loss value and the gradient at point w

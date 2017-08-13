@@ -19,7 +19,7 @@ fbetaLoss(x, y, beta = 1)
 \arguments{
 \item{x}{matrix of training instances (one instance by row)}
 
-\item{y}{a 2-levels factor representing the training labels for each instance in x}
+\item{y}{a logical vector representing the training labels for each instance in x}
 
 \item{loss.weights}{numeric vector of loss weights to incure for each instance of x. 
 Vector length should match length(y), but values are cycled if not of identical size.}
