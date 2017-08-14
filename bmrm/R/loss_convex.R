@@ -42,11 +42,11 @@ lmsRegressionLoss <- function(x,y,loss.weights=1) {
   loss.weights <- rep(loss.weights,length.out=length(y))
   
   set.convex(function(w) {
-    w <- rep(w,length.out=ncol(x))
+    w <- cbind(matrix(numeric(),ncol(x),0),w)
     f <- x %*% w
     loss <- loss.weights * 0.5*(f-y)^2
     grad <- loss.weights * (f-y)
-    lvalue(w) <- sum(loss)
+    lvalue(w) <- colSums(loss)
     gradient(w) <- crossprod(x,grad)
     class(w) <- "linearRegressionLoss"
     return(w)
@@ -63,11 +63,11 @@ ladRegressionLoss <- function(x,y,loss.weights=1) {
   loss.weights <- rep(loss.weights,length.out=length(y))
 
   set.convex(function(w) {
-    w <- rep(w,length.out=ncol(x))
+    w <- cbind(matrix(numeric(),ncol(x),0),w)
     f <- x %*% w
     loss <- loss.weights * abs(f-y)
     grad <- loss.weights * sign(f-y)
-    lvalue(w) <- sum(loss)
+    lvalue(w) <- colSums(loss)
     gradient(w) <- crossprod(x,grad)
     class(w) <- "linearRegressionLoss"
     return(w)
@@ -86,11 +86,11 @@ quantileRegressionLoss <- function(x,y,q=0.5,loss.weights=1) {
   loss.weights <- rep(loss.weights,length.out=length(y))
   
   set.convex(function(w) {
-    w <- rep(w,length.out=ncol(x))
+    w <- cbind(matrix(numeric(),ncol(x),0),w)
     f <- x %*% w
     loss <- loss.weights * pmax(q*(f-y),(1-q)*(y-f))
     grad <- loss.weights * ifelse(f>y,q,q-1)
-    lvalue(w) <- sum(loss)
+    lvalue(w) <- colSums(loss)
     gradient(w) <- crossprod(x,grad)
     class(w) <- "linearRegressionLoss"
     return(w)
@@ -108,11 +108,11 @@ epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
   loss.weights <- rep(loss.weights,length.out=length(y))
   
   set.convex(function(w) {
-    w <- rep(w,length.out=ncol(x))
+    w <- cbind(matrix(numeric(),ncol(x),0),w)
     f <- x %*% w
     loss <- loss.weights * pmax(abs(f-y)-epsilon,0)
     grad <- loss.weights * ifelse(abs(f-y)<epsilon,0,sign(f-y))
-    lvalue(w) <- sum(loss)
+    lvalue(w) <- colSums(loss)
     gradient(w) <- crossprod(x,grad)
     class(w) <- "linearRegressionLoss"
     return(w)
@@ -173,11 +173,11 @@ hingeLoss <- function(x,y,loss.weights=1) {
   loss.weights <- rep(loss.weights,length.out=length(y))
 
   set.convex(function(w) {
-    w <- rep(w,length.out=ncol(x))
+    w <- cbind(matrix(numeric(),ncol(x),0),w)
     f <- x %*% w
-    loss <- loss.weights * pmax(ifelse(y,-f+1,f+1),0)
+    loss <- loss.weights * pmax(f*ifelse(y,-1,+1)+1,0)
     grad <- loss.weights * (loss>0) * ifelse(y,-1,+1)
-    lvalue(w) <- sum(loss)
+    lvalue(w) <- colSums(loss)
     gradient(w) <- crossprod(x,grad)
     class(w) <- c("hingeLoss","binaryClassificationLoss")
     return(w)
@@ -194,11 +194,13 @@ logisticLoss <- function(x,y,loss.weights=1) {
   loss.weights <- rep(loss.weights,length.out=length(y))
 
   set.convex(function(w) {
-    w <- rep(w,length.out=ncol(x))
+    w <- cbind(matrix(numeric(),ncol(x),0),w)
     f <- x %*% w
-    loss <- loss.weights * log(1+exp(ifelse(y,-f,+f)))
-    grad <- loss.weights * ifelse(y, 1/(1+exp(-f))-1, -1/(1+exp(+f))+1)
-    lvalue(w) <- sum(loss)
+    
+    Y <- ifelse(array(y,dim(f)),-1,+1)
+    loss <- loss.weights * log(1+exp(f*Y))
+    grad <- loss.weights * (-Y/(1+exp(f*Y))+Y)
+    lvalue(w) <- colSums(loss)
     gradient(w) <- crossprod(x,grad)
     class(w) <- c("logisticLoss","binaryClassificationLoss")
     return(w)
