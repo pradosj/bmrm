@@ -91,24 +91,6 @@ mmcBuildAssignmentConstraints <- function(instanceIds,k,minClusterSize,groups,mi
   )
 }
 
-# Internal method to find cluster assignment minimizing max-margin-clustering risk
-# 
-# @param R numeric matrix of risks: element (i,j) is the loss penalty for assigning cluster j to sample i
-# @param contraints the constraints list build using mmcBuildAssignmentConstraints
-# @return a binary matrix of the same dimension as R with the solution to the assignment problem
-#' @import lpSolve
-mmcBestClusterAssignment <- function(R,lp.constraints) {
-  opt <- lp("min",
-            objective.in = as.vector(R),
-            dense.const = lp.constraints$dense.const,
-            const.dir = lp.constraints$const.dir,
-            const.rhs = lp.constraints$const.rhs,
-            binary.vec = seq_along(R)
-  )
-  if (opt$status!=0) stop("LP problem not feasible")
-  matrix(opt$solution,nrow(R),ncol(R))
-}
-
 
 
 #' Loss function for max-margin clustering
@@ -129,6 +111,7 @@ mmcBestClusterAssignment <- function(R,lp.constraints) {
 #' @param weight a weight vector for each instance
 #' @return the loss function to optimize for max margin clustering of the given dataset
 #' @import reshape2
+#' @import lpSolve
 mmcLoss <- function(x, k=3L, minClusterSize=1L, groups=NULL, minGroupOverlap=NULL, maxGroupOverlap=NULL, weight=1/nrow(x)) {
   if (!is.matrix(x)) stop("x must be a numeric matrix")
   if (is.null(rownames(x))) rownames(x) <- seq_len(nrow(x))
@@ -138,8 +121,22 @@ mmcLoss <- function(x, k=3L, minClusterSize=1L, groups=NULL, minGroupOverlap=NUL
   function(w) {
     W <- matrix(w, ncol(x),k)
     F <- x %*% W
+    
+    # compute loss incured for predicting a given instance in a given cluster
     R <- weight*array(rowSums(pmax(1 + (rep(1,ncol(F)) %x% F) - as.vector(F),0))-1,dim(F))
-    Y <- mmcBestClusterAssignment(R,lp.constraints)
+    
+    # find cluster assignment minimizing the loss and satifying the constraints
+    Y <- local({
+      opt <- lp("min",
+              objective.in = as.vector(R),
+              dense.const = lp.constraints$dense.const,
+              const.dir = lp.constraints$const.dir,
+              const.rhs = lp.constraints$const.rhs,
+              binary.vec = seq_along(R)
+      )
+      if (opt$status!=0) stop("LP problem not feasible")
+      matrix(opt$solution,nrow(R),ncol(R))
+    })
     
     G <- 1-Y+F-rowSums(F*Y)
     G <- ifelse(G>0,1,0)
@@ -148,7 +145,6 @@ mmcLoss <- function(x, k=3L, minClusterSize=1L, groups=NULL, minGroupOverlap=NUL
     
     val <- sum(R*Y)
     gradient(val) <- crossprod(x,-G)
-    attr(val,"R") <- R
     attr(val,"Y") <- Y
     val
   }
