@@ -110,21 +110,6 @@ mmcBestClusterAssignment <- function(R,lp.constraints) {
 }
 
 
-#' Compute max-margin-clustering risk associated to a given prediction matrix 
-#' 
-#' @export
-#' @param F numeric prediction matrix of the MMC model: (i,j) being prediction of the model for sample i being part of cluster j
-#' @return numeric matrix of risks where element (i,j) is the loss penalty for assigning cluster j to sample i
-mmcClusterAssignmentRisk <- function(F) {
-  R <- array(NA_real_,dim(F))
-  for(k in  1:ncol(F)) {
-    xi <- pmax(1 + F - F[,k],0)
-    xi[,k] <- NA
-    R[,k] <- rowSums(xi,na.rm=TRUE)
-  }
-  return(R)
-}
-
 
 #' Loss function for max-margin clustering
 #' 
@@ -153,8 +138,7 @@ mmcLoss <- function(x, k=3L, minClusterSize=1L, groups=NULL, minGroupOverlap=NUL
   function(w) {
     W <- matrix(w, ncol(x),k)
     F <- x %*% W
-    R <- mmcClusterAssignmentRisk(F)
-    R <- R*weight
+    R <- weight*array(rowSums(pmax(1 + (rep(1,ncol(F)) %x% F) - as.vector(F),0))-1,dim(F))
     Y <- mmcBestClusterAssignment(R,lp.constraints)
     
     G <- 1-Y+F-rowSums(F*Y)
