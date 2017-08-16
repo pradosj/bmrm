@@ -3,15 +3,18 @@
 \name{lpSVM}
 \alias{lpSVM}
 \alias{svmLP}
-\alias{svmMulticlassLP}
 \alias{predict.svmLP}
+\alias{svmMulticlassLP}
+\alias{predict.svmMLP}
 \title{Linearly Programmed SVM}
 \usage{
 svmLP(x, y, LAMBDA = 1, loss.weights = 1)
 
+\method{predict}{svmLP}(object, x, ...)
+
 svmMulticlassLP(x, y, LAMBDA = 1, loss.weights = 1)
 
-\method{predict}{svmLP}(object, x, ...)
+\method{predict}{svmMLP}(object, x, ...)
 }
 \arguments{
 \item{x}{a numeric data matrix to predict}
@@ -26,9 +29,15 @@ Vector length should match length(y), but values are cycled if not of identical 
 \item{object}{an object of class svmLP}
 
 \item{...}{unused, present to satisfy the generic predict() prototype}
+
+\item{object}{an object of class svmLP}
+
+\item{...}{unused, present to satisfy the generic predict() prototype}
 }
 \value{
 the optimized weights matrix, with class svmLP
+
+predict() return predictions for row of x, with an attribute "decision.value"
 
 predict() return predictions for row of x, with an attribute "decision.value"
 }
@@ -61,7 +70,7 @@ where |w| is the L1-norm of w
   w <- svmMulticlassLP(x,y)
   table(predict(w,x),y)
 
-  w <- svmLP(x,ifelse(y=="setosa","setosa","not_setosa"))
+  w <- svmLP(x,y=="setosa")
   table(predict(w,x),y)
 }
 \author{

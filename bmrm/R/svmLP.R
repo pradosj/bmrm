@@ -31,7 +31,7 @@
 #'   w <- svmMulticlassLP(x,y)
 #'   table(predict(w,x),y)
 #'
-#'   w <- svmLP(x,ifelse(y=="setosa","setosa","not_setosa"))
+#'   w <- svmLP(x,y=="setosa")
 #'   table(predict(w,x),y)
 NULL
 
@@ -42,11 +42,10 @@ NULL
 #' @export
 #' @import lpSolve
 svmLP <- function(x,y,LAMBDA=1,loss.weights=1) {
-  y <- as.factor(y)
-  if (nlevels(y)!=2) stop("nlevels(y) must be 2")
+  if (!is.logical(y)) stop("y must be logical")
   if (nrow(x)!=length(y)) stop("length(y) must match nrow(x)")
   loss.weights <- rep_len(loss.weights,nrow(x))
-  y.num <- c(-1,+1)[y]
+  y.num <- ifelse(y,+1,-1)
   opt <- lp(direction = "min",
             objective.in = c(rep(LAMBDA,2L*ncol(x)),loss.weights),
             const.mat = cbind(y.num*x,-y.num*x,diag(nrow(x))),
@@ -56,10 +55,25 @@ svmLP <- function(x,y,LAMBDA=1,loss.weights=1) {
   u <- opt$solution[seq(1L,length.out=ncol(x))] 
   v <- opt$solution[seq(ncol(x)+1L,length.out=ncol(x))]
   w <- cbind(v-u,u-v)
-  colnames(w) <- levels(y)
   class(w) <- "svmLP"
   w
 }
+
+
+
+#' @rdname lpSVM
+#' @param object an object of class svmLP
+#' @param ... unused, present to satisfy the generic predict() prototype
+#' @return predict() return predictions for row of x, with an attribute "decision.value"
+#' @export
+predict.svmLP <- function(object,x,...) {
+  f <- x %*% object
+  y <- y>0
+  attr(y,"decision.values") <- f
+  return(y)
+}
+
+
 
 
 
@@ -96,7 +110,7 @@ svmMulticlassLP <- function(x,y,LAMBDA=1,loss.weights=1) {
   v <- matrix(opt$solution[seq(ncol(x)*nlevels(y)+1L,length.out=ncol(x)*nlevels(y))],ncol(x))
   w <- u - v
   colnames(w) <- levels(y)
-  class(w) <- "svmLP"
+  class(w) <- "svmMLP"
   w
 }
 
@@ -108,7 +122,7 @@ svmMulticlassLP <- function(x,y,LAMBDA=1,loss.weights=1) {
 #' @param ... unused, present to satisfy the generic predict() prototype
 #' @return predict() return predictions for row of x, with an attribute "decision.value"
 #' @export
-predict.svmLP <- function(object,x,...) {
+predict.svmMLP <- function(object,x,...) {
   f <- x %*% object
   y <- colnames(f)[max.col(f,ties.method = "first")]
   attr(y,"decision.values") <- f
