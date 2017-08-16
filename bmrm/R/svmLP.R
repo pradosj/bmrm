@@ -22,6 +22,8 @@
 #' @param loss.weights numeric vector of loss weights to incure for each instance of x. 
 #'        Vector length should match length(y), but values are cycled if not of identical size.
 #' @param LAMBDA control the regularization strength in the optimization process. This is the value used as coefficient of the regularization term.
+#' @param object an object of class svmLP or svmMLP
+#' @param ... unused, present to satisfy the generic predict() prototype
 #' @return the optimized weights matrix, with class svmLP
 #' @author Julien Prados
 #' 
@@ -54,7 +56,7 @@ svmLP <- function(x,y,LAMBDA=1,loss.weights=1) {
   )
   u <- opt$solution[seq(1L,length.out=ncol(x))] 
   v <- opt$solution[seq(ncol(x)+1L,length.out=ncol(x))]
-  w <- cbind(v-u,u-v)
+  w <- u-v
   class(w) <- "svmLP"
   w
 }
@@ -62,8 +64,6 @@ svmLP <- function(x,y,LAMBDA=1,loss.weights=1) {
 
 
 #' @rdname lpSVM
-#' @param object an object of class svmLP
-#' @param ... unused, present to satisfy the generic predict() prototype
 #' @return predict() return predictions for row of x, with an attribute "decision.value"
 #' @export
 predict.svmLP <- function(object,x,...) {
@@ -118,8 +118,6 @@ svmMulticlassLP <- function(x,y,LAMBDA=1,loss.weights=1) {
 
 
 #' @rdname lpSVM
-#' @param object an object of class svmLP
-#' @param ... unused, present to satisfy the generic predict() prototype
 #' @return predict() return predictions for row of x, with an attribute "decision.value"
 #' @export
 predict.svmMLP <- function(object,x,...) {

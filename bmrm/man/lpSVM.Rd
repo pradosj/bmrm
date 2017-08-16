@@ -26,11 +26,7 @@ svmMulticlassLP(x, y, LAMBDA = 1, loss.weights = 1)
 \item{loss.weights}{numeric vector of loss weights to incure for each instance of x. 
 Vector length should match length(y), but values are cycled if not of identical size.}
 
-\item{object}{an object of class svmLP}
-
-\item{...}{unused, present to satisfy the generic predict() prototype}
-
-\item{object}{an object of class svmLP}
+\item{object}{an object of class svmLP or svmMLP}
 
 \item{...}{unused, present to satisfy the generic predict() prototype}
 }
