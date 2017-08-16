@@ -1,122 +1,40 @@
 
 
-# Internal method that build the constraints of the MMC assignment problem for n instances and k clusters
-mmcBuildAssignmentConstraints <- function(instanceIds,k,minClusterSize,groups,minGroupOverlap,maxGroupOverlap) {
-  n <- length(instanceIds)
-  
-  # Helper function building LP constraints for the groups
-  grpConst <- function(instanceIds,k,groups,minGroupOverlap,maxGroupOverlap) {
-    
-    # check argument groups
-    if (is.null(groups)) {
-      if (!is.null(minGroupOverlap) | !is.null(maxGroupOverlap)) stop("min/maxGroupOverlap may be NULL when group is NULL")
-      return(list())
-    } else if (is.matrix(groups)) {
-      if (!is.logical(groups)) stop("groups must be a logical matrix or its sparse representation data.frame")
-      groups <- subset(melt(groups,varnames=c("sampleId","groupName")),value)
-    } else {
-      if (!all(c("sampleId","groupName") %in% names(groups))) stop("when a data.frame, groups must contain fields sampleId and groupName")
-    }
-    groups$groupName <- as.factor(groups$groupName)
-    
-    group.overlap.arg <- function(groupOverlap) {
-      if (is.null(groupOverlap)) groupOverlap <- data.frame(clusterId=integer(),groupName=character(),value=numeric())
-      if (is.matrix(groupOverlap)) {
-        if (!is.numeric(groupOverlap)) stop("(min/max)GroupOverlap must be a numeric matrix or its sparse representation data.frame")
-        if (is.null(colnames(groupOverlap)))
-          colnames(groupOverlap) <- levels(groups$groupName)
-        else if (any(colnames(groupOverlap) != levels(groups$groupName)))
-          stop("when a matrix colnames(min/maxGroupOverlap) must match levels(groups$groupName)")
-        groupOverlap <- subset(melt(groupOverlap,varnames=c("clusterId","groupName")),!is.na(value) & value>0)
-      } else {
-        if (!all(c("clusterId","groupName","value") %in% names(groupOverlap))) 
-          stop("when a data.frame, (min/max)GroupOverlap must contain fields clusterId, groupName and value")
-      }
-      groupOverlap <- unique(groupOverlap[intersect(names(groupOverlap),c("groupName","clusterId","value"))])
-      
-      # Expand groups constraints to all clusters when "clusterId" is missing or if it contains NAs
-      if (!exists("clusterId",groupOverlap)) groupOverlap$clusterId <- NA
-      D <- data.frame(clusterId=c(rep(NA,k),seq_len(k)),extClusterId=c(seq_len(k),seq_len(k)))
-      groupOverlap <- unique(merge(groupOverlap,D))
-      groupOverlap$clusterId <- groupOverlap$extClusterId
-      groupOverlap$extClusterId <- NULL
-      groupOverlap$constraintId <- seq_len(nrow(groupOverlap))
-      groupOverlap
-    }
-    
-    # Simplify arguments
-    groups <- unique(groups[intersect(names(groups),c("groupName","sampleId"))])
-    minGroupOverlap <- group.overlap.arg(minGroupOverlap)
-    maxGroupOverlap <- group.overlap.arg(maxGroupOverlap)
-    
-    # Add an identifier for the groups constraints
-    maxGroupOverlap$constraintId <- maxGroupOverlap$constraintId + max(minGroupOverlap$constraintId,0)
-    minGroupOverlap$dir <- rep_len(">=",nrow(minGroupOverlap))
-    maxGroupOverlap$dir <- rep_len("<=",nrow(maxGroupOverlap))
-    
-    # Build dense constraint matrix
-    n <- length(instanceIds)
-    dense.const <- data.frame(sampleId=instanceIds,clusterId=rep(1:k,each=n),varId=seq_len(n*k))
-    dense.const <- merge(dense.const,groups,by="sampleId")
-    dense.min.const <- merge(dense.const,minGroupOverlap,by=c("groupName","clusterId"))
-    dense.max.const <- merge(dense.const,maxGroupOverlap,by=c("groupName","clusterId"))
-    
-    list(dense.const = rbind(
-      with(dense.min.const,cbind(constraintId,varId,rep_len(1,length(constraintId)))),
-      with(dense.max.const,cbind(constraintId,varId,rep_len(1,length(constraintId))))
-    ),
-    const.dir = c(minGroupOverlap$dir,maxGroupOverlap$dir),
-    const.rhs = c(minGroupOverlap$value,maxGroupOverlap$value)
-    )
-  }
-  
-  # constrain the instances to belong to one and only one cluster
-  eq <- cbind(seq_len(n),seq_len(n*k),1)
-  eq.dir <- rep_len("==",n)
-  eq.rhs <- rep_len(1,n)
-  
-  # constraint on the minimum size of the clusters
-  gt <- cbind(as.vector(col(matrix(NA,n,k))) + n,seq_len(n*k),1)
-  gt.dir <- rep_len(">=",k)
-  gt.rhs <- rep_len(minClusterSize,k)
-  
-  # retreive groups constraints
-  grp <- grpConst(instanceIds,k,groups,minGroupOverlap,maxGroupOverlap)
-  grp$dense.const[,1] <- grp$dense.const[,1] + max(gt[,1])
-  
-  list(
-    dense.const = rbind(eq,gt,grp$dense.const),
-    const.dir = c(eq.dir,gt.dir,grp$const.dir),
-    const.rhs = c(eq.rhs,gt.rhs,grp$const.rhs)
-  )
-}
-
-
-
 #' Loss function for max-margin clustering
 #' 
 #' @export
 #' @param x numeric matrix representing the dataset (one sample per row)
 #' @param k an integer specifying number of clusters to find
 #' @param minClusterSize an integer vector specifying the minimum number of sample per cluster. 
-#'   Given values are reclycled if necessary to have one value per cluster.
-#' @param groups a logical matrix where groups[i,j] is TRUE when sample i belong to group j.
-#'   Alternatively, a sparse representation of the groups matrix can be given as a data.frame. 
-#'   This data.frame must contains the 2 fields "groupName" and "sampleId". 
-#'   "groupName" is a character vector identifying a group of samples; 
-#'   "sampleId" is an integer identifying the samples that are member of the group.
-#' @param minGroupOverlap a data.frame to constrain the minimum overlap size between a group and a cluster. The data.frame may contains 
-#'   the 3 fields "groupName","clusterId","overlapSize". Each row of the data.frame specify a constraint on the minimum overlap between a group and a cluster.
-#'   field "clusterId" is optional and in this case the constraints apply to all clusters
+#'        Given values are reclycled if necessary to have one value per cluster.
+#' @param groups a logical matrix for instance grouping (groups[i,j] TRUE when 
+#'        sample i belong to group j).
+#' @param minGroupOverlap an integer matrix specifyng the minimum number of instance
+#'        per cluster for each group.
 #' @param weight a weight vector for each instance
 #' @return the loss function to optimize for max margin clustering of the given dataset
-#' @import reshape2
 #' @import lpSolve
-mmcLoss <- function(x, k=3L, minClusterSize=1L, groups=NULL, minGroupOverlap=NULL, maxGroupOverlap=NULL, weight=1/nrow(x)) {
+mmcLoss <- function(x, k=3L,minClusterSize=1L,groups=matrix(logical(0),nrow(x),0), 
+                    minGroupOverlap=matrix(integer(0),k,ncol(groups)), 
+                    weight=1/nrow(x)) {
   if (!is.matrix(x)) stop("x must be a numeric matrix")
+  if (nrow(groups)!=nrow(x)) stop("nrow(groups)!=nrow(x)")
+  if (nrow(minGroupOverlap)!=k) stop("nrow(minGroupOverlap)!=k")
+  if (ncol(minGroupOverlap)!=ncol(groups)) stop("ncol(minGroupOverlap)!=ncol(groups)")
   if (is.null(rownames(x))) rownames(x) <- seq_len(nrow(x))
-  weight <- rep(weight,length.out=nrow(x))
-  lp.constraints <- mmcBuildAssignmentConstraints(rownames(x),k,minClusterSize,groups,minGroupOverlap,maxGroupOverlap)
+  weight <- rep_len(weight,nrow(x))
+  minClusterSize <- rep_len(minClusterSize,k)
+  
+  lp.constraints <- list(
+    dense.const = rbind(
+        # constrain the instances to belong to one and only one cluster
+        eq = cbind(seq_len(nrow(x)),seq_len(nrow(x)*k),1),
+        # constrain on the minimum size of the clusters
+        gt = cbind(as.vector(col(matrix(NA,nrow(x),k)))+nrow(x),seq_len(nrow(x)*k),1)
+    ),
+    const.dir = c(eq=rep_len("==",nrow(x)),gt=rep_len(">=",k)),
+    const.rhs = c(eq=rep_len(1,nrow(x)),gt=minClusterSize)
+  )
   
   function(w) {
     W <- matrix(w, ncol(x),k)
@@ -143,16 +61,14 @@ mmcLoss <- function(x, k=3L, minClusterSize=1L, groups=NULL, minGroupOverlap=NUL
     G <- Y*rowSums(G) - G
     G <- G*weight
     
-    val <- sum(R*Y)
-    gradient(val) <- crossprod(x,-G)
-    attr(val,"Y") <- Y
-    val
+    w <- as.vector(W)
+    lvalue(w) <- sum(R*Y)
+    gradient(w) <- as.vector(crossprod(x,-G))
+    attr(w,"Y") <- Y
+    class(w) <- "mmcLoss"
+    w
   }
 }
-
-
-
-
 
 
 
@@ -163,7 +79,6 @@ mmcLoss <- function(x, k=3L, minClusterSize=1L, groups=NULL, minGroupOverlap=NUL
 #' 
 #' @export
 #' @import parallel
-#' @import bmrm
 #' @param x numeric matrix representing the dataset (one sample per row)
 #' @param k an integer specifying number of clusters to find
 #' @param N0 number of instance to randomly assign per cluster when determining a random starting point.
@@ -197,16 +112,14 @@ mmcLoss <- function(x, k=3L, minClusterSize=1L, groups=NULL, minGroupOverlap=NUL
 #'    points(x,pch=19+max.col(y))
 #'    
 #'    # -- show support vectors
-#'    L <- attr(y,"loss")
-#'    is.sv <- rowSums(attr(L,"Y")*attr(L,"R"))>0
-#'    points(x[is.sv,,drop=FALSE],col="blue",pch=8)
+#'    #L <- attr(y,"loss")
+#'    #is.sv <- rowSums(attr(L,"Y")*attr(L,"R"))>0
+#'    #points(x[is.sv,,drop=FALSE],col="blue",pch=8)
 mmc <- function(x,k=2L,N0=3L,LAMBDA=1,NUM_RAMDOM_START=50L,seed=123,
                 nrbmArgsSvm=list(maxCP=20L,MAX_ITER=100L),
                 nrbmArgsMmc=list(maxCP=20L,MAX_ITER=300L),
                 mc.cores=getOption("mc.cores",1L),...) {  
   nrbmArgsMmc$riskFun <- mmcLoss(x,k=k,...)
-  nrbmArgsMmc$convexRisk <- FALSE
-  nrbmArgsSvm$convexRisk <- TRUE
   nrbmArgsSvm$LAMBDA <- nrbmArgsMmc$LAMBDA <- k*LAMBDA
   
   mmcFit <- function(i) {
@@ -254,9 +167,10 @@ mmc <- function(x,k=2L,N0=3L,LAMBDA=1,NUM_RAMDOM_START=50L,seed=123,
 #' @param object a mmc object
 #' @param x a matrix similar to the dataset used, i.e. where rows are instances for
 #'          which class must be predicted
+#' @param ... unused, present to satisfy the generic predict() prototype 
 #' @return a integer vector whose length match nrow(x) and containing the predicted 
 #'         class for each of the given instances.
-predict.mmc <- function(object,x) {
+predict.mmc <- function(object,x,...) {
   max.col(x %*% attr(object,"W"))
 }
 
