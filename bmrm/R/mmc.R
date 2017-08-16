@@ -138,7 +138,7 @@ mmc <- function(x,k=2L,N0=3L,LAMBDA=1,NUM_RAMDOM_START=50L,seed=123,
     return(w)
   }
   mmcError <- function(w) {
-    as.vector(0.5*nrbmArgsMmc$LAMBDA*crossprod(w) + nrbmArgsMmc$riskFun(w))
+    as.vector(0.5*nrbmArgsMmc$LAMBDA*crossprod(w) + lvalue(nrbmArgsMmc$riskFun(w)))
   }
   
   err <- mclapply(mc.cores=mc.cores,seq_len(NUM_RAMDOM_START),function(i) mmcError(mmcFit(i)))
