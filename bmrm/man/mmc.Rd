@@ -4,10 +4,9 @@
 \alias{mmc}
 \title{Convenient wrapper function to solve max-margin clustering problem on a dataset}
 \usage{
-mmc(x, k = 2L, N0 = 3L, LAMBDA = 1, NUM_RAMDOM_START = 50L,
-  seed = 123, nrbmArgsSvm = list(maxCP = 20L, MAX_ITER = 100L),
-  nrbmArgsMmc = list(maxCP = 20L, MAX_ITER = 300L),
-  mc.cores = getOption("mc.cores", 1L), ...)
+mmc(x, k = 2L, N0 = 2L, LAMBDA = 1, seeds = 1:50,
+  nrbmArgsSvm = list(maxCP = 10L, MAX_ITER = 100L), nrbmArgsMmc = list(maxCP
+  = 20L, MAX_ITER = 300L), mc.cores = getOption("mc.cores", 1L), ...)
 }
 \arguments{
 \item{x}{numeric matrix representing the dataset (one sample per row)}
@@ -20,9 +19,7 @@ as the starting point of current MMC iteration.}
 
 \item{LAMBDA}{the complexity parameter for nrbm()}
 
-\item{NUM_RAMDOM_START}{number of MMC iteration to perform with a random starting point}
-
-\item{seed}{the random seed basis to use}
+\item{seeds}{the random seeds to use}
 
 \item{nrbmArgsSvm}{arguments to nrbm() when solving for multi-class SVM problem}
 
@@ -48,7 +45,7 @@ The random starting points are determined by randomly assigning N0 samples to ea
    x <- cbind(x,intercept=1)
 
    # -- Find max-margin clusters
-   y <- mmc(x,k=3,LAMBDA=0.001,minClusterSize=10,NUM_RAMDOM_START=10)
+   y <- mmc(x,k=3,LAMBDA=0.001,minClusterSize=10,seeds=1:10)
    table(y,iris$Species)
    
    # -- Plot the dataset and the MMC decision boundaries
@@ -56,7 +53,7 @@ The random starting points are determined by randomly assigning N0 samples to ea
    gy <- seq(min(x[,2]),max(x[,2]),length=200)
    Y <- outer(gx,gy,function(a,b){predict(y,cbind(a,b,1))})
    image(gx,gy,Y,asp=1,main="MMC clustering",xlab=colnames(x)[1],ylab=colnames(x)[2])
-   points(x,pch=19+max.col(y))
+   points(x,pch=19+y)
    
    # -- show support vectors
    #L <- attr(y,"loss")
