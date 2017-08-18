@@ -24,6 +24,7 @@ mmcLoss <- function(x, k=3L,minClusterSize=1L,groups=matrix(logical(0),nrow(x),0
   if (is.null(rownames(x))) rownames(x) <- seq_len(nrow(x))
   weight <- rep_len(weight,nrow(x))
   minClusterSize <- rep_len(minClusterSize,k)
+  groups <- which(groups,arr.ind=TRUE)
   
   lp.constraints <- list(
     dense.const = rbind(
@@ -31,6 +32,8 @@ mmcLoss <- function(x, k=3L,minClusterSize=1L,groups=matrix(logical(0),nrow(x),0
         eq = cbind(seq_len(nrow(x)),seq_len(nrow(x)*k),1),
         # constrain on the minimum size of the clusters
         gt = cbind(as.vector(col(matrix(NA,nrow(x),k)))+nrow(x),seq_len(nrow(x)*k),1)
+        # groups constraints
+        #grp = cbind(nrow(x)+k+groups[,2],groups[,1],1)
     ),
     const.dir = c(eq=rep_len("==",nrow(x)),gt=rep_len(">=",k)),
     const.rhs = c(eq=rep_len(1,nrow(x)),gt=minClusterSize)
@@ -118,19 +121,24 @@ mmc <- function(x,k=2L,N0=2L,LAMBDA=1,seeds=1:50,
   nrbmArgsSvm$LAMBDA <- nrbmArgsMmc$LAMBDA <- k*LAMBDA
   
   mmcFit <- function(seed) {
-    # select a starting point w0 by randomly selecting N0 samples in each cluster and train a multi-class SVM on them
-    set.seed(seed)
-    n0 <- min(nrow(x),k*N0)
-    i0 <- sample(seq_len(nrow(x)),n0)
-    y0 <- as.factor(sample(rep_len(seq_len(k),n0)))
-    
-    nrbmArgsSvm$riskFun <- softMarginVectorLoss(x[i0,],y0)
-    w0 <- do.call(nrbm,nrbmArgsSvm)
-    
-    # run MMC solver starting at w0
-    nrbmArgsMmc$w0 <- w0
-    w <- do.call(nrbm,nrbmArgsMmc)
-    return(w)
+    tryCatch({
+      # select a starting point w0 by randomly selecting N0 samples in each cluster 
+      # and train a multi-class SVM on them
+      set.seed(seed)
+      n0 <- min(nrow(x),k*N0)
+      i0 <- sample(seq_len(nrow(x)),n0)
+      y0 <- as.factor(sample(rep_len(seq_len(k),n0)))
+      
+      nrbmArgsSvm$riskFun <- softMarginVectorLoss(x[i0,],y0)
+      w0 <- do.call(nrbm,nrbmArgsSvm)
+      
+      # run MMC solver starting at w0
+      nrbmArgsMmc$w0 <- w0
+      do.call(nrbm,nrbmArgsMmc)
+    },error = function(e) {
+      w <- "error";attr(w,"obj") <- NA
+      w
+    })
   }
   err <- mclapply(mc.cores=mc.cores,seeds,function(i) attr(mmcFit(i),"obj"))
   err <- simplify2array(err)

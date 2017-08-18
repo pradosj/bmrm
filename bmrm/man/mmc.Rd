@@ -38,22 +38,18 @@ The random starting points are determined by randomly assigning N0 samples to ea
 }
 \examples{
    # -- Prepare a 2D dataset to cluster with an intercept
-   x <- data.matrix(iris[c(1,3)])
-   x <- x - colMeans(x)[col(x)]
-   colSds <- sqrt(colMeans((x - colMeans(x)[col(x)])^2))
-   x <- x / colSds[col(x)]
-   x <- cbind(x,intercept=1)
+   x <- cbind(intercept=100,scale(data.matrix(iris[c(1,3)]),center=TRUE,scale=FALSE))
 
    # -- Find max-margin clusters
    y <- mmc(x,k=3,LAMBDA=0.001,minClusterSize=10,seeds=1:10)
    table(y,iris$Species)
    
    # -- Plot the dataset and the MMC decision boundaries
-   gx <- seq(min(x[,1]),max(x[,1]),length=200)
-   gy <- seq(min(x[,2]),max(x[,2]),length=200)
-   Y <- outer(gx,gy,function(a,b){predict(y,cbind(a,b,1))})
+   gx <- seq(min(x[,2]),max(x[,2]),length=200)
+   gy <- seq(min(x[,3]),max(x[,3]),length=200)
+   Y <- outer(gx,gy,function(a,b){predict(y,cbind(100,a,b))})
    image(gx,gy,Y,asp=1,main="MMC clustering",xlab=colnames(x)[1],ylab=colnames(x)[2])
-   points(x,pch=19+y)
+   points(x[,-1],pch=19+y)
    
    # -- show support vectors
    #L <- attr(y,"loss")
