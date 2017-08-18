@@ -1,7 +1,7 @@
 Package: bmrm
 Type: Package
 Title: Bundle Methods for Regularized Risk Minimization Package
-Version: 3.4
+Version: 3.5
 Date: 2017-08-16
 Depends:
     R (>= 3.0.2)
@@ -14,7 +14,7 @@ Suggests:
 VignetteBuilder: knitr
 Author: Julien Prados
 Maintainer: Julien Prados <julien.prados@unige.ch>
-Copyright: 2014, University of Geneva
+Copyright: 2017, University of Geneva
 Description: Bundle methods for minimization of convex and non-convex risk
     under L1 or L2 regularization. Implements the algorithm proposed by Teo et
     al. (JMLR 2010) as well as the extension proposed by Do and Artieres (JMLR

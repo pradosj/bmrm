@@ -24,19 +24,25 @@ mmcLoss <- function(x, k=3L,minClusterSize=1L,groups=matrix(logical(0),nrow(x),0
   if (is.null(rownames(x))) rownames(x) <- seq_len(nrow(x))
   weight <- rep_len(weight,nrow(x))
   minClusterSize <- rep_len(minClusterSize,k)
-  groups <- which(groups,arr.ind=TRUE)
+  
+  cst <- merge(by="col",
+    which(as.matrix(groups),arr.ind=TRUE),
+    which(as.matrix(minGroupOverlap)>0,arr.ind=TRUE)
+  )
+  cst$cstId <- as.integer(factor((cst$col-1)*k + cst$row.y))
+  cst$varId <- nrow(x)*(cst$row.y-1L) + cst$row.x
   
   lp.constraints <- list(
     dense.const = rbind(
         # constrain the instances to belong to one and only one cluster
         eq = cbind(seq_len(nrow(x)),seq_len(nrow(x)*k),1),
         # constrain on the minimum size of the clusters
-        gt = cbind(as.vector(col(matrix(NA,nrow(x),k)))+nrow(x),seq_len(nrow(x)*k),1)
+        gt = cbind(as.vector(col(matrix(NA,nrow(x),k)))+nrow(x),seq_len(nrow(x)*k),1),
         # groups constraints
-        #grp = cbind(nrow(x)+k+groups[,2],groups[,1],1)
+        grp = cbind(nrow(x)+k+cst$cstId,cst$varId,rep(1,length(cst$cstId)))
     ),
-    const.dir = c(eq=rep_len("==",nrow(x)),gt=rep_len(">=",k)),
-    const.rhs = c(eq=rep_len(1,nrow(x)),gt=minClusterSize)
+    const.dir = c(eq=rep_len("==",nrow(x)),gt=rep_len(">=",k),gt=rep_len(">=",sum(minGroupOverlap>0))),
+    const.rhs = c(eq=rep_len(1,nrow(x)),gt=minClusterSize,grp=minGroupOverlap[minGroupOverlap>0])
   )
   
   function(w) {
@@ -136,13 +142,14 @@ mmc <- function(x,k=2L,N0=2L,LAMBDA=1,seeds=1:50,
       nrbmArgsMmc$w0 <- w0
       do.call(nrbm,nrbmArgsMmc)
     },error = function(e) {
+      print(e)
       w <- "error";attr(w,"obj") <- NA
       w
     })
   }
   err <- mclapply(mc.cores=mc.cores,seeds,function(i) attr(mmcFit(i),"obj"))
   err <- simplify2array(err)
-  
+
   # find the minimum of all runs
   W <- mmcFit(which.min(err))
   W <- matrix(W,ncol(x),k)

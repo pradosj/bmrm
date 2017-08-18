@@ -24,8 +24,9 @@ This is the value used as coefficient of the regularization term.}
 \item{MAX_ITER}{the maximum number of iteration to perform. 
 The function stop with a warning message if the number of iteration exceed this value}
 
-\item{EPSILON_TOL}{control optimization stoping criteria: 
-the optimization end when the optimization gap is below this threshold}
+\item{EPSILON_TOL}{a numeric value between 0 and 1 controling stoping criteria: 
+the optimization end when the ratio between the optimization gap and the
+objective value is below this threshold}
 
 \item{w0}{initial weight vector where optimization start}
 

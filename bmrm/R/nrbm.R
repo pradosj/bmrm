@@ -14,8 +14,9 @@
 #'   This is the value used as coefficient of the regularization term.
 #' @param MAX_ITER the maximum number of iteration to perform. 
 #'   The function stop with a warning message if the number of iteration exceed this value
-#' @param EPSILON_TOL control optimization stoping criteria: 
-#'   the optimization end when the optimization gap is below this threshold
+#' @param EPSILON_TOL a numeric value between 0 and 1 controling stoping criteria: 
+#'   the optimization end when the ratio between the optimization gap and the
+#'   objective value is below this threshold
 #' @param w0 initial weight vector where optimization start
 #' @param maxCP mximal number of cutting plane to use to limit memory footprint
 #' @param convexRisk a length 1 logical telling if the risk function riskFun is convex. 
