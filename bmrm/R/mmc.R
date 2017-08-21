@@ -114,11 +114,6 @@ mmcLoss <- function(x, k=3L,minClusterSize=1L,groups=matrix(logical(0),nrow(x),0
 #'    Y <- outer(gx,gy,function(a,b){predict(y,cbind(100,a,b))})
 #'    image(gx,gy,Y,asp=1,main="MMC clustering",xlab=colnames(x)[1],ylab=colnames(x)[2])
 #'    points(x[,-1],pch=19+y)
-#'    
-#'    # -- show support vectors
-#'    #L <- attr(y,"loss")
-#'    #is.sv <- rowSums(attr(L,"Y")*attr(L,"R"))>0
-#'    #points(x[is.sv,,drop=FALSE],col="blue",pch=8)
 mmc <- function(x,k=2L,N0=2L,LAMBDA=1,seeds=1:50,
                 nrbmArgsSvm=list(maxCP=10L,MAX_ITER=100L),
                 nrbmArgsMmc=list(maxCP=20L,MAX_ITER=300L),
@@ -149,18 +144,18 @@ mmc <- function(x,k=2L,N0=2L,LAMBDA=1,seeds=1:50,
   }
   err <- mclapply(mc.cores=mc.cores,seeds,function(i) attr(mmcFit(i),"obj"))
   err <- simplify2array(err)
+  names(err) <- seeds
 
   # find the minimum of all runs
-  W <- mmcFit(which.min(err))
+  W <- mmcFit(seeds[which.min(err)])
   W <- matrix(W,ncol(x),k)
   rownames(W) <- colnames(x)
   
   L <- nrbmArgsMmc$riskFun(W)
   y <- max.col(attr(L,"Y"))
   attr(y,"W") <- W
-  attr(y,"loss") <- L
-  attr(y,"riskFun") <- nrbmArgsMmc$riskFun
   attr(y,"errors") <- err
+  attr(y,"best.seed") <- seeds[which.min(err)]
   class(y) <- "mmc"
   return(y)
 }

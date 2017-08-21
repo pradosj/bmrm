@@ -50,9 +50,4 @@ The random starting points are determined by randomly assigning N0 samples to ea
    Y <- outer(gx,gy,function(a,b){predict(y,cbind(100,a,b))})
    image(gx,gy,Y,asp=1,main="MMC clustering",xlab=colnames(x)[1],ylab=colnames(x)[2])
    points(x[,-1],pch=19+y)
-   
-   # -- show support vectors
-   #L <- attr(y,"loss")
-   #is.sv <- rowSums(attr(L,"Y")*attr(L,"R"))>0
-   #points(x[is.sv,,drop=FALSE],col="blue",pch=8)
 }
