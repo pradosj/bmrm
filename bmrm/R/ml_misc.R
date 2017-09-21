@@ -72,6 +72,7 @@ roc.stat <- function(f,y) {
 #'   A <- outer(seq_along(hc$order),seq_along(hc$order),hclust.fca,hc=hc)
 #'   H <- array(hc$height[A],dim(A))
 #'   image(H[hc$order,hc$order])
+#'   image(A[hc$order,hc$order])
 hclust.fca <- function(hc,a,b) {
   rootA <- row(hc$merge)[match(-a,hc$merge)]
   rootB <- row(hc$merge)[match(-b,hc$merge)]
@@ -84,11 +85,6 @@ hclust.fca <- function(hc,a,b) {
   }
   rootA
 }
-
-
-
-
-
 
 
 
