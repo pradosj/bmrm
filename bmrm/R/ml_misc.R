@@ -89,3 +89,43 @@ hclust.fca <- function(hc,a,b) {
 
 
 
+#' Perform multiple hierachical clustering on random subsets of a dataset
+#' 
+#' @param x the numeric matrix containing the data to cluster (one instance per row)
+#' @param seeds a vector of random seed to use.
+#' @param row.rate,col.rate numeric value in [0,1] to specify the proportion of instance 
+#'        (resp. feature) to subset at each random iteration.
+#' @param max.cluster upper bound on the number of expected cluster (can by +Inf).
+#' @param hc.method a clustering method of arity 1, taking as input a random subset of the 
+#'        input matrix x and returning an hclust object
+#' @return a list of 3 square matrices N,H,K of size nrow(x): N is the number of 
+#'         time each pair of instance as been seen in the random subsets; H is the
+#'         average heights where the pair of sample as been merged in the tree; K is 
+#'         the average number of split possible into the trees still preserving the 
+#'         two samples into the same cluster.
+#' @author Julien Prados
+#' @export
+iterative.hclust <- function(x,seeds=1:100,
+  row.rate=0.3,col.rate=0.1,max.cluster=10,
+  hc.method=function(x) {hclust(dist(prcomp(x)$x[,1:4]),method="complete")}
+) {
+  N0 <- matrix(0,nrow(x),nrow(x))
+  N <- Reduce(function(n0,seed) {
+    set.seed(seed)
+    i <- sample(nrow(x),nrow(x)*row.rate)
+    j <- sample(ncol(x),ncol(x)*col.rate)
+    M <- x[i,j]
+    hc <- hc.method(M)
+    A <- outer(seq_along(hc$order),seq_along(hc$order),hclust.fca,hc=hc)
+    H <- array(hc$height[A],dim(A))
+    n0$N[i,i] <- n0$N[i,i] + 1
+    n0$K[i,i] <- n0$K[i,i] + pmin(nrow(hc$merge)-A+1,max.cluster)
+    n0$H[i,i] <- n0$H[i,i] + H
+    n0
+  },seeds,list(N=N0,K=N0,H=N0))
+  N$K <- ifelse(N$N>0,N$K/N$N,NA)
+  N$H <- ifelse(N$N>0,N$H/N$N,NA)
+  return(N)
+}
+
+
