@@ -4,14 +4,17 @@
 \alias{iterative.hclust}
 \title{Perform multiple hierachical clustering on random subsets of a dataset}
 \usage{
-iterative.hclust(x, seeds = 1:100, row.rate = 0.3, col.rate = 0.1,
-  max.cluster = 10, hc.method = function(x) {     hclust(dist(prcomp(x)$x[,
-  1:4]), method = "complete") })
+iterative.hclust(x, seeds = 1:100, mc.cores = getOption("mc.cores", 1L),
+  row.rate = 0.3, col.rate = 0.1, max.cluster = 10,
+  hc.method = function(x) {     hclust(dist(prcomp(x)$x[, 1:4]), method =
+  "complete") })
 }
 \arguments{
 \item{x}{the numeric matrix containing the data to cluster (one instance per row)}
 
 \item{seeds}{a vector of random seed to use.}
+
+\item{mc.cores}{number of core to use for parallelization}
 
 \item{row.rate, col.rate}{numeric value in [0,1] to specify the proportion of instance 
 (resp. feature) to subset at each random iteration.}

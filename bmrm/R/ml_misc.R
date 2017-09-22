@@ -61,6 +61,7 @@ roc.stat <- function(f,y) {
 
 #' Find first common ancestor of 2 nodes in an hclust object
 #' 
+#' @param hc an hclust object
 #' @param a an integer vector with the first leaf node
 #' @param b an integer vector with the second leaf node (same length as a)
 #' @return an integer vector of the same length as a and b identifing the first common ancestors of a and b
@@ -93,6 +94,7 @@ hclust.fca <- function(hc,a,b) {
 #' 
 #' @param x the numeric matrix containing the data to cluster (one instance per row)
 #' @param seeds a vector of random seed to use.
+#' @param mc.cores number of core to use for parallelization
 #' @param row.rate,col.rate numeric value in [0,1] to specify the proportion of instance 
 #'        (resp. feature) to subset at each random iteration.
 #' @param max.cluster upper bound on the number of expected cluster (can by +Inf).
@@ -104,13 +106,14 @@ hclust.fca <- function(hc,a,b) {
 #'         the average number of split possible into the trees still preserving the 
 #'         two samples into the same cluster.
 #' @author Julien Prados
+#' @import stats
 #' @export
-iterative.hclust <- function(x,seeds=1:100,
+iterative.hclust <- function(x,seeds=1:100,mc.cores=getOption("mc.cores",1L),
   row.rate=0.3,col.rate=0.1,max.cluster=10,
   hc.method=function(x) {hclust(dist(prcomp(x)$x[,1:4]),method="complete")}
 ) {
   N0 <- matrix(0,nrow(x),nrow(x))
-  N <- Reduce(function(n0,seed) {
+  fun <- function(n0,seed) {
     set.seed(seed)
     i <- sample(nrow(x),nrow(x)*row.rate)
     j <- sample(ncol(x),ncol(x)*col.rate)
@@ -118,14 +121,24 @@ iterative.hclust <- function(x,seeds=1:100,
     hc <- hc.method(M)
     A <- outer(seq_along(hc$order),seq_along(hc$order),hclust.fca,hc=hc)
     H <- array(hc$height[A],dim(A))
+    
     n0$N[i,i] <- n0$N[i,i] + 1
     n0$K[i,i] <- n0$K[i,i] + pmin(nrow(hc$merge)-A+1,max.cluster)
     n0$H[i,i] <- n0$H[i,i] + H
     n0
-  },seeds,list(N=N0,K=N0,H=N0))
+  }
+  #N <- Reduce(fun,seeds,list(N=N0,K=N0,H=N0))
+  N <- mclapply(split(seeds,seq_along(seeds)%%mc.cores),Reduce,fun,list(N=N0,K=N0,H=N0),mc.cores=mc.cores)
+  N <- Reduce(function(n0,x) {n0$N <- n0$N + x$N;n0$K <- n0$K + x$K;n0$H <- n0$H + x$H;n0},N,list(N=N0,K=N0,H=N0))
+  
   N$K <- ifelse(N$N>0,N$K/N$N,NA)
   N$H <- ifelse(N$N>0,N$H/N$N,NA)
   return(N)
 }
+
+
+
+
+
 
 

@@ -7,6 +7,8 @@
 hclust.fca(hc, a, b)
 }
 \arguments{
+\item{hc}{an hclust object}
+
 \item{a}{an integer vector with the first leaf node}
 
 \item{b}{an integer vector with the second leaf node (same length as a)}
