@@ -128,7 +128,7 @@ iterative.hclust <- function(x,seeds=1:100,mc.cores=getOption("mc.cores",1L),
     n0
   }
   #N <- Reduce(fun,seeds,list(N=N0,K=N0,H=N0))
-  N <- mclapply(split(seeds,seq_along(seeds)%%mc.cores),Reduce,fun,list(N=N0,K=N0,H=N0),mc.cores=mc.cores)
+  N <- mclapply(split(seeds,seq_along(seeds)%%mc.cores),Reduce,f=fun,init=list(N=N0,K=N0,H=N0),mc.cores=mc.cores)
   N <- Reduce(function(n0,x) {n0$N <- n0$N + x$N;n0$K <- n0$K + x$K;n0$H <- n0$H + x$H;n0},N,list(N=N0,K=N0,H=N0))
   
   N$K <- ifelse(N$N>0,N$K/N$N,NA)
