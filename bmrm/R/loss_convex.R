@@ -366,7 +366,7 @@ predict.softMarginVectorLoss <- function(object,x,...) {
   f <- x %*% W
   y <- max.col(f,ties.method="first")
   y <- factor(colnames(W)[y],colnames(W))
-  attr(f,"decision.value") <- f
+  attr(y,"decision.value") <- f
   y
 }
 
