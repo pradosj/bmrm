@@ -407,7 +407,7 @@ ontologyLoss <- function(x,y,l=1 - table(seq_along(y),y),dag=diag(nlevels(y))) {
   if (nlevels(y)!=ncol(l)) stop('ncol(l) do not match with nlevels(y)')
   
   set.convex(function(w) {
-    W <- matrix(w,ncol(x),ncol(dag),dimnames = list(colnames(x)))
+    W <- matrix(w,ncol(x),ncol(dag),dimnames = list(colnames(x),colnames(dag)))
     fp <- x %*% W
     z <- tcrossprod(fp,dag) + l
     Y <- max.col(z,ties.method = "first")
@@ -415,7 +415,7 @@ ontologyLoss <- function(x,y,l=1 - table(seq_along(y),y),dag=diag(nlevels(y))) {
     
     w <- as.vector(W)
     attr(w,"model.dim") <- dim(W)
-    attr(w,"model.dimnames") <- list(colnames(x),levels(y))
+    attr(w,"model.dimnames") <- dimnames(W)
     attr(w,"model.dag") <- dag
     lvalue(w) <- sum(z[cbind(seq_along(Y),Y)] - z[cbind(seq_along(y),y)])
     gradient(w) <- as.vector(crossprod(x,G))
