@@ -427,8 +427,8 @@ ontologyLoss <- function(x,y,l=1 - table(seq_along(y),y),dag=diag(nlevels(y))) {
 #' @export
 predict.ontologyLoss <- function(object,x,...) {
   W <- array(object,attr(object,"model.dim"))
-  W <- tcrossprod(W,attr(object,"model.dag"))
   dimnames(W) <- attr(object,"model.dimnames")
+  W <- tcrossprod(W,attr(object,"model.dag"))
   f <- x %*% W
   y <- max.col(f,ties.method="first")
   y <- factor(colnames(W)[y],colnames(W))
