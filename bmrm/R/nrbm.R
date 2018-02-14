@@ -70,7 +70,7 @@ NULL
 
 #' @describeIn nrbm original L2-regularized version of nrbm
 #' @export
-nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L,convexRisk=is.convex(riskFun),LowRankQP.method="LU",line.search=TRUE) {
+nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L,convexRisk=is.convex(riskFun),LowRankQP.method="LU",line.search=!convexRisk) {
   # check parameters
   if (maxCP<3) stop("maxCP should be >=3")
   cat(ifelse(convexRisk%in%TRUE,"Run nrbm with convex loss\n","Run nrbm with non-convex loss\n"))
