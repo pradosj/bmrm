@@ -180,7 +180,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L
 
 #' @describeIn nrbm L1-regularized version of nrbm that can only handle convex risk
 #' @export
-nrbmL1 <- function(riskFun,LAMBDA=1,MAX_ITER=300L,EPSILON_TOL=0.01,w0=0,maxCP=+Inf,line.search=TRUE) {
+nrbmL1 <- function(riskFun,LAMBDA=1,MAX_ITER=300L,EPSILON_TOL=0.01,w0=0,maxCP=+Inf,line.search=FALSE) {
   # check parameters
   if (maxCP<3) stop("maxCP should be >=3")
 

@@ -11,7 +11,7 @@ nrbm(riskFun, LAMBDA = 1, MAX_ITER = 1000L, EPSILON_TOL = 0.01, w0 = 0,
   line.search = !convexRisk)
 
 nrbmL1(riskFun, LAMBDA = 1, MAX_ITER = 300L, EPSILON_TOL = 0.01, w0 = 0,
-  maxCP = +Inf, line.search = TRUE)
+  maxCP = +Inf, line.search = FALSE)
 }
 \arguments{
 \item{riskFun}{the risk function to use in the optimization (e.g.: hingeLoss, softMarginVectorLoss). 
