@@ -16,5 +16,5 @@ BuildType: Package
 PackageUseDevtools: Yes
 PackagePath: bmrm
 PackageInstallArgs: --no-multiarch
-PackageCheckArgs: --as-cran
+PackageCheckArgs: --as-cran --run-dontrun --run-donttest
 PackageRoxygenize: rd,namespace
