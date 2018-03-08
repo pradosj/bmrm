@@ -442,6 +442,68 @@ predict.ontologyLoss <- function(object,x,...) {
 
 
 
+#' softmax Loss Function
+#' 
+#' softmax loss function may be used to predict probability distributions
+#' 
+#' @param x instance matrix, where x(t,) defines the features of instance t
+#' @param y target matrix where y(t,) is a probability distribution that should sum to 1
+#' @param loss.weights numeric vector of loss weights to incure for each instance of x. 
+#'        Vector length should match nrow(y), but values are recycled if not of identical size.
+#' @return a function taking one argument w and computing the loss value and the gradient at point w
+#' @export
+#' @references Teo et al.
+#'   Bundle Methods for Regularized Risk Minimization
+#'   JMLR 2010
+#' @examples
+#'   # -- Load the data
+#'   x <- cbind(intercept=100,data.matrix(iris[1:4]))
+#'   y <- model.matrix(~iris$Species+0)
+#'   w <- nrbm(softmaxLoss(x,y))
+#'   P <- predict(w,x)
+#'   table(max.col(P),iris$Species)
+softmaxLoss <- function(x,y,loss.weights=1) {
+  if (!is.matrix(y)) stop("y must be a numeric matrix")
+  if (!is.matrix(x)) stop("x must be a numeric matrix")
+  if (nrow(x) != nrow(y)) stop("dimensions of x and y mismatch")
+  loss.weights <- rep(loss.weights, length.out = nrow(y))
+  
+  set.convex(function(w) {
+    W <- matrix(w, ncol(x), ncol(y), dimnames = list(colnames(x), colnames(y)))
+    f <- x %*% W
+    q <- exp(f-matrixStats::rowMaxs(f));q <- q/rowSums(q)
+    lp <- -rowSums(y*log(q))*loss.weights
+    
+    grad <- local({
+      Q <- array(q,c(dim(y),ncol(y)))
+      E <- array(diag(ncol(y))[col(y),],c(dim(y),ncol(y)))
+      Y <- array(y %x% matrix(1,1,ncol(y)),c(dim(y),ncol(y)))
+      rowSums(Y*(Q-E),dims=2)
+    })
+    grad <- grad*loss.weights
+    
+    w <- as.vector(W)
+    attr(w, "model.dim") <- dim(W)
+    attr(w, "model.dimnames") <- dimnames(W)
+    lvalue(w) <- mean(lp)
+    gradient(w) <- as.vector(crossprod(x, grad))/length(lp)
+    class(w) <- "softmaxLoss"
+    return(w)
+  })
+}
+
+#' @export
+predict.softmaxLoss <- function(object,x,...) {
+  W <- array(object,attr(object,"model.dim"),attr(object,"model.dimnames"))
+  f <- x %*% W
+  q <- exp(f-matrixStats::rowMaxs(f));q <- q/rowSums(q)
+  q
+}
+
+
+
+
+
 
 #' Compute or check the structure of a cost matrix 
 #' 
