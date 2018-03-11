@@ -15,7 +15,18 @@ balanced.cv.fold <- function(y,num.cv=10) {
   fold
 }
 
-
+#' Compute loss.weights so that total losses of each class is balanced
+#' 
+#' @param y a object coerced to factor that represent the class labels of each sample of the dataset
+#' @return a numeric vector of the same length as y
+#' @export
+balanced.loss.weights <- function(y) {
+  #if (is.logical(y)) return(ifelse(y,mean(!y),mean(y)))
+  y <- as.factor(y)
+  cw <- 1/(tabulate(y)/length(y))
+  cw <- cw / sum(cw)
+  cw[y]
+}
 
 
 #' Compute statistics for ROC curve plotting
