@@ -29,6 +29,25 @@ balanced.loss.weights <- function(y) {
 }
 
 
+#' Rank linear weight of a linear model
+#' 
+#' @param w a numeric vector of linear weights
+#' @return a data.frame with a rank for each feature as well as z-score, p-value, and false discovery rate.
+#' @export
+rank.linear.weights <- function(w) {
+  w <- as.vector(w)
+  R <- data.frame(stringsAsFactors = FALSE,
+    feature.name = if (is.null(names(w))) seq_along(w) else names(w),
+    w = w,
+    rk = pmin(rank(+w,ties.method="first"),rank(-w,ties.method="first"))
+  )
+  R$z <- as.vector((w-mean(w))/sd(w))
+  R$pval <- as.vector(2*pnorm(abs(R$z),lower.tail=FALSE))
+  R$fdr <- as.vector(p.adjust(R$pval,method="fdr"))
+  R
+}
+
+
 #' Compute statistics for ROC curve plotting
 #' 
 #' @param f decision value for each instance
