@@ -9,7 +9,9 @@ rowmean(x, group, ...)
 \arguments{
 \item{x}{a matrix}
 
-\item{group}{a factor with one element per row of x.}
+\item{group}{a factor with one element per row of x}
+
+\item{...}{additional arguments are passed to rowsum()}
 }
 \value{
 a matrix containing the means, with one row per level of group.
