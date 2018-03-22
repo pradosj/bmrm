@@ -88,38 +88,6 @@ roc.stat <- function(f,y) {
 
 
 
-
-#' Find first common ancestor of 2 nodes in an hclust object
-#' 
-#' @param hc an hclust object
-#' @param a an integer vector with the first leaf node
-#' @param b an integer vector with the second leaf node (same length as a)
-#' @return an integer vector of the same length as a and b identifing the first common ancestors of a and b
-#' @author Julien Prados
-#' @export
-#' @examples
-#'   hc <- hclust(dist(USArrests), "complete")
-#'   plot(hc)
-#'   A <- outer(seq_along(hc$order),seq_along(hc$order),hclust.fca,hc=hc)
-#'   H <- array(hc$height[A],dim(A))
-#'   image(H[hc$order,hc$order])
-#'   image(A[hc$order,hc$order])
-hclust.fca <- function(hc,a,b) {
-  rootA <- row(hc$merge)[match(-a,hc$merge)]
-  rootB <- row(hc$merge)[match(-b,hc$merge)]
-  while(!all(rootA==rootB)) {
-    rootA.parent <- row(hc$merge)[match(rootA,hc$merge)]
-    rootB.parent <- row(hc$merge)[match(rootB,hc$merge)]
-    rootA <- ifelse(rootA<rootB,rootA.parent,rootA)
-    rootB <- ifelse(rootB<rootA,rootB.parent,rootB)
-    rootA==rootB
-  }
-  rootA
-}
-
-
-
-
 #' Perform multiple hierachical clustering on random subsets of a dataset
 #' 
 #' @param x the numeric matrix containing the data to cluster (one instance per row)
@@ -149,7 +117,7 @@ iterative.hclust <- function(x,seeds=1:100,mc.cores=getOption("mc.cores",1L),
     j <- sample(ncol(x),ncol(x)*col.rate)
     M <- x[i,j]
     hc <- hc.method(M)
-    A <- outer(seq_along(hc$order),seq_along(hc$order),hclust.fca,hc=hc)
+    A <- outer(seq_along(hc$order),seq_along(hc$order),hclust_fca,hc=hc)
     H <- array(hc$height[A],dim(A))
     
     n0$N[i,i] <- n0$N[i,i] + 1
