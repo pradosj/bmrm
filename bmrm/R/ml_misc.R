@@ -108,7 +108,7 @@ roc.stat <- function(f,y) {
 #' @export
 iterative.hclust <- function(x,seeds=1:100,mc.cores=getOption("mc.cores",1L),
   row.rate=0.3,col.rate=0.1,max.cluster=10,
-  hc.method=function(x) {hclust(dist(prcomp(x)$x[,1:4]),method="complete")}
+  hc.method=function(x) {hclust(dist(prcomp(x,rank.=6)$x),method="complete")}
 ) {
   N0 <- matrix(0,nrow(x),nrow(x))
   fun <- function(n0,seed) {
