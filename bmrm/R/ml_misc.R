@@ -109,7 +109,7 @@ roc.stat <- function(f,y) {
 #' @export
 iterative.hclust <- function(x,seeds=1:100,mc.cores=getOption("mc.cores",1L),
   row.rate=0.3,col.rate=0.1,max.cluster=10,
-  hc.method=function(x,PCs=1:6) {hclust(dist(prcomp(x,rank.=max(PCs))$x[,PCs,drop=FALSE]),method="complete")},
+  hc.method=function(x,PCs=1:6,...) {hclust(dist(prcomp(x,rank.=max(PCs))$x[,PCs,drop=FALSE]),...)},
   ...
 ) {
   N0 <- matrix(0,nrow(x),nrow(x))
