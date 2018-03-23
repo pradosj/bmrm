@@ -6,8 +6,8 @@
 \usage{
 iterative.hclust(x, seeds = 1:100, mc.cores = getOption("mc.cores", 1L),
   row.rate = 0.3, col.rate = 0.1, max.cluster = 10,
-  hc.method = function(x) {     hclust(dist(prcomp(x)$x[, 1:4]), method =
-  "complete") })
+  hc.method = function(x, PCs = 1:6) {     hclust(dist(prcomp(x, rank. =
+  max(PCs))$x[, PCs, drop = FALSE]), method = "complete") }, ...)
 }
 \arguments{
 \item{x}{the numeric matrix containing the data to cluster (one instance per row)}
@@ -23,6 +23,8 @@ iterative.hclust(x, seeds = 1:100, mc.cores = getOption("mc.cores", 1L),
 
 \item{hc.method}{a clustering method of arity 1, taking as input a random subset of the 
 input matrix x and returning an hclust object}
+
+\item{...}{additional arguments are passed to the hc.method}
 }
 \value{
 a list of 3 square matrices N,H,K of size nrow(x): N is the number of 

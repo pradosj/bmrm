@@ -98,6 +98,7 @@ roc.stat <- function(f,y) {
 #' @param max.cluster upper bound on the number of expected cluster (can by +Inf).
 #' @param hc.method a clustering method of arity 1, taking as input a random subset of the 
 #'        input matrix x and returning an hclust object
+#' @param ... additional arguments are passed to the hc.method
 #' @return a list of 3 square matrices N,H,K of size nrow(x): N is the number of 
 #'         time each pair of instance as been seen in the random subsets; H is the
 #'         average heights where the pair of sample as been merged in the tree; K is 
@@ -108,7 +109,8 @@ roc.stat <- function(f,y) {
 #' @export
 iterative.hclust <- function(x,seeds=1:100,mc.cores=getOption("mc.cores",1L),
   row.rate=0.3,col.rate=0.1,max.cluster=10,
-  hc.method=function(x) {hclust(dist(prcomp(x,rank.=6)$x),method="complete")}
+  hc.method=function(x,PCs=1:6) {hclust(dist(prcomp(x,rank.=max(PCs))$x[,PCs,drop=FALSE]),method="complete")},
+  ...
 ) {
   N0 <- matrix(0,nrow(x),nrow(x))
   fun <- function(n0,seed) {
@@ -116,7 +118,7 @@ iterative.hclust <- function(x,seeds=1:100,mc.cores=getOption("mc.cores",1L),
     i <- sample(nrow(x),nrow(x)*row.rate)
     j <- sample(ncol(x),ncol(x)*col.rate)
     M <- x[i,j]
-    hc <- hc.method(M)
+    hc <- hc.method(M,...)
     A <- outer(seq_along(hc$order),seq_along(hc$order),hclust_fca,hc=hc)
     H <- array(hc$height[A],dim(A))
     
