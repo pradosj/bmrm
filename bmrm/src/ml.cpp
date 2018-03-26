@@ -31,9 +31,9 @@ IntegerVector hclust_fca(List hc,IntegerVector a,IntegerVector b) {
       parents_pos[m[i]-1] = i % m.nrow();
     }
   }
-  
-  IntegerVector root(a.length(),NA_INTEGER);
-  for(int i=0;i<=root.length();i++) {
+
+  IntegerVector root(a.length());
+  for(int i=0;i<root.length();i++) {
     int rootA = parents_neg[a[i]-1];
     int rootB = parents_neg[b[i]-1];
     while (rootA!=rootB) {

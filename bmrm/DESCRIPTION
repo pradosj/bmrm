@@ -9,7 +9,8 @@ Imports:
     lpSolve,
     LowRankQP,
     matrixStats,
-    Rcpp
+    Rcpp,
+    Matrix
 Suggests:
     knitr
 VignetteBuilder: knitr

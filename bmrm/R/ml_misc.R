@@ -106,33 +106,49 @@ roc.stat <- function(f,y) {
 #'         two samples into the same cluster.
 #' @author Julien Prados
 #' @import stats
+#' @importFrom Matrix Matrix sparseMatrix
 #' @export
 iterative.hclust <- function(x,seeds=1:100,mc.cores=getOption("mc.cores",1L),
   row.rate=0.3,col.rate=0.1,max.cluster=10,
   hc.method=function(x,PCs=1:6,...) {hclust(dist(prcomp(x,rank.=max(PCs))$x[,PCs,drop=FALSE]),...)},
   ...
 ) {
-  N0 <- matrix(0,nrow(x),nrow(x))
-  fun <- function(n0,seed) {
+  
+  # for each random seed, subset the dataset, call the hc.method, and determine first common ancestor
+  mapfun <- function(seed) {
     set.seed(seed)
-    i <- sample(nrow(x),nrow(x)*row.rate)
+    i <- sort(sample(nrow(x),nrow(x)*row.rate))
     j <- sample(ncol(x),ncol(x)*col.rate)
-    M <- x[i,j]
-    hc <- hc.method(M,...)
-    A <- outer(seq_along(hc$order),seq_along(hc$order),hclust_fca,hc=hc)
-    H <- array(hc$height[A],dim(A))
+    hc <- hc.method(x[i,j],...)
     
-    n0$N[i,i] <- n0$N[i,i] + 1
-    n0$K[i,i] <- n0$K[i,i] + pmin(nrow(hc$merge)-A+1,max.cluster)
-    n0$H[i,i] <- n0$H[i,i] + H
+    ri <- rep(seq_along(hc$order),rev(seq_along(hc$order)))
+    ci <- seq_along(ri) + cumsum(seq_along(hc$order)-1)[ri]
+    ci <- (ci-1)%%length(hc$order) + 1
+    
+    A <- hclust_fca(hc,ri,ci)
+    N <- sparseMatrix(i[ri],i[ci],x=1L,dims=c(nrow(x),nrow(x)),symmetric=TRUE)
+    K <- sparseMatrix(i[ri],i[ci],x=pmin(nrow(hc$merge)-A+1,max.cluster),dims=c(nrow(x),nrow(x)),symmetric=TRUE)
+    H <- sparseMatrix(i[ri],i[ci],x=hc$height[A],dims=c(nrow(x),nrow(x)),symmetric=TRUE)
+    
+    list(N=N,H=H,K=K)
+  }
+  redfun <- function(n0,n) {
+    n0$N <- n0$N + n$N
+    n0$K <- n0$K + n$K
+    n0$H <- n0$H + n$H
     n0
   }
-  #N <- Reduce(fun,seeds,list(N=N0,K=N0,H=N0))
-  N <- mclapply(split(seeds,seq_along(seeds)%%mc.cores),Reduce,f=fun,init=list(N=N0,K=N0,H=N0),mc.cores=mc.cores)
-  N <- Reduce(function(n0,x) {n0$N <- n0$N + x$N;n0$K <- n0$K + x$K;n0$H <- n0$H + x$H;n0},N,list(N=N0,K=N0,H=N0))
+  mcMapReduce <- function(seeds,mapfun,redfun,N0,mc.cores=1) {
+    seeds <- split(seeds,seq_along(seeds)%%mc.cores)
+    N <- mclapply(seeds,Reduce,f=function(n0,seed) redfun(n0,mapfun(seed)),init=N0,mc.cores=mc.cores)
+    Reduce(redfun,N[-1],N[[1]])
+  }
   
-  N$K <- ifelse(N$N>0,N$K/N$N,NA)
-  N$H <- ifelse(N$N>0,N$H/N$N,NA)
+  N0 <- Matrix(0,nrow(x),nrow(x))
+  N0 <- list(N=N0,K=N0,H=N0)
+  N <- mcMapReduce(seeds,mapfun,redfun,N0,mc.cores)
+  N$K <- N$K/N$N
+  N$H <- N$H/N$N
   return(N)
 }
 
