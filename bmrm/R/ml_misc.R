@@ -92,7 +92,6 @@ roc.stat <- function(f,y) {
 #' 
 #' @param x the numeric matrix containing the data to cluster (one instance per row)
 #' @param seeds a vector of random seed to use.
-#' @param mc.cores number of core to use for parallelization
 #' @param row.rate,col.rate numeric value in [0,1] to specify the proportion of instance 
 #'        (resp. feature) to subset at each random iteration.
 #' @param max.cluster upper bound on the number of expected cluster (can by +Inf).
@@ -106,50 +105,37 @@ roc.stat <- function(f,y) {
 #'         two samples into the same cluster.
 #' @author Julien Prados
 #' @import stats
-#' @importFrom Matrix Matrix sparseMatrix
 #' @export
-iterative.hclust <- function(x,seeds=1:100,mc.cores=getOption("mc.cores",1L),
-  row.rate=0.3,col.rate=0.1,max.cluster=10,
+iterative.hclust <- function(x,seeds=1:100,
+  row.rate=0.3,col.rate=0.1,max.cluster=10L,
   hc.method=function(x,PCs=1:6,...) {hclust(dist(prcomp(x,rank.=max(PCs))$x[,PCs,drop=FALSE]),...)},
   ...
 ) {
+  K <- N <- matrix(0L,nrow(x),nrow(x))
+  H <- matrix(0,nrow(x),nrow(x))
   
-  # for each random seed, subset the dataset, call the hc.method, and determine first common ancestor
-  mapfun <- function(seed) {
-    set.seed(seed)
+  pb <- txtProgressBar(0,length(seeds),style=3)
+  for(k in seq_along(seeds)) {
+    set.seed(seeds[k])
     i <- sort(sample(nrow(x),nrow(x)*row.rate))
     j <- sample(ncol(x),ncol(x)*col.rate)
     hc <- hc.method(x[i,j],...)
     
     ri <- rep(seq_along(hc$order),rev(seq_along(hc$order)))
-    ci <- seq_along(ri) + cumsum(seq_along(hc$order)-1)[ri]
-    ci <- (ci-1)%%length(hc$order) + 1
+    ci <- seq_along(ri) + cumsum(seq_along(hc$order)-1L)[ri]
+    ci <- (ci-1)%%length(hc$order) + 1L
     
     A <- hclust_fca(hc,ri,ci)
-    N <- sparseMatrix(i[ri],i[ci],x=1L,dims=c(nrow(x),nrow(x)),symmetric=TRUE)
-    K <- sparseMatrix(i[ri],i[ci],x=pmin(nrow(hc$merge)-A+1,max.cluster),dims=c(nrow(x),nrow(x)),symmetric=TRUE)
-    H <- sparseMatrix(i[ri],i[ci],x=hc$height[A],dims=c(nrow(x),nrow(x)),symmetric=TRUE)
-    
-    list(N=N,H=H,K=K)
+    ij <- cbind(i[ri],i[ci])
+    H[ij] <- H[ij] + hc$height[A]
+    N[ij] <- N[ij] + 1L
+    A <- nrow(hc$merge)+1L-A
+    A[A>max.cluster] <- max.cluster
+    K[ij] <- K[ij] + A
+    setTxtProgressBar(pb,k)
   }
-  redfun <- function(n0,n) {
-    n0$N <- n0$N + n$N
-    n0$K <- n0$K + n$K
-    n0$H <- n0$H + n$H
-    n0
-  }
-  mcMapReduce <- function(seeds,mapfun,redfun,N0,mc.cores=1) {
-    seeds <- split(seeds,seq_along(seeds)%%mc.cores)
-    N <- mclapply(seeds,Reduce,f=function(n0,seed) redfun(n0,mapfun(seed)),init=N0,mc.cores=mc.cores)
-    Reduce(redfun,N[-1],N[[1]])
-  }
-  
-  N0 <- Matrix(0,nrow(x),nrow(x))
-  N0 <- list(N=N0,K=N0,H=N0)
-  N <- mcMapReduce(seeds,mapfun,redfun,N0,mc.cores)
-  N$K <- N$K/N$N
-  N$H <- N$H/N$N
-  return(N)
+
+  return(list(N=N,H=H,K=K))
 }
 
 
