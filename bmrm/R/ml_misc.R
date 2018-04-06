@@ -95,6 +95,7 @@ roc.stat <- function(f,y) {
 #' @param row.rate,col.rate numeric value in [0,1] to specify the proportion of instance 
 #'        (resp. feature) to subset at each random iteration.
 #' @param max.cluster upper bound on the number of expected cluster (can by +Inf).
+#' @param ret.height a logical to specify whether the average merging height should be returned.
 #' @param hc.method a clustering method of arity 1, taking as input a random subset of the 
 #'        input matrix x and returning an hclust object
 #' @param ... additional arguments are passed to the hc.method
@@ -108,12 +109,14 @@ roc.stat <- function(f,y) {
 #' @export
 iterative.hclust <- function(x,seeds=1:100,
   row.rate=0.3,col.rate=0.1,max.cluster=10L,
+  ret.height=FALSE,
   hc.method=function(x,PCs=1:6,...) {hclust(dist(prcomp(x,rank.=max(PCs))$x[,PCs,drop=FALSE]),...)},
   ...
 ) {
-  K <- N <- matrix(0L,nrow(x),nrow(x))
-  H <- matrix(0,nrow(x),nrow(x))
-  
+  ret <- list()
+  ret$K <- ret$N <- matrix(0L,nrow(x),nrow(x))
+  if (ret.height) ret$H <- matrix(0,nrow(x),nrow(x))
+
   pb <- txtProgressBar(0,length(seeds),style=3)
   for(k in seq_along(seeds)) {
     set.seed(seeds[k])
@@ -123,19 +126,21 @@ iterative.hclust <- function(x,seeds=1:100,
     
     ri <- rep(seq_along(hc$order),rev(seq_along(hc$order)))
     ci <- seq_along(ri) + cumsum(seq_along(hc$order)-1L)[ri]
-    ci <- (ci-1)%%length(hc$order) + 1L
-    
+    ci <- (ci-1L)%%length(hc$order) + 1L
     A <- hclust_fca(hc,ri,ci)
-    ij <- cbind(i[ri],i[ci])
-    H[ij] <- H[ij] + hc$height[A]
-    N[ij] <- N[ij] + 1L
+
+    ij <- cbind(i[ci],i[ri])
+    if (ret.height) ret$H[ij] <- ret$H[ij] + hc$height[A]
+    ret$N[ij] <- ret$N[ij] + 1L
     A <- nrow(hc$merge)+1L-A
     A[A>max.cluster] <- max.cluster
-    K[ij] <- K[ij] + A
+    ret$K[ij] <- ret$K[ij] + A
     setTxtProgressBar(pb,k)
   }
-
-  return(list(N=N,H=H,K=K))
+  ret$K <- as.dist(ret$K)
+  ret$N <- as.dist(ret$N)
+  if (ret.height) ret$H <- as.dist(ret$H)
+  ret
 }
 
 

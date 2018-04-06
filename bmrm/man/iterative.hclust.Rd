@@ -5,8 +5,9 @@
 \title{Perform multiple hierachical clustering on random subsets of a dataset}
 \usage{
 iterative.hclust(x, seeds = 1:100, row.rate = 0.3, col.rate = 0.1,
-  max.cluster = 10L, hc.method = function(x, PCs = 1:6, ...) {    
-  hclust(dist(prcomp(x, rank. = max(PCs))$x[, PCs, drop = FALSE]), ...) }, ...)
+  max.cluster = 10L, ret.height = FALSE, hc.method = function(x, PCs =
+  1:6, ...) {     hclust(dist(prcomp(x, rank. = max(PCs))$x[, PCs, drop =
+  FALSE]), ...) }, ...)
 }
 \arguments{
 \item{x}{the numeric matrix containing the data to cluster (one instance per row)}
@@ -17,6 +18,8 @@ iterative.hclust(x, seeds = 1:100, row.rate = 0.3, col.rate = 0.1,
 (resp. feature) to subset at each random iteration.}
 
 \item{max.cluster}{upper bound on the number of expected cluster (can by +Inf).}
+
+\item{ret.height}{a logical to specify whether the average merging height should be returned.}
 
 \item{hc.method}{a clustering method of arity 1, taking as input a random subset of the 
 input matrix x and returning an hclust object}
