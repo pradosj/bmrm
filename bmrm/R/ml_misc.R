@@ -146,6 +146,27 @@ iterative.hclust <- function(x,seeds=1:100,
 
 
 
+#' Compute Bhattacharyya coefficient needed for Hellinger distance
+#' 
+#' @param x a numeric matrix
+#' @return a square matrix containing Bhattacharyya coefficient for each pair of row in x
+#' @author Julien Prados
+#' @export
+bhattacharyya.coefficient <- function(x) {
+  pmin(pmax(crossprod(sqrt(t(x))),0),1)
+}
+
+#' Compute Hellinger distance
+#' 
+#' @param x a numeric matrix
+#' @return an object of class "dist" with Hellinger distance of each pair of row in x
+#' @author Julien Prados
+#' @export
+hellinger.dist <- function(x) {
+  as.dist(sqrt(1-bhattacharyya.coefficient(x)))
+}
+
+
 
 
 
