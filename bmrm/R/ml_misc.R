@@ -34,6 +34,7 @@ balanced.loss.weights <- function(y) {
 #' @param w a numeric vector of linear weights
 #' @return a data.frame with a rank for each feature as well as z-score, p-value, and false discovery rate.
 #' @export
+#' @importFrom stats sd pnorm p.adjust
 rank.linear.weights <- function(w) {
   w <- as.vector(w)
   R <- data.frame(stringsAsFactors = FALSE,
@@ -105,7 +106,8 @@ roc.stat <- function(f,y) {
 #'         the average number of split possible into the trees still preserving the 
 #'         two samples into the same cluster.
 #' @author Julien Prados
-#' @import stats
+#' @importFrom stats as.dist dist hclust prcomp
+#' @importFrom utils txtProgressBar setTxtProgressBar
 #' @export
 iterative.hclust <- function(x,seeds=1:100,
   row.rate=0.3,col.rate=0.1,max.cluster=10L,
