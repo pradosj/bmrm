@@ -635,3 +635,46 @@ predict.ordinalRegressionLoss <- function(object,x,...) {
 }
 
 
+
+
+
+
+
+
+
+
+#' The loss function for Preference loss
+#' 
+#' @param x matrix of training instances (one instance by row)
+#' @param P a data.frame with 3 fields (i,j,cost) that specify the cost for prefering sample j over sample i.
+#' @return a function taking one argument w and computing the loss value and the gradient at point w
+#' @export
+#' @references Teo et al.
+#'   Bundle Methods for Regularized Risk Minimization
+#'   JMLR 2010
+#' @seealso nrbm
+#' @examples
+#' x <- data.matrix(iris[1:4])
+#' P <- expand.grid(i=which(iris$Species=="virginica"),j=which(iris$Species!="virginica"))
+#' w <- nrbm(preferenceLoss(x,P),LAMBDA=0.001,EPSILON_TOL=0.0001)
+preferenceLoss <- function(x,P) {
+  # check parameters at first call
+  P <- as.data.frame(P)
+  if (!is.matrix(x)) stop('x must be a numeric matrix')
+  if (!all(c("i","j") %in% names(P))) stop('P must be a data.frame with fields "i","j"')
+  if (!("cost" %in% names(P))) P$cost <- 1
+  
+  set.convex(function(w) {
+    w <- rep(w,length.out=ncol(x))
+    f <- x %*% w
+    lvalue(w) <- sum(P$cost * pmax(1+f[P$i]-f[P$j],0))
+    gradient(w) <- crossprod(P$cost*(x[P$i,]-x[P$j,]),(1+f[P$i]-f[P$j])>0)
+    attr(w,"class") <- "preferenceLoss"
+    return(w)
+  })
+}
+
+#' @export
+predict.preferenceLoss <- function(object,x,...) {
+  x %*% object
+}
