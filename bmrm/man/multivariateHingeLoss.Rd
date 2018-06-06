@@ -23,7 +23,13 @@ The loss function for multivariate hinge loss
 \examples{
   x <- cbind(intercept=100,data.matrix(iris[1:4]))
   y <- model.matrix(~iris$Species+0)>0
-  w <- nrbm(multivariateHingeLoss(x,y))
+  w <- nrbm(multivariateHingeLoss(x,y),LAMBDA=1)
+  table(y,predict(w,x)>0,col(y))
+  table(
+    do.call(paste0,as.data.frame(y+0)),
+    do.call(paste0,as.data.frame((predict(w,x)>0)+0))
+  )
+  
 }
 \seealso{
 nrbm
