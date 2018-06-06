@@ -678,3 +678,67 @@ preferenceLoss <- function(x,P) {
 predict.preferenceLoss <- function(object,x,...) {
   x %*% object
 }
+
+
+
+
+
+
+
+
+#' The loss function for multivariate hinge loss
+#' 
+#' @param x matrix of training instances (one instance by row)
+#' @param y logical matrix of targets: y(t,) is the vector of binary labels for x(t,)
+#' @param loss.weights numeric vector of loss weights to incure for each instance of x. 
+#'        Vector length should match nrow(x), but values are cycled if not of identical size.
+#' @return a function taking one argument w and computing the loss value and the gradient at point w
+#' @export
+#' @seealso nrbm
+#' @examples
+#'   x <- cbind(intercept=100,data.matrix(iris[1:4]))
+#'   y <- model.matrix(~iris$Species+0)>0
+#'   w <- nrbm(multivariateHingeLoss(x,y),LAMBDA=1)
+#'   table(y,predict(w,x)>0,col(y))
+#'   table(
+#'     do.call(paste0,as.data.frame(y+0)),
+#'     do.call(paste0,as.data.frame((predict(w,x)>0)+0))
+#'   )
+#'   
+multivariateHingeLoss <- function(x,y,loss.weights=1) {
+  if (!is.logical(y)) stop("y must be logical")
+  if (!is.matrix(y)) stop("y must be a matrix")
+  if (!is.matrix(x)) stop("x must be a numeric matrix")
+  if (nrow(x) != nrow(y)) stop("dimensions of x and y mismatch")
+  
+  set.convex(function(w) {
+    W <- matrix(w, ncol(x), ncol(y), dimnames = list(colnames(x), colnames(y)))
+    f <- x %*% W
+    loss <- loss.weights * pmax(f * ifelse(y, -1, +1) + 1, 0)
+    i <- max.col(loss,ties.method="first")
+    i <- array(seq_along(loss),dim(loss))[cbind(seq_along(i),i)]
+    loss[-i] <- 0
+    grad <- loss.weights * (loss > 0) * ifelse(y, -1, +1)
+    w <- as.vector(W)
+    attr(w, "model.dim") <- dim(W)
+    attr(w, "model.dimnames") <- dimnames(W)
+    lvalue(w) <- sum(loss)
+    gradient(w) <- as.vector(crossprod(x, grad))
+    class(w) <- "multivariateHingeLoss"
+    return(w)
+  })
+}
+
+#' @export
+predict.multivariateHingeLoss <- function(object,x,...) {
+  W <- array(object,attr(object,"model.dim"),attr(object,"model.dimnames"))
+  f <- x %*% W
+  f
+}
+
+
+
+
+
+
+
