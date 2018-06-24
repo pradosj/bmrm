@@ -102,9 +102,8 @@ roc.stat <- function(f,y) {
 #' @param ... additional arguments are passed to the hc.method
 #' @return a list of 3 square matrices N,H,K of size nrow(x): N is the number of 
 #'         time each pair of instance as been seen in the random subsets; H is the
-#'         average heights where the pair of sample as been merged in the tree; K is 
-#'         the average number of split possible into the trees still preserving the 
-#'         two samples into the same cluster.
+#'         corresponding sum of heights for the pairs; K is the sum of the number of split
+#'         possible that still preserve the two samples into the same cluster.
 #' @author Julien Prados
 #' @importFrom stats as.dist dist hclust prcomp
 #' @importFrom utils txtProgressBar setTxtProgressBar
