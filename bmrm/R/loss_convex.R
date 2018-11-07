@@ -576,7 +576,7 @@ ordinalRegressionLoss <- function(x,y,C="0/1",impl=c("loglin","quadratic")) {
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')  
   C <- costMatrix(y,C)
   y <- as.integer(y)
-  m <- length(y)
+  m <- as.numeric(length(y))
   mi <- tabulate(y,nbins=ncol(C))
   M <- (m*m - sum(mi*mi))/2
   C <- C / M

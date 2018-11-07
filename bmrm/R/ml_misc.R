@@ -59,14 +59,14 @@ rank.linear.weights <- function(w) {
 #' @examples
 #'   x <- cbind(data.matrix(iris[1:4]))
 #'   w <- nrbmL1(rocLoss(x,iris$Species=="versicolor"),LAMBDA=0.01)
-#'   with(roc.stat(x %*% w,iris$Species=="versicolor"),plot(FPR,TPR,type="l"))
-#'   with(roc.stat(-x[,2],iris$Species=="versicolor"),lines(FPR,TPR,col="blue"))
+#'   plot(roc.stat(x %*% w,iris$Species=="versicolor"))
+#'   lines(roc.stat(-x[,2],iris$Species=="versicolor"),col="blue")
 roc.stat <- function(f,y) {
   if (!is.logical(y)) stop("y must be a logical vector")
   if (length(f)!=length(y)) stop("f and y must have same length")
   o <- order(f, decreasing=TRUE)
   roc <- data.frame(
-    f=c(-Inf,f[o]),
+    f = c(-Inf,f[o]),
     TP = c(0,cumsum(y[o])),
     FP = c(0,cumsum(!y[o]))
   )
@@ -82,11 +82,27 @@ roc.stat <- function(f,y) {
   dx <- diff(roc$FPR)
   dy <- diff(roc$TPR)
   attr(roc,"AUC") <- sum(dx*roc$TPR[seq_along(dx)] + dx*dy/2)
+  class(roc) <- c("roc.stat",class(roc))
   return(roc)
 }
 
+#' Generic method overlad to print object of class roc.stat
+#' 
+#' @export
+print.roc.stat <- function(x,...) {
+  NextMethod()
+  cat(sprintf("AUC: %.2f\n",attr(x,"AUC")))
+}
 
+#' @export
+plot.roc.stat <- function(x,y,type="o",xlab="sensitivity",ylab="specificity",...) {
+  plot(x$sensitivity,x$specificity,xlab=xlab,ylab=ylab,type=type,...)
+}
 
+#' @export
+lines.roc.stat <- function(x,type="o",...) {
+  lines(x$sensitivity,x$specificity,type=type,...)
+}
 
 
 #' Perform multiple hierachical clustering on random subsets of a dataset
