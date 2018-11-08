@@ -5,8 +5,8 @@
 \title{Perform multiple hierachical clustering on random subsets of a dataset}
 \usage{
 iterative.hclust(x, seeds = 1:100, row.rate = 0.3, col.rate = 0.1,
-  max.cluster = 10L, ret.height = FALSE, hc.method = function(x, PCs =
-  1:6, ...) {     hclust(dist(prcomp(x, rank. = max(PCs))$x[, PCs, drop =
+  max.cluster = 10L, ret.height = FALSE, hc.method = function(x, PCs
+  = 1:6, ...) {     hclust(dist(prcomp(x, rank. = max(PCs))$x[, PCs, drop =
   FALSE]), ...) }, ...)
 }
 \arguments{

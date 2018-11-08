@@ -28,5 +28,5 @@ Description: Bundle methods for minimization of convex and non-convex risk
     least absolute deviation regression (see package examples), etc... all with
     L1 and L2 regularization.
 License: GPL-3
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
 LinkingTo: Rcpp

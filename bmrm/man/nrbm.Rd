@@ -2,16 +2,15 @@
 % Please edit documentation in R/nrbm.R
 \name{nrbm}
 \alias{nrbm}
-\alias{nrbm}
 \alias{nrbmL1}
 \title{Convex and non-convex risk minimization with L2 regularization and limited memory}
 \usage{
-nrbm(riskFun, LAMBDA = 1, MAX_ITER = 1000L, EPSILON_TOL = 0.01, w0 = 0,
-  maxCP = 50L, convexRisk = is.convex(riskFun), LowRankQP.method = "LU",
-  line.search = !convexRisk)
+nrbm(riskFun, LAMBDA = 1, MAX_ITER = 1000L, EPSILON_TOL = 0.01,
+  w0 = 0, maxCP = 50L, convexRisk = is.convex(riskFun),
+  LowRankQP.method = "LU", line.search = !convexRisk)
 
-nrbmL1(riskFun, LAMBDA = 1, MAX_ITER = 300L, EPSILON_TOL = 0.01, w0 = 0,
-  maxCP = +Inf, line.search = FALSE)
+nrbmL1(riskFun, LAMBDA = 1, MAX_ITER = 300L, EPSILON_TOL = 0.01,
+  w0 = 0, maxCP = +Inf, line.search = FALSE)
 }
 \arguments{
 \item{riskFun}{the risk function to use in the optimization (e.g.: hingeLoss, softMarginVectorLoss). 
