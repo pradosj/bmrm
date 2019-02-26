@@ -6,6 +6,11 @@
 \usage{
 \method{print}{roc.stat}(x, ...)
 }
+\arguments{
+\item{x}{a roc.stat object return by the function roc.stat}
+
+\item{...}{additional parameters}
+}
 \description{
 Generic method overlad to print object of class roc.stat
 }

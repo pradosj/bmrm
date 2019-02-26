@@ -88,6 +88,8 @@ roc.stat <- function(f,y) {
 
 #' Generic method overlad to print object of class roc.stat
 #' 
+#' @param x a roc.stat object return by the function roc.stat
+#' @param ... additional parameters
 #' @export
 print.roc.stat <- function(x,...) {
   NextMethod()
@@ -95,11 +97,13 @@ print.roc.stat <- function(x,...) {
 }
 
 #' @export
+#' @importFrom graphics plot
 plot.roc.stat <- function(x,y,type="o",xlab="sensitivity",ylab="specificity",...) {
   plot(x$sensitivity,x$specificity,xlab=xlab,ylab=ylab,type=type,...)
 }
 
 #' @export
+#' @importFrom graphics lines
 lines.roc.stat <- function(x,type="o",...) {
   lines(x$sensitivity,x$specificity,type=type,...)
 }
