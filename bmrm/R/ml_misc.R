@@ -36,7 +36,7 @@ balanced.loss.weights <- function(y) {
 #' @export
 #' @importFrom stats sd pnorm p.adjust
 rank.linear.weights <- function(w) {
-  w <- as.vector(w)
+  w <- as(w,"vector")
   R <- data.frame(stringsAsFactors = FALSE,
     feature.name = if (is.null(names(w))) seq_along(w) else names(w),
     w = w,
