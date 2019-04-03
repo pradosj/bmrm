@@ -35,6 +35,7 @@ balanced.loss.weights <- function(y) {
 #' @return a data.frame with a rank for each feature as well as z-score, p-value, and false discovery rate.
 #' @export
 #' @importFrom stats sd pnorm p.adjust
+#' @importFrom methods as
 rank.linear.weights <- function(w) {
   w <- as(w,"vector")
   R <- data.frame(stringsAsFactors = FALSE,
