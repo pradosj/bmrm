@@ -42,6 +42,7 @@ wolfe.linesearch <- function(f, x0, s0, ..., a1=0.5, amax=1.1, c1=1e-4, c2=0.9, 
   g0 <- as.vector(crossprod(gradient(x0),s0))
   
   zoom <- function(alo, ahi, flo, fhi, glo, ghi, maxiter) {
+    maxiter <- max(1,maxiter)
     for(j in seq_len(maxiter)) {
       # find aj in [alo,ahi] using cubic interpolation
       d1 <- glo + ghi - 3*(flo-fhi)/(alo-ahi)
