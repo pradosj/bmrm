@@ -428,11 +428,11 @@ predict.softmaxLoss <- function(object,x,...) {
 #' 
 #' @param y a factor representing the labels of the instances
 #' @param C either a cost matrix to check for consistency with labels in y, or a character string defining the standard matrix to compute. 
-#'        If a character string the accepted values are "0/1" for a 0-1 cost matrix or "linear" for linear cost.
+#'        If a character string the accepted values are "0/1" for a 0-1 cost matrix, "0/1b" for balanced 0-1 cost matrix, or "linear" for linear cost.
 #' @return the cost matrix object
 #' @export
 #' @seealso nrbm, ordinalRegressionLoss
-costMatrix <- function(y,C=c("0/1","linear")) {
+costMatrix <- function(y,C=c("0/1","0/1b","linear")) {
   y <- as.factor(y)
   if (is.character(C)) {
     C <- match.arg(C)
@@ -440,6 +440,13 @@ costMatrix <- function(y,C=c("0/1","linear")) {
                 "0/1" = {
                   C <- matrix(1,nlevels(y),nlevels(y),dimnames = list(levels(y),levels(y)))
                   diag(C) <- 0
+                  return(C)
+                },
+                "0/1b" = {
+                  C <- matrix(1,nlevels(y),nlevels(y),dimnames = list(levels(y),levels(y)))
+                  diag(C) <- 0
+                  C <- C / tabulate(y)[col(C)] / tabulate(y)
+                  C <- C / max(C)
                   return(C)
                 },
                 "linear" = abs(outer(levels(y),levels(y),'-'))

@@ -1,8 +1,8 @@
 Package: bmrm
 Type: Package
 Title: Bundle Methods for Regularized Risk Minimization Package
-Version: 4.1
-Date: 2019-04-03
+Version: 4.2
+Date: 2019-04-24
 Depends:
     R (>= 3.0.2)
 Imports:
