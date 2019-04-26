@@ -169,6 +169,7 @@ nrbm <- function(riskFun,LAMBDA=1,MAX_ITER=1000L,EPSILON_TOL=0.01,w0=0,maxCP=50L
   }
   if (i >= MAX_ITER) warning('max # of itertion exceeded')
   attr(ub.w,"obj") <- ub
+  attr(ub.w,"niter") <- iter
   return(ub.w)
 }
 
@@ -259,6 +260,7 @@ nrbmL1 <- function(riskFun,LAMBDA=1,MAX_ITER=300L,EPSILON_TOL=0.01,w0=0,maxCP=+I
   }
   if (i >= MAX_ITER) warning('max # of itertion exceeded')
   attr(ub.w,"obj") <- ub
+  attr(ub.w,"niter") <- iter
   return(ub.w)
 }
 
