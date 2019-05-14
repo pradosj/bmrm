@@ -7,7 +7,7 @@
 #' f(w) = 0.5*LAMBDA*l2norm(w) + riskFun(w)
 #' where riskFun is either a convex or a non-convex risk function.
 #' @name nrbm
-#' @param riskFun the risk function to use in the optimization (e.g.: hingeLoss, softMarginVectorLoss). 
+#' @param riskFun the risk function to use in the optimization (e.g.: hingeLoss, ontologyLoss). 
 #'   The function must evaluate the loss value and its gradient for a given point vector (w).
 #'   The function must return the given point vector w, with attributes "lvalue" and "gradient" set.
 #' @param LAMBDA control the regularization strength in the optimization process. 

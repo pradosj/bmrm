@@ -34,7 +34,7 @@ $$R_{emp} := \frac{1}{m}\sum{l(x_i,y_i,w)}, \lambda > 0.$$
 | Least absolute deviation regression | Linear Regressor           | `ladRegressionLoss()`                | $abs(wx-y)$                  |
 | $\epsilon$-insensitive regression   | Linear Regressor           | `epsilonInsensitiveRegressionLoss()` | $\max(0,abs(wx-y)-\epsilon)$ |
 | Quantile regression                 | Linear Regressor           | `quantileRegressionLoss()`           | @Teo_JMLR_2010, Table 5      |
-| Multiclass SVM                      | Structure Predictor        | `softMarginVectorLoss()`             | @Teo_JMLR_2010, Table 6      |
+| Multiclass SVM                      | Structure Predictor        | `ontologyLoss()`                     | @Teo_JMLR_2010, Table 6      |
 | Ontology classification             | Structure Predictor        | `ontologyLoss()`                     | @Teo_JMLR_2010, &sect;A.4.2  |
 | Ordinal regression                  | Structure Predictor        | `ordinalRegressionLoss()`            | @Teo_JMLR_2010, &sect;A.3.2  |
 
@@ -54,7 +54,7 @@ In this quick start guide, we show how to train a multiclass-SVM on iris dataset
 ```{r, echo=TRUE, results='hide'}
     library(bmrm)
     x <- cbind(intercept=100,data.matrix(iris[c("Sepal.Length","Sepal.Width","Petal.Length","Petal.Width")]))
-    w <- nrbm(softMarginVectorLoss(x,iris$Species))
+    w <- nrbm(ontologyLoss(x,iris$Species))
     table(target=iris$Species,prediction=predict(w,x))
 ```
     

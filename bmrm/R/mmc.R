@@ -130,7 +130,7 @@ mmc <- function(x,k=2L,N0=2L,LAMBDA=1,seeds=1:50,
       i0 <- sample(seq_len(nrow(x)),n0)
       y0 <- as.factor(sample(rep_len(seq_len(k),n0)))
       
-      nrbmArgsSvm$riskFun <- softMarginVectorLoss(x[i0,],y0)
+      nrbmArgsSvm$riskFun <- ontologyLoss(x[i0,],y0)
       w0 <- do.call(nrbm,nrbmArgsSvm)
       
       # run MMC solver starting at w0
