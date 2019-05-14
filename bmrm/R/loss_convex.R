@@ -35,12 +35,11 @@ predict.linearRegressionLoss <- function(object,x,...) {
 
 #' @describeIn linearRegressionLoss Least Mean Square regression
 #' @export
-lmsRegressionLoss <- function(x,y,loss.weights=1) {
+lmsRegressionLoss <- function(x,y,loss.weights=1/length(y)) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.numeric(y)) stop('y must be a numeric vector')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   loss.weights <- rep(loss.weights,length.out=length(y))
-  loss.weights <- loss.weights/sum(loss.weights)
   
   set.convex(function(w) {
     w <- cbind(matrix(numeric(),ncol(x),0),w)
@@ -57,12 +56,11 @@ lmsRegressionLoss <- function(x,y,loss.weights=1) {
 
 #' @describeIn linearRegressionLoss Least Absolute Deviation regression
 #' @export
-ladRegressionLoss <- function(x,y,loss.weights=1) {
+ladRegressionLoss <- function(x,y,loss.weights=1/length(y)) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.numeric(y)) stop('y must be a numeric vector')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   loss.weights <- rep(loss.weights,length.out=length(y))
-  loss.weights <- loss.weights/sum(loss.weights)
 
   set.convex(function(w) {
     w <- cbind(matrix(numeric(),ncol(x),0),w)
@@ -80,13 +78,12 @@ ladRegressionLoss <- function(x,y,loss.weights=1) {
 #' @describeIn linearRegressionLoss Quantile Regression
 #' @param q a numeric value in the range [0-1] defining quantile value to consider
 #' @export
-quantileRegressionLoss <- function(x,y,q=0.5,loss.weights=1) {
+quantileRegressionLoss <- function(x,y,q=0.5,loss.weights=1/length(y)) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.numeric(y)) stop('y must be a numeric vector')    
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   if (length(q)!=1 || q<0 || q>1) stop('q must be a length one numeric in the range [0-1]')
   loss.weights <- rep(loss.weights,length.out=length(y))
-  loss.weights <- loss.weights/sum(loss.weights)
   
   set.convex(function(w) {
     w <- cbind(matrix(numeric(),ncol(x),0),w)
@@ -104,12 +101,11 @@ quantileRegressionLoss <- function(x,y,q=0.5,loss.weights=1) {
 #' @describeIn linearRegressionLoss epsilon-insensitive regression (Vapnik et al. 1997)
 #' @param epsilon a numeric value setting tolerance of the epsilon-regression
 #' @export
-epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1) {
+epsilonInsensitiveRegressionLoss <- function(x,y,epsilon,loss.weights=1/length(y)) {
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (!is.numeric(y)) stop('y must be a numeric vector')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   loss.weights <- rep(loss.weights,length.out=length(y))
-  loss.weights <- loss.weights/sum(loss.weights)
   
   set.convex(function(w) {
     w <- cbind(matrix(numeric(),ncol(x),0),w)
@@ -172,12 +168,11 @@ predict.binaryClassificationLoss <- function(object,x,...) {
 
 #' @describeIn binaryClassificationLoss logistic regression
 #' @export
-logisticLoss <- function(x,y,loss.weights=1) {
+logisticLoss <- function(x,y,loss.weights=1/length(y)) {
   if (!is.logical(y)) stop("y must be logical")
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   loss.weights <- rep(loss.weights,length.out=length(y))
-  loss.weights <- loss.weights/sum(loss.weights)
 
   set.convex(function(w) {
     w <- cbind(matrix(numeric(),ncol(x),0),w)
@@ -308,12 +303,11 @@ fbetaLoss <- function(x,y,beta=1) {
 #'   w <- nrbm(softmaxLoss(x,y))
 #'   P <- predict(w,x)
 #'   table(max.col(P),iris$Species)
-softmaxLoss <- function(x,y,loss.weights=1) {
+softmaxLoss <- function(x,y,loss.weights=1/length(y)) {
   if (!is.matrix(y)) stop("y must be a numeric matrix")
   if (!is.matrix(x)) stop("x must be a numeric matrix")
   if (nrow(x) != nrow(y)) stop("dimensions of x and y mismatch")
   loss.weights <- rep(loss.weights, length.out = nrow(y))
-  loss.weights <- loss.weights/sum(loss.weights)
   
   set.convex(function(w) {
     W <- matrix(w, ncol(x), ncol(y), dimnames = list(colnames(x), colnames(y)))
@@ -559,13 +553,12 @@ predict.preferenceLoss <- function(object,x,...) {
 #'     do.call(paste0,as.data.frame((predict(w,x)>0)+0))
 #'   )
 #'   
-multivariateHingeLoss <- function(x,y,loss.weights=1) {
+multivariateHingeLoss <- function(x,y,loss.weights=1/length(y)) {
   if (!is.logical(y)) stop("y must be logical")
   if (!is.matrix(y)) stop("y must be a matrix")
   if (!is.matrix(x)) stop("x must be a numeric matrix")
   if (nrow(x) != nrow(y)) stop("dimensions of x and y mismatch")
   loss.weights <- rep(loss.weights,length.out=nrow(y))
-  loss.weights <- loss.weights/sum(loss.weights)
   
   set.convex(function(w) {
     W <- matrix(w, ncol(x), ncol(y), dimnames = list(colnames(x), colnames(y)))

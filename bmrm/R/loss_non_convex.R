@@ -4,12 +4,11 @@
 
 #' @describeIn binaryClassificationLoss Hinge Loss for Linear Support Vector Machine (SVM)
 #' @export
-hingeLoss <- function(x,y,loss.weights=1) {
+hingeLoss <- function(x,y,loss.weights=1/length(y)) {
   if (!is.logical(y)) stop("y must be logical")
   if (!is.matrix(x)) stop('x must be a numeric matrix')
   if (nrow(x) != length(y)) stop('dimensions of x and y mismatch')
   loss.weights <- rep(loss.weights,length.out=length(y))
-  loss.weights <- loss.weights/sum(loss.weights)
   
   f <- function(w) {
     w <- cbind(matrix(numeric(),ncol(x),0),w)
