@@ -8,13 +8,13 @@
 \alias{hingeLoss}
 \title{Loss functions for binary classification}
 \usage{
-logisticLoss(x, y, loss.weights = 1)
+logisticLoss(x, y, loss.weights = 1/length(y))
 
 rocLoss(x, y)
 
 fbetaLoss(x, y, beta = 1)
 
-hingeLoss(x, y, loss.weights = 1)
+hingeLoss(x, y, loss.weights = 1/length(y))
 }
 \arguments{
 \item{x}{matrix of training instances (one instance by row)}

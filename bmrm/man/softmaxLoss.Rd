@@ -4,7 +4,7 @@
 \alias{softmaxLoss}
 \title{softmax Loss Function}
 \usage{
-softmaxLoss(x, y, loss.weights = 1)
+softmaxLoss(x, y, loss.weights = 1/length(y))
 }
 \arguments{
 \item{x}{instance matrix, where x(t,) defines the features of instance t}

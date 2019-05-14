@@ -8,13 +8,14 @@
 \alias{epsilonInsensitiveRegressionLoss}
 \title{Loss functions to perform a regression}
 \usage{
-lmsRegressionLoss(x, y, loss.weights = 1)
+lmsRegressionLoss(x, y, loss.weights = 1/length(y))
 
-ladRegressionLoss(x, y, loss.weights = 1)
+ladRegressionLoss(x, y, loss.weights = 1/length(y))
 
-quantileRegressionLoss(x, y, q = 0.5, loss.weights = 1)
+quantileRegressionLoss(x, y, q = 0.5, loss.weights = 1/length(y))
 
-epsilonInsensitiveRegressionLoss(x, y, epsilon, loss.weights = 1)
+epsilonInsensitiveRegressionLoss(x, y, epsilon,
+  loss.weights = 1/length(y))
 }
 \arguments{
 \item{x}{matrix of training instances (one instance by row)}

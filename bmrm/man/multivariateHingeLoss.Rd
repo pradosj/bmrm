@@ -4,7 +4,7 @@
 \alias{multivariateHingeLoss}
 \title{The loss function for multivariate hinge loss}
 \usage{
-multivariateHingeLoss(x, y, loss.weights = 1)
+multivariateHingeLoss(x, y, loss.weights = 1/length(y))
 }
 \arguments{
 \item{x}{matrix of training instances (one instance by row)}
