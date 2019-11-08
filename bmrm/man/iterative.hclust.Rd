@@ -35,6 +35,12 @@ a list of 3 square matrices N,H,K of size nrow(x): N is the number of
 \description{
 Perform multiple hierachical clustering on random subsets of a dataset
 }
+\examples{
+k <- iterative.hclust(as.matrix(iris[1:4]),1:500,row.rate=0.3,col.rate=0.8,hc.method=function(x) hclust(dist(x)),max.cluster = 10)
+D <- (10-k$K/k$N)/9
+h <- hclust(D,method="ward.D")
+heatmap(as.matrix(D),Rowv = as.dendrogram(h),symm = TRUE,RowSideColors=rainbow(nlevels(iris$Species))[iris$Species])
+}
 \author{
 Julien Prados
 }
