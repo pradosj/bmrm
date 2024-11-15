@@ -39,6 +39,21 @@ Train multiclass-SVM:
     w <- nrbm(ontologyLoss(x,y),LAMBDA=0.01)
     table(y,predict(w,x)) # Performance on training set
 
+Evaluate performance of multiclass-SVM with leave-one-out strategy
+
+    svm_loo_pred <- function(x,y,...) {
+        parallel::mclapply(mc.cores = 5,seq_along(y),function(i) {
+                w <- nrbm(ontologyLoss(x[-i,,drop=FALSE],y[-i]),...)
+                pred <- predict(w,x) # Predict all samples
+                pred[-i] <- NA # Keep only the left out sample (Put NA everywhere else)
+                pred
+            }) |>
+            simplify2array() |>
+            diag()
+    }
+    loo_pred <- svm_loo_pred(x,y,LAMBDA=0.01)
+    table(y,loo_pred) # Contingency matrix
+
 Train binary SVM to reconize viriginca species:
 
     w <- nrbm(hingeLoss(x,y=="virginica"),LAMBDA=0.01)
@@ -48,8 +63,12 @@ Train binary max-margin linear classifier to reconize virginica and so that AUC 
 
     w <- nrbm(rocLoss(x,y=="virginica"),LAMBDA=0.01)
     roc.stat(predict(w,x),y=="virginica") |>
-    ggplot(aes(x=sensitivity,y=specificity)) + 
-      geom_line() + coord_equal()
+      ggplot(aes(x=sensitivity,y=specificity)) + 
+        geom_line() + coord_equal()
 
+Train a linear max-margin model for ordinal regression on iris (assuming labels are ordered)
+
+    w <- nrbm(ordinalRegressionLoss(x,y),LAMBDA=0.01)
+    boxplot(predict(w,x)~y) 
 
 
