@@ -38,11 +38,11 @@ Usage
 
 
 
-## Train other type of models
+### Train other type of models
 
     # Train binary SVM to reconize viriginca species
     w <- nrbm(hingeLoss(x,y=="virginica"),LAMBDA=0.01)
-    table(y,predict(w,x)) # Performance on training set
+    table(y=="virginica",predict(w,x)) # Performance on training set
 
     # Train max-margin classifier that maximize AUC, and display ROC curve
     w <- nrbm(rocLoss(x,y=="virginica"),LAMBDA=0.01)
@@ -57,7 +57,7 @@ Usage
 
 
 
-Evaluate classifier performance with leave-one-out strategy
+### Evaluate classifier performance with leave-one-out strategy
 
     svm_loo_pred <- function(x,y,...) {
         parallel::mclapply(mc.cores = 5,seq_along(y),function(i) {
