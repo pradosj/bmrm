@@ -32,7 +32,9 @@ Usage
 
     # Train multiclass-SVM
     w <- nrbm(ontologyLoss(x,y),LAMBDA=0.01)
-    table(y,predict(w,x)) # Performance on training set
+
+    # Performance on training set
+    table(y,predict(w,x))
 
 
 
