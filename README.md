@@ -37,6 +37,20 @@ Usage
     table(y,predict(w,x))
 
 
+### Evaluate classifier performance with leave-one-out strategy
+
+    svm_loo_pred <- function(x,y,...) {
+        parallel::mclapply(mc.cores = 5,seq_along(y),function(i) {
+                w <- nrbm(ontologyLoss(x[-i,,drop=FALSE],y[-i]),...)
+                pred <- predict(w,x) # Predict all samples
+                pred[-i] <- NA # Keep only the left out sample (Put NA everywhere else)
+                pred
+            }) |>
+            simplify2array() |>
+            diag()
+    }
+    loo_pred <- svm_loo_pred(x,y,LAMBDA=0.01)
+    table(y,loo_pred) # Contingency matrix
 
 ### Train other type of models
 
@@ -56,18 +70,3 @@ Usage
 
 
 
-
-### Evaluate classifier performance with leave-one-out strategy
-
-    svm_loo_pred <- function(x,y,...) {
-        parallel::mclapply(mc.cores = 5,seq_along(y),function(i) {
-                w <- nrbm(ontologyLoss(x[-i,,drop=FALSE],y[-i]),...)
-                pred <- predict(w,x) # Predict all samples
-                pred[-i] <- NA # Keep only the left out sample (Put NA everywhere else)
-                pred
-            }) |>
-            simplify2array() |>
-            diag()
-    }
-    loo_pred <- svm_loo_pred(x,y,LAMBDA=0.01)
-    table(y,loo_pred) # Contingency matrix
