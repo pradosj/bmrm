@@ -26,19 +26,18 @@ bmrm can be installed using devtools:
 Usage
 ---------------
 
-Here are examples to train classifiers on `iris` dataset.
-
     # Prepare the training set
     x <- cbind(intercept=10,data.matrix(iris[1:4]))
     y <- iris$Species
 
-    # Train multiclass-SVM:
+    # Train multiclass-SVM
     w <- nrbm(ontologyLoss(x,y),LAMBDA=0.01)
     table(y,predict(w,x)) # Performance on training set
 
 
 
-Example to train other models
+## Train other type of models
+
     # Train binary SVM to reconize viriginca species
     w <- nrbm(hingeLoss(x,y=="virginica"),LAMBDA=0.01)
     table(y,predict(w,x)) # Performance on training set
