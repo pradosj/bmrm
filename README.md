@@ -29,19 +29,21 @@ Usage
 Here is an example to train a linear-multiclass-SVM on `iris`:
 
     # Prepare training set 
-    # Allow the linear model to have a intercept by adding a constant input feature
+    # Allow the linear models to have a intercept by adding a constant input feature
     x <- cbind(intercept=10,data.matrix(iris[1:4]))
     y <- iris$Species
 
-    # Train multiclass-SVM
+
+Train multiclass-SVM:
     w <- nrbm(ontologyLoss(x,y),LAMBDA=0.01)
     table(y,predict(w,x)) # Performance on training set
 
-    # Train binary SVM to reconize viriginca species
+Train binary SVM to reconize viriginca species:
+
     w <- nrbm(hingeLoss(x,y=="virginica"),LAMBDA=0.01)
     table(y,predict(w,x)) # Performance on training set
 
-    # Train binary max-margin linear classifier to reconize virginica and so that AUC is maximal, then display the ROC curve
+Train binary max-margin linear classifier to reconize virginica and so that AUC is maximal, then display the ROC curve:
     w <- nrbm(rocLoss(x,y=="virginica"),LAMBDA=0.01)
     roc.stat(predict(w,x),y=="virginica") |>
     ggplot(aes(x=sensitivity,y=specificity)) + 
