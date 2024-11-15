@@ -52,6 +52,13 @@ Usage
     loo_pred <- svm_loo_pred(x,y,LAMBDA=0.01)
     table(y,loo_pred) # Contingency matrix
 
+### Sparse models with L1 regularisation
+
+    # Train sparse multiclass-SVM with L1-regularization instead of the default L2-regularization
+    w <- nrbmL1(ontologyLoss(x,y),LAMBDA=0.1)
+    table(y,predict(w,x))
+
+
 ### Train other type of models
 
     # Train binary SVM to reconize viriginca species
